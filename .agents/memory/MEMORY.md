@@ -1,0 +1,4 @@
+- [Orval query hooks require queryKey](orval-querykey.md) — every useQuery hook from Orval codegen needs explicit `queryKey` in options or TypeScript errors
+- [Auth hook stable init pattern](auth-hook-init.md) — silent refresh must use `useRef` guard + empty deps to prevent infinite loop; use native `fetch` not `customFetch` for the refresh call
+- [tsx binary location](tsx-binary.md) — tsx is not in root `.bin`; use the pnpm node_modules path to run seed/scripts
+- [Google Fonts in Vite+Tailwind v4](google-fonts-vite.md) — must use `<link>` in index.html, not `@import url()` in CSS

@@ -3,13 +3,38 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: JABEEN Investor Portal API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication and session management
+  - name: projects
+    description: Project management
+  - name: updates
+    description: Status updates and review workflow
+  - name: documents
+    description: Document management
+  - name: messages
+    description: Project messaging
+  - name: notes
+    description: Internal notes
+  - name: notifications
+    description: Notifications
+  - name: dashboard
+    description: Dashboard and portfolio
+  - name: templates
+    description: Stage templates / pipelines
+  - name: users
+    description: User administration
+  - name: audit
+    description: Audit log
+  - name: settings
+    description: System settings
+
 paths:
   /healthz:
     get:
@@ -24,7 +49,791 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # --- AUTH ---
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Self-register as Investor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+        "409":
+          description: Email already exists
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Sign in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+        "401":
+          description: Invalid credentials
+        "403":
+          description: Account deactivated
+        "429":
+          description: Too many attempts
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Sign out
+      responses:
+        "204":
+          description: Signed out
+
+  /auth/refresh:
+    post:
+      operationId: refreshToken
+      tags: [auth]
+      summary: Renew session
+      responses:
+        "200":
+          description: New access token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+        "401":
+          description: Renewal failed
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get own profile
+      responses:
+        "200":
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    patch:
+      operationId: updateMe
+      tags: [auth]
+      summary: Update own profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileUpdate"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  # --- DASHBOARD ---
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [dashboard]
+      summary: Portfolio dashboard stats
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /projects/export:
+    get:
+      operationId: exportPortfolio
+      tags: [dashboard]
+      summary: Export portfolio as CSV (managers only)
+      responses:
+        "200":
+          description: CSV file
+          content:
+            text/csv:
+              schema:
+                type: string
+
+  # --- PROJECTS ---
+  /projects:
+    get:
+      operationId: listProjects
+      tags: [projects]
+      summary: List projects (scoped by role)
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search by name, agreement number, sector, investor name/company
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [on-track, delayed, stalled, complete]
+        - name: stage
+          in: query
+          schema:
+            type: string
+          description: Filter by current stage name
+        - name: sector
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Project list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProjectSummary"
+    post:
+      operationId: createProject
+      tags: [projects]
+      summary: Create project (managers only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectInput"
+      responses:
+        "201":
+          description: Created project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+
+  /projects/{projectId}:
+    get:
+      operationId: getProject
+      tags: [projects]
+      summary: Get project detail
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+      responses:
+        "200":
+          description: Project detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateProject
+      tags: [projects]
+      summary: Update project metadata (managers only)
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectUpdate"
+      responses:
+        "200":
+          description: Updated project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+    delete:
+      operationId: deleteProject
+      tags: [projects]
+      summary: Delete project (admin only)
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+      responses:
+        "204":
+          description: Deleted
+
+  # --- STATUS UPDATES ---
+  /projects/{projectId}/updates:
+    get:
+      operationId: listUpdates
+      tags: [updates]
+      summary: List project status updates
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+      responses:
+        "200":
+          description: Update list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StatusUpdate"
+    post:
+      operationId: createUpdate
+      tags: [updates]
+      summary: Submit a status update
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateInput"
+      responses:
+        "201":
+          description: Created update
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusUpdate"
+        "409":
+          description: Pending update already exists or approval guard failed
+
+  /projects/{projectId}/updates/{updateId}/approve:
+    patch:
+      operationId: approveUpdate
+      tags: [updates]
+      summary: Approve a pending update (managers only)
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+        - $ref: "#/components/parameters/updateId"
+      responses:
+        "200":
+          description: Approved update
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusUpdate"
+        "409":
+          description: Approval guard failed
+
+  /projects/{projectId}/updates/{updateId}/reject:
+    patch:
+      operationId: rejectUpdate
+      tags: [updates]
+      summary: Reject a pending update (managers only)
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+        - $ref: "#/components/parameters/updateId"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RejectInput"
+      responses:
+        "200":
+          description: Rejected update
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusUpdate"
+
+  # --- DOCUMENTS ---
+  /projects/{projectId}/documents:
+    get:
+      operationId: listProjectDocuments
+      tags: [documents]
+      summary: List project documents
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+      responses:
+        "200":
+          description: Document list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Document"
+    post:
+      operationId: uploadDocument
+      tags: [documents]
+      summary: Upload a document to a project
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/DocumentUpload"
+      responses:
+        "201":
+          description: Uploaded document
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+
+  /documents:
+    get:
+      operationId: listAllDocuments
+      tags: [documents]
+      summary: List all documents (admin only)
+      responses:
+        "200":
+          description: All documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Document"
+
+  /documents/{documentId}:
+    delete:
+      operationId: deleteDocument
+      tags: [documents]
+      summary: Delete a document (admin only)
+      parameters:
+        - $ref: "#/components/parameters/documentId"
+      responses:
+        "204":
+          description: Deleted
+
+  /documents/{documentId}/download:
+    get:
+      operationId: downloadDocument
+      tags: [documents]
+      summary: Download document content
+      parameters:
+        - $ref: "#/components/parameters/documentId"
+      responses:
+        "200":
+          description: File content
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+  # --- MESSAGES ---
+  /projects/{projectId}/messages:
+    get:
+      operationId: listMessages
+      tags: [messages]
+      summary: List project messages
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+      responses:
+        "200":
+          description: Messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Message"
+    post:
+      operationId: createMessage
+      tags: [messages]
+      summary: Post a project message
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageInput"
+      responses:
+        "201":
+          description: Created message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+
+  # --- INTERNAL NOTES ---
+  /projects/{projectId}/notes:
+    get:
+      operationId: listInternalNotes
+      tags: [notes]
+      summary: List internal notes (managers only)
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+      responses:
+        "200":
+          description: Notes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InternalNote"
+    post:
+      operationId: createInternalNote
+      tags: [notes]
+      summary: Create internal note (managers only)
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NoteInput"
+      responses:
+        "201":
+          description: Created note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InternalNote"
+
+  # --- NOTIFICATIONS ---
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: Get own notifications
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+
+  /notifications/unread-count:
+    get:
+      operationId: getUnreadCount
+      tags: [notifications]
+      summary: Get unread notification count
+      responses:
+        "200":
+          description: Unread count
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnreadCount"
+
+  /notifications/read-all:
+    patch:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      summary: Mark all notifications as read
+      responses:
+        "204":
+          description: Marked
+
+  /notifications/{notificationId}/read:
+    patch:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark a notification as read
+      parameters:
+        - $ref: "#/components/parameters/notificationId"
+      responses:
+        "200":
+          description: Updated notification
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+
+  # --- STAGE TEMPLATES ---
+  /templates:
+    get:
+      operationId: listTemplates
+      tags: [templates]
+      summary: List stage templates
+      responses:
+        "200":
+          description: Templates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TemplateSummary"
+    post:
+      operationId: createTemplate
+      tags: [templates]
+      summary: Create a stage template (managers only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TemplateInput"
+      responses:
+        "201":
+          description: Created template
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Template"
+
+  /templates/{templateId}:
+    get:
+      operationId: getTemplate
+      tags: [templates]
+      summary: Get template detail
+      parameters:
+        - $ref: "#/components/parameters/templateId"
+      responses:
+        "200":
+          description: Template
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Template"
+    put:
+      operationId: replaceTemplate
+      tags: [templates]
+      summary: Replace template stages/fields (managers only)
+      parameters:
+        - $ref: "#/components/parameters/templateId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TemplateInput"
+      responses:
+        "200":
+          description: Updated template
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Template"
+    delete:
+      operationId: deleteTemplate
+      tags: [templates]
+      summary: Delete a template (managers only)
+      parameters:
+        - $ref: "#/components/parameters/templateId"
+      responses:
+        "204":
+          description: Deleted
+
+  # --- USERS ---
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List users (managers+)
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum: [investor, top-management, project-manager, administrator]
+      responses:
+        "200":
+          description: Users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+    post:
+      operationId: createUser
+      tags: [users]
+      summary: Create user account (PM creates investors; Admin creates any)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserInput"
+      responses:
+        "201":
+          description: Created user with one-time password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserCreated"
+
+  /users/{userId}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get user detail (managers+)
+      parameters:
+        - $ref: "#/components/parameters/userId"
+      responses:
+        "200":
+          description: User
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    patch:
+      operationId: updateUser
+      tags: [users]
+      summary: Update user account (admin only)
+      parameters:
+        - $ref: "#/components/parameters/userId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    delete:
+      operationId: deleteUser
+      tags: [users]
+      summary: Delete user account (admin only)
+      parameters:
+        - $ref: "#/components/parameters/userId"
+      responses:
+        "204":
+          description: Deleted
+
+  /users/{userId}/reset-password:
+    post:
+      operationId: resetUserPassword
+      tags: [users]
+      summary: Reset user password (admin only)
+      parameters:
+        - $ref: "#/components/parameters/userId"
+      responses:
+        "200":
+          description: New one-time password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PasswordReset"
+
+  # --- AUDIT LOG ---
+  /audit-log:
+    get:
+      operationId: listAuditLog
+      tags: [audit]
+      summary: List audit log entries (admin only)
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 500
+      responses:
+        "200":
+          description: Audit log entries
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditLogPage"
+
+  # --- SETTINGS ---
+  /settings:
+    get:
+      operationId: getSettings
+      tags: [settings]
+      summary: Get system settings (admin only)
+      responses:
+        "200":
+          description: Settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SystemSettings"
+    patch:
+      operationId: updateSettings
+      tags: [settings]
+      summary: Update system settings (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettingsUpdate"
+      responses:
+        "200":
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SystemSettings"
+
 components:
+  parameters:
+    projectId:
+      name: projectId
+      in: path
+      required: true
+      schema:
+        type: integer
+    updateId:
+      name: updateId
+      in: path
+      required: true
+      schema:
+        type: integer
+    documentId:
+      name: documentId
+      in: path
+      required: true
+      schema:
+        type: integer
+    notificationId:
+      name: notificationId
+      in: path
+      required: true
+      schema:
+        type: integer
+    templateId:
+      name: templateId
+      in: path
+      required: true
+      schema:
+        type: integer
+    userId:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: integer
+
   schemas:
     HealthStatus:
       type: object
@@ -34,3 +843,833 @@ components:
       required:
         - status
 
+    # --- AUTH ---
+    RegisterInput:
+      type: object
+      required: [fullName, email, password, companyName]
+      properties:
+        fullName:
+          type: string
+          minLength: 2
+          maxLength: 160
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+        companyName:
+          type: string
+          minLength: 2
+          maxLength: 200
+        title:
+          type: string
+          maxLength: 160
+        phone:
+          type: string
+          maxLength: 40
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    AuthResult:
+      type: object
+      required: [accessToken, user]
+      properties:
+        accessToken:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+
+    ProfileUpdate:
+      type: object
+      properties:
+        fullName:
+          type: string
+          minLength: 2
+          maxLength: 160
+        title:
+          type: ["string", "null"]
+          maxLength: 160
+        companyName:
+          type: string
+          minLength: 2
+          maxLength: 200
+        phone:
+          type: ["string", "null"]
+          maxLength: 40
+
+    # --- USER ---
+    User:
+      type: object
+      required: [id, email, fullName, companyName, role, active, createdAt]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        fullName:
+          type: string
+        companyName:
+          type: string
+        title:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        role:
+          type: string
+          enum: [investor, top-management, project-manager, administrator]
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    UserInput:
+      type: object
+      required: [fullName, email, companyName, role]
+      properties:
+        fullName:
+          type: string
+          minLength: 2
+          maxLength: 160
+        email:
+          type: string
+          format: email
+        companyName:
+          type: string
+          minLength: 2
+          maxLength: 200
+        title:
+          type: string
+          maxLength: 160
+        phone:
+          type: string
+          maxLength: 40
+        role:
+          type: string
+          enum: [investor, top-management, project-manager, administrator]
+
+    UserUpdate:
+      type: object
+      properties:
+        fullName:
+          type: string
+          minLength: 2
+          maxLength: 160
+        companyName:
+          type: string
+          minLength: 2
+          maxLength: 200
+        title:
+          type: ["string", "null"]
+          maxLength: 160
+        phone:
+          type: ["string", "null"]
+          maxLength: 40
+        role:
+          type: string
+          enum: [investor, top-management, project-manager, administrator]
+        active:
+          type: boolean
+
+    UserCreated:
+      type: object
+      required: [user, temporaryPassword]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        temporaryPassword:
+          type: string
+
+    PasswordReset:
+      type: object
+      required: [temporaryPassword]
+      properties:
+        temporaryPassword:
+          type: string
+
+    # --- PROJECT ---
+    ProjectSummary:
+      type: object
+      required: [id, name, sector, agreementNumber, derivedStatus, constructionPct, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        sector:
+          type: string
+        agreementNumber:
+          type: string
+        plotNumber:
+          type: ["string", "null"]
+        derivedStatus:
+          type: string
+          enum: [on-track, delayed, stalled, complete]
+        constructionPct:
+          type: integer
+        attentionFlag:
+          type: boolean
+        lastUpdateAt:
+          type: ["string", "null"]
+          format: date-time
+        currentStage:
+          $ref: "#/components/schemas/StageSummary"
+        investor:
+          $ref: "#/components/schemas/InvestorContact"
+        pipelineName:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    Project:
+      type: object
+      required: [id, name, sector, agreementNumber, derivedStatus, constructionPct, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        sector:
+          type: string
+        agreementNumber:
+          type: string
+        plotNumber:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        derivedStatus:
+          type: string
+          enum: [on-track, delayed, stalled, complete]
+        constructionPct:
+          type: integer
+        attentionFlag:
+          type: boolean
+        lastUpdateAt:
+          type: ["string", "null"]
+          format: date-time
+        currentStage:
+          $ref: "#/components/schemas/StageSummary"
+        investor:
+          $ref: "#/components/schemas/InvestorContact"
+        pipeline:
+          $ref: "#/components/schemas/Template"
+        pipelineId:
+          type: ["integer", "null"]
+        currentStageId:
+          type: ["integer", "null"]
+        investorId:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    ProjectInput:
+      type: object
+      required: [name, sector, agreementNumber]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        sector:
+          type: string
+          minLength: 1
+          maxLength: 200
+        agreementNumber:
+          type: string
+          minLength: 1
+          maxLength: 100
+        plotNumber:
+          type: string
+          maxLength: 100
+        notes:
+          type: string
+        pipelineId:
+          type: integer
+        constructionPct:
+          type: integer
+          minimum: 0
+          maximum: 100
+        investorId:
+          type: integer
+
+    ProjectUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        sector:
+          type: string
+          minLength: 1
+          maxLength: 200
+        plotNumber:
+          type: ["string", "null"]
+          maxLength: 100
+        notes:
+          type: ["string", "null"]
+        attentionFlag:
+          type: boolean
+        constructionPct:
+          type: integer
+          minimum: 0
+          maximum: 100
+        investorId:
+          type: ["integer", "null"]
+        pipelineId:
+          type: ["integer", "null"]
+
+    StageSummary:
+      type: object
+      required: [id, name, orderIndex, progressBaseline, category]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        orderIndex:
+          type: integer
+        progressBaseline:
+          type: integer
+        category:
+          type: string
+          enum: [on-hold, active, complete]
+        description:
+          type: ["string", "null"]
+
+    InvestorContact:
+      type: object
+      required: [id, fullName, email, companyName]
+      properties:
+        id:
+          type: integer
+        fullName:
+          type: string
+        email:
+          type: string
+        companyName:
+          type: string
+        phone:
+          type: ["string", "null"]
+
+    # --- STATUS UPDATE ---
+    StatusUpdate:
+      type: object
+      required: [id, projectId, authorId, targetStageId, constructionPct, reviewStatus, fieldValues, createdAt]
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        authorId:
+          type: integer
+        author:
+          $ref: "#/components/schemas/User"
+        sourceStageId:
+          type: ["integer", "null"]
+        targetStageId:
+          type: integer
+        targetStage:
+          $ref: "#/components/schemas/StageSummary"
+        constructionPct:
+          type: integer
+        note:
+          type: ["string", "null"]
+        reviewStatus:
+          type: string
+          enum: [pending, approved, rejected]
+        reviewerId:
+          type: ["integer", "null"]
+        reviewer:
+          $ref: "#/components/schemas/User"
+        reviewedAt:
+          type: ["string", "null"]
+          format: date-time
+        reviewNote:
+          type: ["string", "null"]
+        documentId:
+          type: ["integer", "null"]
+        fieldValues:
+          type: array
+          items:
+            $ref: "#/components/schemas/FieldValue"
+        createdAt:
+          type: string
+          format: date-time
+
+    UpdateInput:
+      type: object
+      required: [targetStageId]
+      properties:
+        targetStageId:
+          type: integer
+        constructionPct:
+          type: integer
+          minimum: 0
+          maximum: 100
+        note:
+          type: string
+          maxLength: 4000
+        fieldValues:
+          type: array
+          items:
+            $ref: "#/components/schemas/FieldValueInput"
+
+    RejectInput:
+      type: object
+      properties:
+        reviewNote:
+          type: string
+          maxLength: 4000
+
+    FieldValue:
+      type: object
+      required: [id, fieldId]
+      properties:
+        id:
+          type: integer
+        fieldId:
+          type: integer
+        fieldName:
+          type: string
+        textValue:
+          type: ["string", "null"]
+        numValue:
+          type: ["number", "null"]
+        dateValue:
+          type: ["string", "null"]
+        boolValue:
+          type: ["boolean", "null"]
+        choiceValue:
+          type: ["string", "null"]
+
+    FieldValueInput:
+      type: object
+      required: [fieldId]
+      properties:
+        fieldId:
+          type: integer
+        textValue:
+          type: string
+        numValue:
+          type: number
+        dateValue:
+          type: string
+        boolValue:
+          type: boolean
+        choiceValue:
+          type: string
+
+    # --- DOCUMENT ---
+    Document:
+      type: object
+      required: [id, projectId, fileName, contentType, size, uploaderId, createdAt]
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        updateId:
+          type: ["integer", "null"]
+        fileName:
+          type: string
+        contentType:
+          type: string
+        size:
+          type: integer
+        uploaderId:
+          type: integer
+        uploader:
+          $ref: "#/components/schemas/User"
+        createdAt:
+          type: string
+          format: date-time
+
+    DocumentUpload:
+      type: object
+      required: [file]
+      properties:
+        file:
+          type: string
+          format: binary
+        updateId:
+          type: integer
+
+    # --- MESSAGE ---
+    Message:
+      type: object
+      required: [id, projectId, authorId, authorRole, body, createdAt]
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        authorId:
+          type: integer
+        author:
+          $ref: "#/components/schemas/User"
+        authorRole:
+          type: string
+        body:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    MessageInput:
+      type: object
+      required: [body]
+      properties:
+        body:
+          type: string
+          minLength: 1
+          maxLength: 4000
+
+    # --- INTERNAL NOTE ---
+    InternalNote:
+      type: object
+      required: [id, projectId, authorId, body, createdAt]
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        authorId:
+          type: integer
+        author:
+          $ref: "#/components/schemas/User"
+        body:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    NoteInput:
+      type: object
+      required: [body]
+      properties:
+        body:
+          type: string
+          minLength: 1
+          maxLength: 4000
+
+    # --- NOTIFICATION ---
+    Notification:
+      type: object
+      required: [id, recipientId, kind, title, read, createdAt]
+      properties:
+        id:
+          type: integer
+        recipientId:
+          type: integer
+        kind:
+          type: string
+          enum: [message, internal-note, update-submitted, update-approved, update-rejected]
+        projectId:
+          type: ["integer", "null"]
+        projectName:
+          type: ["string", "null"]
+        actorId:
+          type: ["integer", "null"]
+        actorName:
+          type: ["string", "null"]
+        title:
+          type: string
+        body:
+          type: ["string", "null"]
+        read:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    UnreadCount:
+      type: object
+      required: [count]
+      properties:
+        count:
+          type: integer
+
+    # --- DASHBOARD ---
+    DashboardStats:
+      type: object
+      required: [total, complete, inProgress, needsAttention, byStatus, bySector]
+      properties:
+        total:
+          type: integer
+        complete:
+          type: integer
+        inProgress:
+          type: integer
+        needsAttention:
+          type: integer
+        byStatus:
+          type: array
+          items:
+            $ref: "#/components/schemas/StatusCount"
+        bySector:
+          type: array
+          items:
+            $ref: "#/components/schemas/SectorCount"
+        recentUpdates:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProjectSummary"
+
+    StatusCount:
+      type: object
+      required: [status, count]
+      properties:
+        status:
+          type: string
+        count:
+          type: integer
+
+    SectorCount:
+      type: object
+      required: [sector, count]
+      properties:
+        sector:
+          type: string
+        count:
+          type: integer
+
+    # --- TEMPLATE ---
+    TemplateSummary:
+      type: object
+      required: [id, name, isDefault, stageCount, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        isDefault:
+          type: boolean
+        stageCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    Template:
+      type: object
+      required: [id, name, isDefault, stages, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        isDefault:
+          type: boolean
+        stages:
+          type: array
+          items:
+            $ref: "#/components/schemas/Stage"
+        createdAt:
+          type: string
+          format: date-time
+
+    TemplateInput:
+      type: object
+      required: [name, stages]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 500
+        isDefault:
+          type: boolean
+        stages:
+          type: array
+          items:
+            $ref: "#/components/schemas/StageInput"
+
+    Stage:
+      type: object
+      required: [id, name, orderIndex, progressBaseline, category, fields]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        orderIndex:
+          type: integer
+        progressBaseline:
+          type: integer
+          minimum: 0
+          maximum: 100
+        category:
+          type: string
+          enum: [on-hold, active, complete]
+        fields:
+          type: array
+          items:
+            $ref: "#/components/schemas/StageField"
+
+    StageInput:
+      type: object
+      required: [name, progressBaseline, category]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 500
+        progressBaseline:
+          type: integer
+          minimum: 0
+          maximum: 100
+        category:
+          type: string
+          enum: [on-hold, active, complete]
+        fields:
+          type: array
+          items:
+            $ref: "#/components/schemas/StageFieldInput"
+
+    StageField:
+      type: object
+      required: [id, name, baseType, widget, required, position]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        baseType:
+          type: string
+          enum: [text, number, date, boolean, file, image, single-choice, multi-choice]
+        widget:
+          type: string
+          enum: [single-line, multi-line, email, telephone, number, date, checkbox, toggle, file-upload, single-photo, photo-gallery, drop-list, list-box, radio, checkbox-list]
+        required:
+          type: boolean
+        position:
+          type: integer
+        options:
+          type: array
+          items:
+            type: string
+        config:
+          type: object
+
+    StageFieldInput:
+      type: object
+      required: [name, baseType, widget, required]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        baseType:
+          type: string
+          enum: [text, number, date, boolean, file, image, single-choice, multi-choice]
+        widget:
+          type: string
+          enum: [single-line, multi-line, email, telephone, number, date, checkbox, toggle, file-upload, single-photo, photo-gallery, drop-list, list-box, radio, checkbox-list]
+        required:
+          type: boolean
+        options:
+          type: array
+          items:
+            type: string
+        config:
+          type: object
+
+    # --- AUDIT ---
+    AuditLogEntry:
+      type: object
+      required: [id, action, actorId, createdAt]
+      properties:
+        id:
+          type: integer
+        action:
+          type: string
+        targetType:
+          type: ["string", "null"]
+        targetId:
+          type: ["integer", "null"]
+        actorId:
+          type: integer
+        actorName:
+          type: ["string", "null"]
+        detail:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    AuditLogPage:
+      type: object
+      required: [entries, total, page, limit]
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditLogEntry"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    # --- SETTINGS ---
+    SystemSettings:
+      type: object
+      required: [stalledThresholdDays, delayedThresholdDays, outOfBandNotificationsEnabled, loginThrottleMaxAttempts, loginThrottleWindowSeconds]
+      properties:
+        stalledThresholdDays:
+          type: integer
+          default: 45
+        delayedThresholdDays:
+          type: integer
+          default: 30
+        outOfBandNotificationsEnabled:
+          type: boolean
+          default: false
+        loginThrottleMaxAttempts:
+          type: integer
+          default: 10
+        loginThrottleWindowSeconds:
+          type: integer
+          default: 60
+
+    SettingsUpdate:
+      type: object
+      properties:
+        stalledThresholdDays:
+          type: integer
+          minimum: 1
+        delayedThresholdDays:
+          type: integer
+          minimum: 1
+        outOfBandNotificationsEnabled:
+          type: boolean
+        loginThrottleMaxAttempts:
+          type: integer
+          minimum: 1
+        loginThrottleWindowSeconds:
+          type: integer
+          minimum: 1

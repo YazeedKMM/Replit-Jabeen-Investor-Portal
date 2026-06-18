@@ -5,9 +5,14 @@
   "type": "module",
   "scripts": {
     "hello": "tsx ./src/hello.ts",
+    "seed": "tsx ./src/seed.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
+  "dependencies": {
+    "bcryptjs": "catalog:"
+  },
   "devDependencies": {
+    "@types/bcryptjs": "catalog:",
     "@types/node": "catalog:",
     "tsx": "catalog:"
   }

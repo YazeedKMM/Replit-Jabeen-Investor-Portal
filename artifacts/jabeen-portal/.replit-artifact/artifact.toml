@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "JABEEN Investor Portal"
+version = "1.0.0"
+id = "artifacts/jabeen-portal"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20615
+
+[services.development]
+run = "pnpm --filter @workspace/jabeen-portal run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/jabeen-portal", "run", "build" ]
+publicDir = "artifacts/jabeen-portal/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20615"
+BASE_PATH = "/"
