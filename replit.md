@@ -19,12 +19,12 @@ Run once to populate the DB with demo users and sample projects:
 /home/runner/workspace/node_modules/.pnpm/node_modules/.bin/tsx artifacts/api-server/src/seed.ts
 ```
 
-Demo accounts (all passwords: `password123`):
-- `admin@jabeen.sa` — Administrator
-- `pm1@jabeen.sa` — Project Manager
-- `tm1@jabeen.sa` — Top Management
-- `investor1@acmecorp.com` — Investor (Acme Plastics)
-- `investor2@gulfpetro.com` — Investor (Gulf Petro Refinery)
+Demo accounts:
+- `admin@jabeen.sa` / `Admin@2026!` — Administrator
+- `pm1@jabeen.sa` / `Manager@2026!` — Project Manager
+- `tm1@jabeen.sa` / `TopMgmt@2026!` — Top Management
+- `investor1@acmecorp.com` / `Investor@2026!` — Investor (Acme Plastics)
+- `investor2@gulfpetro.com` / `Investor@2026!` — Investor (Gulf Petro Refinery)
 
 ## Stack
 
