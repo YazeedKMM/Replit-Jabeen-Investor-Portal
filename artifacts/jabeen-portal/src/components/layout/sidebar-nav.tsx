@@ -73,11 +73,18 @@ export function SidebarNav() {
   return (
     <Sidebar variant="sidebar" collapsible="icon" className="bg-sidebar">
       <SidebarHeader className="p-4 flex items-center justify-center">
-        <div className="flex items-center gap-2 font-bold text-lg text-sidebar-primary-foreground tracking-tight">
-          <div className="h-8 w-8 bg-sidebar-primary rounded flex items-center justify-center text-white">
-            J
-          </div>
-          <span className="group-data-[collapsible=icon]:hidden">JABEEN</span>
+        <div className="flex items-center justify-center">
+          <img
+            src="/jabeen-logo.svg"
+            alt="JABEEN"
+            className="h-8 w-auto brightness-0 invert group-data-[collapsible=icon]:hidden"
+          />
+          <img
+            src="/jabeen-logo.svg"
+            alt="JABEEN"
+            className="h-7 w-7 object-left brightness-0 invert hidden group-data-[collapsible=icon]:block"
+            style={{ objectPosition: 'left center', objectFit: 'cover', width: '28px' }}
+          />
         </div>
       </SidebarHeader>
       <Separator className="opacity-10" />

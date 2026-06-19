@@ -20,16 +20,103 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Plus, Trash2, GripVertical, Save, Loader2 } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ArrowLeft, Plus, Trash2, GripVertical, Save, Loader2, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 
-// Helper to generate IDs for local state management before saving
 const genId = () => Math.random().toString(36).substr(2, 9);
 
 type LocalField = Omit<StageFieldInput, "options"> & { id: string; optionsStr: string };
 type LocalStage = Omit<StageInput, "fields"> & { id: string; fields: LocalField[] };
 type LocalTemplate = Omit<TemplateInput, "stages"> & { stages: LocalStage[] };
+
+/** Widgets available for each base type */
+const WIDGETS_BY_TYPE: Record<string, { value: string; label: string }[]> = {
+  text:           [{ value: "single-line", label: "Single Line Input" }, { value: "multi-line", label: "Multi Line Text Area" }],
+  number:         [{ value: "number", label: "Number Input" }],
+  date:           [{ value: "date", label: "Date Picker" }],
+  boolean:        [{ value: "toggle", label: "Toggle Switch" }],
+  "single-choice":[{ value: "drop-list", label: "Dropdown List" }, { value: "radio", label: "Radio Buttons" }],
+  "multi-choice": [{ value: "checkbox-list", label: "Checkboxes" }],
+};
+
+const DEFAULT_WIDGET: Record<string, string> = {
+  text: "single-line", number: "number", date: "date",
+  boolean: "toggle", "single-choice": "drop-list", "multi-choice": "checkbox-list",
+};
+
+/** Renders a live preview of the field based on its widget type */
+function FieldPreview({ field }: { field: LocalField }) {
+  const options = field.optionsStr.split('\n').map(o => o.trim()).filter(Boolean);
+  const label = field.name || "Field Label";
+  const required = field.required;
+
+  return (
+    <div className="p-3 rounded-md bg-muted/10 border border-dashed">
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1">
+        <Eye className="h-3 w-3" /> Preview
+      </p>
+      <div className="space-y-1.5 max-w-xs">
+        <Label className="text-xs font-medium">
+          {label}{required && <span className="text-destructive ml-0.5">*</span>}
+        </Label>
+        {field.widget === "single-line" && (
+          <Input className="h-8 text-sm" placeholder={`Enter ${label.toLowerCase()}...`} disabled />
+        )}
+        {field.widget === "multi-line" && (
+          <Textarea className="text-sm min-h-[60px] resize-none" placeholder={`Enter ${label.toLowerCase()}...`} disabled />
+        )}
+        {field.widget === "number" && (
+          <Input type="number" className="h-8 text-sm" placeholder="0" disabled />
+        )}
+        {field.widget === "date" && (
+          <Input type="date" className="h-8 text-sm" disabled />
+        )}
+        {field.widget === "toggle" && (
+          <div className="flex items-center gap-2">
+            <Switch disabled />
+            <span className="text-xs text-muted-foreground">Yes / No</span>
+          </div>
+        )}
+        {field.widget === "drop-list" && (
+          <Select disabled>
+            <SelectTrigger className="h-8 text-sm">
+              <SelectValue placeholder={options.length ? options[0] : "Choose an option..."} />
+            </SelectTrigger>
+          </Select>
+        )}
+        {field.widget === "radio" && options.length > 0 && (
+          <RadioGroup disabled className="space-y-1">
+            {options.slice(0, 4).map((opt, i) => (
+              <div key={i} className="flex items-center space-x-2">
+                <RadioGroupItem value={opt} id={`prev-radio-${field.id}-${i}`} />
+                <Label htmlFor={`prev-radio-${field.id}-${i}`} className="text-xs font-normal">{opt}</Label>
+              </div>
+            ))}
+          </RadioGroup>
+        )}
+        {field.widget === "radio" && options.length === 0 && (
+          <p className="text-xs text-muted-foreground italic">Add options above to see radio buttons.</p>
+        )}
+        {field.widget === "checkbox-list" && options.length > 0 && (
+          <div className="space-y-1">
+            {options.slice(0, 4).map((opt, i) => (
+              <div key={i} className="flex items-center space-x-2">
+                <Checkbox id={`prev-cb-${field.id}-${i}`} disabled />
+                <Label htmlFor={`prev-cb-${field.id}-${i}`} className="text-xs font-normal">{opt}</Label>
+              </div>
+            ))}
+          </div>
+        )}
+        {field.widget === "checkbox-list" && options.length === 0 && (
+          <p className="text-xs text-muted-foreground italic">Add options above to see checkboxes.</p>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function TemplateBuilderPage() {
   const params = useParams();
@@ -48,13 +135,9 @@ export default function TemplateBuilderPage() {
   const updateMutation = useReplaceTemplate();
 
   const [template, setTemplate] = useState<LocalTemplate>({
-    name: "",
-    description: "",
-    isDefault: false,
-    stages: []
+    name: "", description: "", isDefault: false, stages: []
   });
 
-  // Init from server
   useEffect(() => {
     if (serverTemplate && !isNew) {
       setTemplate({
@@ -83,10 +166,7 @@ export default function TemplateBuilderPage() {
   const addStage = () => {
     setTemplate(prev => ({
       ...prev,
-      stages: [
-        ...prev.stages, 
-        { id: genId(), name: "New Stage", description: "", progressBaseline: 0, category: "active", fields: [] }
-      ]
+      stages: [...prev.stages, { id: genId(), name: "New Stage", description: "", progressBaseline: 0, category: "active", fields: [] }]
     }));
   };
 
@@ -97,12 +177,9 @@ export default function TemplateBuilderPage() {
   const addField = (stageId: string) => {
     setTemplate(prev => ({
       ...prev,
-      stages: prev.stages.map(s => {
-        if (s.id !== stageId) return s;
-        return {
-          ...s,
-          fields: [...s.fields, { id: genId(), name: "New Field", baseType: "text", widget: "single-line", required: false, optionsStr: "" }]
-        };
+      stages: prev.stages.map(s => s.id !== stageId ? s : {
+        ...s,
+        fields: [...s.fields, { id: genId(), name: "New Field", baseType: "text" as StageFieldInputBaseType, widget: "single-line" as StageFieldInputWidget, required: false, optionsStr: "" }]
       })
     }));
   };
@@ -110,10 +187,7 @@ export default function TemplateBuilderPage() {
   const removeField = (stageId: string, fieldId: string) => {
     setTemplate(prev => ({
       ...prev,
-      stages: prev.stages.map(s => {
-        if (s.id !== stageId) return s;
-        return { ...s, fields: s.fields.filter(f => f.id !== fieldId) };
-      })
+      stages: prev.stages.map(s => s.id !== stageId ? s : { ...s, fields: s.fields.filter(f => f.id !== fieldId) })
     }));
   };
 
@@ -127,17 +201,18 @@ export default function TemplateBuilderPage() {
   const updateField = (stageId: string, fieldId: string, updates: Partial<LocalField>) => {
     setTemplate(prev => ({
       ...prev,
-      stages: prev.stages.map(s => {
-        if (s.id !== stageId) return s;
-        return {
-          ...s,
-          fields: s.fields.map(f => f.id === fieldId ? { ...f, ...updates } : f)
-        };
+      stages: prev.stages.map(s => s.id !== stageId ? s : {
+        ...s,
+        fields: s.fields.map(f => f.id === fieldId ? { ...f, ...updates } : f)
       })
     }));
   };
 
-  // Move stage up or down
+  const changeBaseType = (stageId: string, fieldId: string, baseType: string) => {
+    const defaultWidget = DEFAULT_WIDGET[baseType] || "single-line";
+    updateField(stageId, fieldId, { baseType: baseType as StageFieldInputBaseType, widget: defaultWidget as StageFieldInputWidget });
+  };
+
   const moveStage = (index: number, direction: -1 | 1) => {
     const newStages = [...template.stages];
     if (index + direction < 0 || index + direction >= newStages.length) return;
@@ -150,7 +225,6 @@ export default function TemplateBuilderPage() {
   const handleSave = async () => {
     if (!template.name) { toast({ title: "Name required", variant: "destructive" }); return; }
 
-    // Map LocalTemplate -> TemplateInput
     const payload: TemplateInput = {
       name: template.name,
       description: template.description,
@@ -206,7 +280,6 @@ export default function TemplateBuilderPage() {
         </Button>
       </div>
 
-      {/* Main Settings */}
       <Card>
         <CardHeader>
           <CardTitle>Template Details</CardTitle>
@@ -230,7 +303,6 @@ export default function TemplateBuilderPage() {
         </CardContent>
       </Card>
 
-      {/* Stages */}
       <div className="space-y-4">
         <div className="flex justify-between items-end">
           <div>
@@ -269,7 +341,6 @@ export default function TemplateBuilderPage() {
                 </div>
 
                 <AccordionContent className="pt-2 pb-6 space-y-6">
-                  {/* Stage Config */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted/30 rounded-md">
                     <div className="space-y-2">
                       <Label>Stage Name</Label>
@@ -296,7 +367,6 @@ export default function TemplateBuilderPage() {
                     </div>
                   </div>
 
-                  {/* Stage Fields */}
                   <div>
                     <div className="flex justify-between items-center mb-3">
                       <Label className="text-base font-semibold">Custom Data Fields</Label>
@@ -306,63 +376,81 @@ export default function TemplateBuilderPage() {
                     {stage.fields.length === 0 ? (
                       <p className="text-sm text-muted-foreground italic pl-2">No custom fields for this stage.</p>
                     ) : (
-                      <div className="space-y-3">
-                        {stage.fields.map((field) => (
-                          <div key={field.id} className="flex flex-col md:flex-row gap-3 items-start border p-3 rounded-md bg-background">
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 flex-1 w-full">
-                              <div className="space-y-1">
-                                <Label className="text-xs">Field Label</Label>
-                                <Input className="h-8 text-sm" value={field.name} onChange={e => updateField(stage.id, field.id, { name: e.target.value })} />
-                              </div>
-                              <div className="space-y-1">
-                                <Label className="text-xs">Data Type</Label>
-                                <Select value={field.baseType} onValueChange={(v: any) => updateField(stage.id, field.id, { baseType: v, widget: v === 'boolean' ? 'toggle' : v === 'date' ? 'date' : 'single-line' })}>
-                                  <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="text">Text</SelectItem>
-                                    <SelectItem value="number">Number</SelectItem>
-                                    <SelectItem value="date">Date</SelectItem>
-                                    <SelectItem value="boolean">Yes/No</SelectItem>
-                                    <SelectItem value="single-choice">Single Choice</SelectItem>
-                                    <SelectItem value="multi-choice">Multi Choice</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div className="space-y-1">
-                                <Label className="text-xs">UI Widget</Label>
-                                <Select value={field.widget} onValueChange={(v: any) => updateField(stage.id, field.id, { widget: v })}>
-                                  <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="single-line">Single Line Input</SelectItem>
-                                    <SelectItem value="multi-line">Multi Line Area</SelectItem>
-                                    <SelectItem value="drop-list">Dropdown List</SelectItem>
-                                    <SelectItem value="radio">Radio Buttons</SelectItem>
-                                    <SelectItem value="checkbox-list">Checkboxes</SelectItem>
-                                    <SelectItem value="date">Date Picker</SelectItem>
-                                    <SelectItem value="toggle">Toggle Switch</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div className="space-y-1 flex flex-col justify-end pb-1">
-                                <div className="flex items-center space-x-2">
-                                  <Switch id={`req-${field.id}`} checked={field.required} onCheckedChange={c => updateField(stage.id, field.id, { required: c })} />
-                                  <Label htmlFor={`req-${field.id}`} className="text-xs font-normal">Required</Label>
+                      <div className="space-y-4">
+                        {stage.fields.map((field) => {
+                          const availableWidgets = WIDGETS_BY_TYPE[field.baseType] || WIDGETS_BY_TYPE["text"];
+                          const needsOptions = field.baseType === "single-choice" || field.baseType === "multi-choice";
+
+                          return (
+                            <div key={field.id} className="border rounded-lg bg-background overflow-hidden">
+                              {/* Field Config Row */}
+                              <div className="flex flex-col md:flex-row gap-3 items-start p-3">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 flex-1 w-full">
+                                  <div className="space-y-1">
+                                    <Label className="text-xs">Field Label</Label>
+                                    <Input className="h-8 text-sm" value={field.name} onChange={e => updateField(stage.id, field.id, { name: e.target.value })} />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs">Data Type</Label>
+                                    <Select value={field.baseType} onValueChange={(v) => changeBaseType(stage.id, field.id, v)}>
+                                      <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="text">Text</SelectItem>
+                                        <SelectItem value="number">Number</SelectItem>
+                                        <SelectItem value="date">Date</SelectItem>
+                                        <SelectItem value="boolean">Yes / No</SelectItem>
+                                        <SelectItem value="single-choice">Single Choice</SelectItem>
+                                        <SelectItem value="multi-choice">Multi Choice</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs">UI Widget</Label>
+                                    <Select
+                                      value={field.widget}
+                                      onValueChange={(v: any) => updateField(stage.id, field.id, { widget: v })}
+                                    >
+                                      <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                                      <SelectContent>
+                                        {availableWidgets.map(w => (
+                                          <SelectItem key={w.value} value={w.value}>{w.label}</SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  <div className="space-y-1 flex flex-col justify-end pb-1">
+                                    <div className="flex items-center space-x-2">
+                                      <Switch id={`req-${field.id}`} checked={field.required} onCheckedChange={c => updateField(stage.id, field.id, { required: c })} />
+                                      <Label htmlFor={`req-${field.id}`} className="text-xs font-normal">Required</Label>
+                                    </div>
+                                  </div>
                                 </div>
+
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0 self-end md:self-center" onClick={() => removeField(stage.id, field.id)}>
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+
+                              {/* Options input for choice types */}
+                              {needsOptions && (
+                                <div className="px-3 pb-3">
+                                  <Label className="text-xs">Options <span className="text-muted-foreground font-normal">(one per line)</span></Label>
+                                  <Textarea
+                                    className="mt-1 text-xs resize-none h-20"
+                                    value={field.optionsStr}
+                                    onChange={e => updateField(stage.id, field.id, { optionsStr: e.target.value })}
+                                    placeholder={"Option A\nOption B\nOption C"}
+                                  />
+                                </div>
+                              )}
+
+                              {/* Live preview */}
+                              <div className="px-3 pb-3">
+                                <FieldPreview field={field} />
                               </div>
                             </div>
-                            
-                            {(field.baseType === 'single-choice' || field.baseType === 'multi-choice') && (
-                              <div className="w-full md:w-48 space-y-1">
-                                <Label className="text-xs">Options (One per line)</Label>
-                                <Textarea className="min-h-[32px] h-[32px] text-xs resize-none" value={field.optionsStr} onChange={e => updateField(stage.id, field.id, { optionsStr: e.target.value })} placeholder="Option A&#10;Option B" />
-                              </div>
-                            )}
-
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0 self-end md:self-center" onClick={() => removeField(stage.id, field.id)}>
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </div>

@@ -111,12 +111,7 @@ export default function LoginPage() {
         <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '32px 32px' }} />
         
         <div className="relative z-10">
-          <div className="flex items-center gap-3 font-bold text-2xl tracking-tight">
-            <div className="h-10 w-10 bg-white text-primary rounded flex items-center justify-center">
-              J
-            </div>
-            JABEEN
-          </div>
+          <img src="/jabeen-logo.svg" alt="JABEEN" className="h-14 w-auto brightness-0 invert" />
         </div>
         
         <div className="relative z-10 max-w-xl mt-12 md:mt-0">

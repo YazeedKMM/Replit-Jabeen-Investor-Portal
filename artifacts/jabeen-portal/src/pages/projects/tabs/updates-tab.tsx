@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Project, useListUpdates, useCreateUpdate, useApproveUpdate, useRejectUpdate } from "@workspace/api-client-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, CheckCircle2, XCircle, Clock, FileText } from "lucide-react";
+import { Loader2, Plus, CheckCircle2, XCircle, Clock, Info } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useQueryClient } from "@tanstack/react-query";
@@ -15,13 +15,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/hooks/use-auth";
 
 interface Props {
   project: Project;
   isPrivileged: boolean;
 }
 
-// Simplified update schema just requiring target stage and percent
 const createUpdateSchema = z.object({
   targetStageId: z.coerce.number().min(1, "Stage is required"),
   constructionPct: z.coerce.number().min(0).max(100),
@@ -29,6 +29,9 @@ const createUpdateSchema = z.object({
 });
 
 export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "administrator";
+
   const { data: updates, isLoading } = useListUpdates(project.id);
   const [rejectId, setRejectId] = useState<number | null>(null);
   const [rejectNote, setRejectNote] = useState("");
@@ -41,10 +44,19 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
   const approveMutation = useApproveUpdate();
   const rejectMutation = useRejectUpdate();
 
+  // Determine which stages are selectable:
+  // - Admins can target any stage (including going back)
+  // - Others can only target current stage or later stages
+  const allStages = project.pipeline?.stages ?? [];
+  const currentStageIndex = allStages.findIndex(s => s.id === project.currentStageId);
+  const selectableStages = isAdmin
+    ? allStages
+    : allStages.filter((_, idx) => idx >= Math.max(0, currentStageIndex));
+
   const form = useForm<z.infer<typeof createUpdateSchema>>({
     resolver: zodResolver(createUpdateSchema),
     defaultValues: {
-      targetStageId: project.currentStageId || (project.pipeline?.stages?.[0]?.id || 0),
+      targetStageId: project.currentStageId || (allStages[0]?.id || 0),
       constructionPct: project.constructionPct,
       note: ""
     }
@@ -69,7 +81,7 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
       queryClient.invalidateQueries({ queryKey: ["/api/projects", project.id, "updates"] });
       queryClient.invalidateQueries({ queryKey: ["/api/projects", project.id] });
       toast({ title: "Update approved", description: "Project baseline has been updated." });
-    } catch (error) {
+    } catch {
       toast({ title: "Approval failed", variant: "destructive" });
     }
   };
@@ -82,7 +94,7 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
       toast({ title: "Update rejected" });
       setRejectId(null);
       setRejectNote("");
-    } catch (error) {
+    } catch {
       toast({ title: "Rejection failed", variant: "destructive" });
     }
   };
@@ -103,6 +115,15 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
                 <DialogDescription>Record a milestone or completion percentage.</DialogDescription>
               </DialogHeader>
               
+              {!isAdmin && currentStageIndex > 0 && (
+                <div className="flex items-start gap-2 text-sm bg-muted/50 border rounded-md p-3">
+                  <Info className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                  <p className="text-muted-foreground">
+                    Only the current stage and upcoming stages are available. Contact an administrator to revert to a previous stage.
+                  </p>
+                </div>
+              )}
+
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   <FormField control={form.control} name="targetStageId" render={({ field }) => (
@@ -111,8 +132,13 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
                       <Select onValueChange={field.onChange} defaultValue={field.value.toString()}>
                         <FormControl><SelectTrigger><SelectValue placeholder="Select a stage" /></SelectTrigger></FormControl>
                         <SelectContent>
-                          {project.pipeline?.stages?.map(s => (
-                            <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>
+                          {selectableStages.map(s => (
+                            <SelectItem key={s.id} value={s.id.toString()}>
+                              {s.name}
+                              {s.id === project.currentStageId && (
+                                <span className="ml-2 text-xs text-muted-foreground">(current)</span>
+                              )}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -130,7 +156,7 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
 
                   <FormField control={form.control} name="note" render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Notes (Optional)</FormLabel>
+                      <FormLabel>Notes <span className="text-muted-foreground font-normal">(Optional)</span></FormLabel>
                       <FormControl><Textarea placeholder="Details about this update..." {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
@@ -160,9 +186,9 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
         </Card>
       ) : (
         <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-muted before:to-transparent">
-          {updates.map((update, idx) => (
+          {updates.map((update) => (
             <div key={update.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-background bg-muted text-muted-foreground shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 ml-0 md:ml-0 absolute left-0 md:left-1/2 -translate-x-0 md:-translate-x-1/2">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-background bg-muted text-muted-foreground shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 ml-0 absolute left-0 md:left-1/2 md:-translate-x-1/2">
                 {update.reviewStatus === 'approved' ? <CheckCircle2 className="h-5 w-5 text-emerald-500" /> :
                  update.reviewStatus === 'rejected' ? <XCircle className="h-5 w-5 text-destructive" /> :
                  <Clock className="h-5 w-5 text-amber-500" />}
@@ -172,11 +198,9 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
                 <CardHeader className="p-4 pb-2 border-b bg-muted/10">
                   <div className="flex justify-between items-start">
                     <div>
-                      <CardTitle className="text-base flex items-center gap-2">
-                        {update.targetStage?.name || "Unknown Stage"}
-                      </CardTitle>
+                      <CardTitle className="text-base">{update.targetStage?.name || "Unknown Stage"}</CardTitle>
                       <div className="text-xs text-muted-foreground mt-1">
-                        By {update.author?.fullName} • {format(new Date(update.createdAt), 'MMM d, yyyy')}
+                        By {update.author?.fullName} · {format(new Date(update.createdAt), 'MMM d, yyyy')}
                       </div>
                     </div>
                     <Badge variant="outline" className={
@@ -201,18 +225,22 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
                   )}
 
                   {update.reviewStatus === 'rejected' && update.reviewNote && (
-                    <div className="bg-destructive/10 text-destructive-foreground p-3 rounded border border-destructive/20">
-                      <span className="font-semibold block mb-1 text-xs uppercase">Rejection Reason</span>
-                      <p>{update.reviewNote}</p>
+                    <div className="bg-destructive/10 p-3 rounded border border-destructive/20">
+                      <span className="font-semibold block mb-1 text-xs uppercase text-destructive">Rejection Reason</span>
+                      <p className="text-destructive/80">{update.reviewNote}</p>
                     </div>
                   )}
 
                   {isPrivileged && update.reviewStatus === 'pending' && (
                     <div className="flex gap-2 pt-4 border-t mt-4">
-                      <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => handleApprove(update.id)}>Approve</Button>
+                      <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => handleApprove(update.id)}>
+                        <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" /> Approve
+                      </Button>
                       <Dialog open={rejectId === update.id} onOpenChange={(o) => !o && setRejectId(null)}>
                         <DialogTrigger asChild>
-                          <Button size="sm" variant="destructive" onClick={() => setRejectId(update.id)}>Reject</Button>
+                          <Button size="sm" variant="destructive" onClick={() => setRejectId(update.id)}>
+                            <XCircle className="h-3.5 w-3.5 mr-1.5" /> Reject
+                          </Button>
                         </DialogTrigger>
                         <DialogContent>
                           <DialogHeader><DialogTitle>Reject Update</DialogTitle></DialogHeader>
