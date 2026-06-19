@@ -12,6 +12,7 @@ import AuditLogPage from "@/pages/audit/audit-log";
 import UsersPage from "@/pages/admin/users";
 import TemplatesPage from "@/pages/admin/templates";
 import TemplateBuilderPage from "@/pages/admin/template-builder";
+import ProjectWorkspacePage from "@/pages/projects/project-workspace";
 import NotFound from "@/pages/not-found";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -82,7 +83,12 @@ export function AppRouter() {
         </ProtectedRoute>
       </Route>
       
-      {/* Add Project Workspace later */}
+      {/* Project Workspace — all authenticated roles */}
+      <Route path="/projects/:id">
+        <ProtectedRoute>
+          <AppLayout><ProjectWorkspacePage /></AppLayout>
+        </ProtectedRoute>
+      </Route>
 
       <Route>
         <AppLayout><NotFound /></AppLayout>
