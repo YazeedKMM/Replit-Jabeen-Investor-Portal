@@ -1,0 +1,36 @@
+name: jabeen-run
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: jabeen
+      POSTGRES_PASSWORD: jabeen
+      POSTGRES_DB: jabeen
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jabeen -d jabeen"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+    ports:
+      - "5433:5432"
+
+  app:
+    build:
+      context: ..
+      dockerfile: .docker-run/Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://jabeen:jabeen@db:5432/jabeen
+      SESSION_SECRET: dev-secret-not-for-prod
+      NODE_ENV: development
+    command: ["bash", "/app/.docker-run/entrypoint.sh"]
+    volumes:
+      # Mount entrypoint + api-server source so edits don't require an image rebuild.
+      - ./entrypoint.sh:/app/.docker-run/entrypoint.sh:ro
+      - ../artifacts/api-server/src:/app/artifacts/api-server/src
+    ports:
+      - "5173:5173"   # frontend (open this)
+      - "8080:8080"   # API
