@@ -4,6 +4,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
+import { fileTypeFromBuffer } from "file-type";
 import { db } from "@workspace/db";
 import { documentsTable, projectsTable, usersTable } from "@workspace/db";
 import { requireAuth, type AuthenticatedRequest, PRIVILEGED_ROLES, ADMIN_ROLE } from "../middlewares/requireAuth";
@@ -28,6 +29,54 @@ const ALLOWED_TYPES = new Set([
   "text/plain",
   "text/csv",
 ]);
+
+// Magic-byte MIME types mapped to our allowed set
+// file-type may detect application/zip for docx/xlsx; we map those appropriately
+const MAGIC_BYTE_ALLOW: Set<string> = new Set([
+  "application/pdf",
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  // MS Word legacy
+  "application/x-cfb", // .doc
+  // OOXML formats — reported as zip by file-type; we accept zip when the declared MIME is OOXML
+  "application/zip",
+  // Plain text and CSV have no magic bytes — file-type returns undefined; allow through
+]);
+
+const SCANNER_URL = process.env.MALWARE_SCANNER_URL;
+if (!SCANNER_URL) {
+  // Log once at startup that no scanner is configured
+  process.nextTick(() => {
+    console.warn("[security] MALWARE_SCANNER_URL is not configured — malware scanning is disabled for document uploads (stub only)");
+  });
+}
+
+async function validateMagicBytes(filePath: string, declaredMime: string): Promise<boolean> {
+  const fd = fs.openSync(filePath, "r");
+  const buf = Buffer.alloc(4100);
+  const bytesRead = fs.readSync(fd, buf, 0, 4100, 0);
+  fs.closeSync(fd);
+
+  const detected = await fileTypeFromBuffer(buf.subarray(0, bytesRead));
+
+  if (!detected) {
+    // No magic bytes detected — allow plain text/CSV which have no signatures
+    return declaredMime === "text/plain" || declaredMime === "text/csv";
+  }
+
+  // For OOXML types (docx, xlsx), file-type reports application/zip; allow when declared MIME is OOXML
+  const isOoxml = declaredMime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    || declaredMime === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+  if (isOoxml && detected.mime === "application/zip") return true;
+
+  // For legacy .doc/.xls, file-type reports application/x-cfb (Compound File Binary)
+  const isCfb = declaredMime === "application/msword" || declaredMime === "application/vnd.ms-excel";
+  if (isCfb && detected.mime === "application/x-cfb") return true;
+
+  // For other types, detected MIME must match declared MIME exactly
+  return detected.mime === declaredMime;
+}
 
 const storage = multer.diskStorage({
   destination: uploadsDir,
@@ -75,6 +124,21 @@ router.post("/projects/:projectId/documents", requireAuth, upload.single("file")
   const project = await getProjectScoped(projectId, req.user!.userId, req.user!.role);
   if (!project) { res.status(404).json({ error: "Not found" }); return; }
   if (!req.file) { res.status(400).json({ error: "No file uploaded" }); return; }
+
+  const filePath = path.join(uploadsDir, req.file.filename);
+
+  // Magic-byte validation: verify the file's actual signature matches the declared MIME type
+  const signatureValid = await validateMagicBytes(filePath, req.file.mimetype);
+  if (!signatureValid) {
+    fs.unlinkSync(filePath);
+    res.status(415).json({ error: "File signature does not match the declared content type. Upload rejected." });
+    return;
+  }
+
+  // Malware scanning stub: warn if no scanner is configured, skip scan
+  if (!SCANNER_URL) {
+    req.log?.warn({ file: req.file.filename }, "Malware scanning skipped — no MALWARE_SCANNER_URL configured");
+  }
 
   const updateId = req.body.updateId ? parseInt(req.body.updateId) : null;
   const [doc] = await db.insert(documentsTable).values({

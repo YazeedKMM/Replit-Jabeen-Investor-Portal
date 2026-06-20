@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import { eq, and, ilike, or } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { usersTable, projectsTable, refreshTokensTable } from "@workspace/db";
-import { requireAuth, type AuthenticatedRequest, MANAGER_ROLES, ADMIN_ROLE, PRIVILEGED_ROLES } from "../middlewares/requireAuth";
+import { requireAuth, invalidateAccountStatusCache, type AuthenticatedRequest, MANAGER_ROLES, ADMIN_ROLE, PRIVILEGED_ROLES } from "../middlewares/requireAuth";
 import { hashPassword, generateOtpPassword } from "../lib/auth";
 import { logAudit } from "../lib/audit";
 
@@ -87,6 +87,8 @@ router.patch("/users/:userId", requireAuth, async (req: AuthenticatedRequest, re
   if (status !== undefined) updates.status = status;
 
   const [updated] = await db.update(usersTable).set(updates).where(eq(usersTable.id, userId)).returning();
+  // Invalidate the per-request account status cache so requireAuth re-validates on next request
+  if (status !== undefined) invalidateAccountStatusCache(userId);
   await logAudit({ action: "user.updated", actorId: req.user!.userId, targetType: "user", targetId: userId });
   res.json(safeUser(updated));
 });
@@ -100,6 +102,8 @@ router.delete("/users/:userId", requireAuth, async (req: AuthenticatedRequest, r
 
   await db.update(projectsTable).set({ investorId: null }).where(eq(projectsTable.investorId, userId));
   await db.delete(usersTable).where(eq(usersTable.id, userId));
+  // Invalidate the account status cache for the deleted user immediately
+  invalidateAccountStatusCache(userId);
   await logAudit({ action: "user.deleted", actorId: req.user!.userId, targetType: "user", targetId: userId });
   res.sendStatus(204);
 });
@@ -177,6 +181,8 @@ router.post("/users/:userId/activate", requireAuth, async (req: AuthenticatedReq
   }
 
   await db.delete(refreshTokensTable).where(eq(refreshTokensTable.userId, userId));
+  // Invalidate the per-request account status cache so requireAuth re-validates on next request
+  invalidateAccountStatusCache(userId);
 
   await logAudit({
     action: "user.activated",

@@ -1217,7 +1217,7 @@ components:
     # --- PROJECT ---
     ProjectSummary:
       type: object
-      required: [id, name, sector, agreementNumber, derivedStatus, constructionPct, createdAt]
+      required: [id, name, sector, agreementNumber, derivedStatus, constructionPct, createdAt, version]
       properties:
         id:
           type: integer
@@ -1248,10 +1248,13 @@ components:
         createdAt:
           type: string
           format: date-time
+        version:
+          type: integer
+          description: Optimistic concurrency version token — must be submitted unchanged on PATCH
 
     Project:
       type: object
-      required: [id, name, sector, agreementNumber, derivedStatus, constructionPct, createdAt]
+      required: [id, name, sector, agreementNumber, derivedStatus, constructionPct, createdAt, version]
       properties:
         id:
           type: integer
@@ -1290,6 +1293,9 @@ components:
         createdAt:
           type: string
           format: date-time
+        version:
+          type: integer
+          description: Optimistic concurrency version token — must be submitted unchanged on PATCH
 
     ProjectInput:
       type: object
@@ -1323,6 +1329,7 @@ components:
 
     ProjectUpdate:
       type: object
+      required: [version]
       properties:
         name:
           type: string
@@ -1347,6 +1354,9 @@ components:
           type: ["integer", "null"]
         pipelineId:
           type: ["integer", "null"]
+        version:
+          type: integer
+          description: Optimistic concurrency version token from the last GET — required, rejected with 409 if stale
 
     StageSummary:
       type: object

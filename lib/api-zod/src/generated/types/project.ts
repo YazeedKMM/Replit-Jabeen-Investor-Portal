@@ -34,4 +34,6 @@ export interface Project {
   /** @nullable */
   investorId?: number | null;
   createdAt: Date;
+  /** Optimistic concurrency version token — must be submitted unchanged on PATCH */
+  version: number;
 }

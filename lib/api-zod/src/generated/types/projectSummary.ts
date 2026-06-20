@@ -26,4 +26,6 @@ export interface ProjectSummary {
   /** @nullable */
   pipelineName?: string | null;
   createdAt: Date;
+  /** Optimistic concurrency version token — must be submitted unchanged on PATCH */
+  version: number;
 }

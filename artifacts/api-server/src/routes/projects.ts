@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, or, isNull, desc } from "drizzle-orm";
+import { eq, and, or, isNull, desc, sql } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { projectsTable, usersTable, stageTemplatesTable, stagesTable } from "@workspace/db";
 import { requireAuth, type AuthenticatedRequest, MANAGER_ROLES, PRIVILEGED_ROLES, ADMIN_ROLE } from "../middlewares/requireAuth";
@@ -91,6 +91,21 @@ async function enrichProject(project: typeof projectsTable.$inferSelect, forRole
   };
 }
 
+/** Sanitize a CSV cell value to prevent formula injection. */
+function sanitizeCsvCell(value: string): string {
+  if (value.length > 0 && (
+    value[0] === "=" ||
+    value[0] === "+" ||
+    value[0] === "-" ||
+    value[0] === "@" ||
+    value[0] === "\t" ||
+    value[0] === "\r"
+  )) {
+    return `'${value}`;
+  }
+  return value;
+}
+
 router.get("/projects", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
   const { search, status, stage, sector } = req.query as Record<string, string>;
   const userId = req.user!.userId;
@@ -175,6 +190,7 @@ router.post("/projects", requireAuth, async (req: AuthenticatedRequest, res): Pr
     constructionPct: constructionPct ?? 0,
     investorId: investorId ?? null,
     currentStageId,
+    version: 1,
   }).returning();
 
   // Mark the template version as having been assigned
@@ -195,6 +211,9 @@ router.get("/projects/export", requireAuth, async (req: AuthenticatedRequest, re
   const rows = await db.select().from(projectsTable);
   const enriched = await Promise.all(rows.map((p) => enrichProject(p, req.user!.role, stalledDays, delayedDays)));
 
+  // Audit: record the portfolio export
+  await logAudit({ action: "portfolio-exported", actorId: req.user!.userId, targetType: "portfolio", detail: `exported ${enriched.length} projects` });
+
   const header = ["Agreement Number", "Name", "Sector", "Plot Number", "Pipeline", "Current Stage", "Construction %", "Derived Status", "Investor Company", "Investor Email", "Last Update", "Attention Flag"];
   const csvRows = enriched.map((p) => [
     p.agreementNumber,
@@ -209,7 +228,10 @@ router.get("/projects/export", requireAuth, async (req: AuthenticatedRequest, re
     (p.investor as { email?: string } | null)?.email ?? "",
     p.lastUpdateAt ? new Date(p.lastUpdateAt).toISOString() : "",
     p.attentionFlag ? "Yes" : "No",
-  ].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","));
+  ].map((v) => {
+    const sanitized = sanitizeCsvCell(String(v));
+    return `"${sanitized.replace(/"/g, '""')}"`;
+  }).join(","));
 
   const csv = [header.map((h) => `"${h}"`).join(","), ...csvRows].join("\n");
   res.setHeader("Content-Type", "text/csv");
@@ -257,6 +279,17 @@ router.get("/projects/:projectId", requireAuth, async (req: AuthenticatedRequest
       phone: usersTable.phone,
     }).from(usersTable).where(eq(usersTable.id, project.investorId));
     investor = u ?? null;
+
+    // Audit: record privileged view of investor contact details
+    if (investor) {
+      await logAudit({
+        action: "investor-contact-viewed",
+        actorId: req.user!.userId,
+        targetType: "project",
+        targetId: projectId,
+        detail: `investor:${project.investorId}`,
+      });
+    }
   }
 
   res.json({ ...project, derivedStatus, currentStage, investor, pipeline, pipelineName: pipeline?.name ?? null });
@@ -270,7 +303,16 @@ router.patch("/projects/:projectId", requireAuth, async (req: AuthenticatedReque
   const [project] = await db.select().from(projectsTable).where(eq(projectsTable.id, projectId));
   if (!project) { res.status(404).json({ error: "Not found" }); return; }
 
-  const { name, sector, plotNumber, notes, attentionFlag, constructionPct, investorId, pipelineId: rawPipelineId } = req.body;
+  // Optimistic concurrency: version is mandatory — reject if missing or stale
+  const { name, sector, plotNumber, notes, attentionFlag, constructionPct, investorId, pipelineId: rawPipelineId, version } = req.body;
+  if (version === undefined || version === null) {
+    res.status(400).json({ error: "version is required for project updates. Fetch the project first and include its current version.", code: "VERSION_REQUIRED" });
+    return;
+  }
+  if (typeof version !== "number" || version !== project.version) {
+    res.status(409).json({ error: "Conflict: project was modified by another request. Please reload and try again.", code: "VERSION_CONFLICT" });
+    return;
+  }
 
   if (investorId !== undefined && investorId !== null) {
     const [inv] = await db.select().from(usersTable).where(and(eq(usersTable.id, investorId), eq(usersTable.role, "investor")));
@@ -287,9 +329,6 @@ router.patch("/projects/:projectId", requireAuth, async (req: AuthenticatedReque
   if (investorId !== undefined) updates.investorId = investorId;
 
   // Pipeline change: only resolve/validate when the pipeline is actually changing.
-  // If the submitted pipelineId matches the project's current pipelineId (even if that
-  // version is now archived), treat it as a no-op to avoid breaking edits for projects
-  // already pinned to an archived version.
   if (rawPipelineId !== undefined && rawPipelineId !== project.pipelineId) {
     if (rawPipelineId === null) {
       updates.pipelineId = null;
@@ -311,7 +350,24 @@ router.patch("/projects/:projectId", requireAuth, async (req: AuthenticatedReque
     }
   }
 
-  const [updated] = await db.update(projectsTable).set(updates).where(eq(projectsTable.id, projectId)).returning();
+  // Increment version on every successful update
+  updates.version = project.version + 1;
+
+  // Use conditional update to guard against concurrent edits at DB level
+  const result = await db.update(projectsTable)
+    .set(updates)
+    .where(and(
+      eq(projectsTable.id, projectId),
+      eq(projectsTable.version, project.version)
+    ))
+    .returning();
+
+  if (result.length === 0) {
+    res.status(409).json({ error: "Conflict: project was modified concurrently. Please reload and try again.", code: "VERSION_CONFLICT" });
+    return;
+  }
+
+  const [updated] = result;
   await logAudit({ action: "project.updated", actorId: req.user!.userId, targetType: "project", targetId: projectId });
   const enriched = await enrichProject(updated, req.user!.role);
   res.json(enriched);

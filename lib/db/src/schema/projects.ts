@@ -16,6 +16,7 @@ export const projectsTable = pgTable("projects", {
   currentStageId: integer("current_stage_id").references(() => stagesTable.id, { onDelete: "set null" }),
   investorId: integer("investor_id").references(() => usersTable.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  version: integer("version").notNull().default(1),
 });
 
 export type Project = typeof projectsTable.$inferSelect;

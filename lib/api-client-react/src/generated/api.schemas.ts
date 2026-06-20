@@ -284,6 +284,8 @@ export interface ProjectSummary {
   /** @nullable */
   pipelineName?: string | null;
   createdAt: string;
+  /** Optimistic concurrency version token — must be submitted unchanged on PATCH */
+  version: number;
 }
 
 export type ProjectDerivedStatus = typeof ProjectDerivedStatus[keyof typeof ProjectDerivedStatus];
@@ -410,6 +412,8 @@ export interface Project {
   /** @nullable */
   investorId?: number | null;
   createdAt: string;
+  /** Optimistic concurrency version token — must be submitted unchanged on PATCH */
+  version: number;
 }
 
 export interface ProjectInput {
@@ -468,6 +472,8 @@ export interface ProjectUpdate {
   investorId?: number | null;
   /** @nullable */
   pipelineId?: number | null;
+  /** Optimistic concurrency version token from the last GET — required, rejected with 409 if stale */
+  version: number;
 }
 
 export type StatusUpdateReviewStatus = typeof StatusUpdateReviewStatus[keyof typeof StatusUpdateReviewStatus];

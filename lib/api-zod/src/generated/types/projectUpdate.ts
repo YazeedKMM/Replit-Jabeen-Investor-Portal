@@ -34,4 +34,6 @@ export interface ProjectUpdate {
   investorId?: number | null;
   /** @nullable */
   pipelineId?: number | null;
+  /** Optimistic concurrency version token from the last GET — required, rejected with 409 if stale */
+  version: number;
 }

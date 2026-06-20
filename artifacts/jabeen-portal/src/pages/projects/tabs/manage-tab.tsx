@@ -1,5 +1,5 @@
 import { Project, useUpdateProject, useDeleteProject, useListUsers, useListTemplates } from "@workspace/api-client-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Trash2 } from "lucide-react";
+import { getGetProjectQueryKey } from "@workspace/api-client-react";
 
 interface Props {
   project: Project;
@@ -54,11 +55,27 @@ export default function ProjectManageTab({ project, isAdmin }: Props) {
 
   const onSubmit = async (data: z.infer<typeof updateProjectSchema>) => {
     try {
-      await updateMutation.mutateAsync({ projectId: project.id, data });
-      queryClient.invalidateQueries({ queryKey: ["/api/projects", project.id] });
+      await updateMutation.mutateAsync({
+        projectId: project.id,
+        data: {
+          ...data,
+          version: (project as Project & { version?: number }).version,
+        },
+      });
+      queryClient.invalidateQueries({ queryKey: getGetProjectQueryKey(project.id) });
       toast({ title: "Project updated successfully" });
-    } catch (error) {
-      toast({ title: "Update failed", variant: "destructive" });
+    } catch (error: unknown) {
+      const apiError = error as { response?: { status?: number; data?: { code?: string } } };
+      if (apiError?.response?.status === 409) {
+        toast({
+          title: "Edit conflict — please reload",
+          description: "This project was modified by another user while you were editing. Reload the page to get the latest version.",
+          variant: "destructive",
+        });
+        queryClient.invalidateQueries({ queryKey: getGetProjectQueryKey(project.id) });
+      } else {
+        toast({ title: "Update failed", variant: "destructive" });
+      }
     }
   };
 

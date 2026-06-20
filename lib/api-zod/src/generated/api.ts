@@ -248,7 +248,8 @@ export const GetDashboardResponse = zod.object({
   "phone": zod.string().nullish()
 }).optional(),
   "pipelineName": zod.string().nullish(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "version": zod.number().describe('Optimistic concurrency version token — must be submitted unchanged on PATCH')
 })).optional()
 })
 
@@ -289,7 +290,8 @@ export const ListProjectsResponseItem = zod.object({
   "phone": zod.string().nullish()
 }).optional(),
   "pipelineName": zod.string().nullish(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "version": zod.number().describe('Optimistic concurrency version token — must be submitted unchanged on PATCH')
 })
 export const ListProjectsResponse = zod.array(ListProjectsResponseItem)
 
@@ -395,7 +397,8 @@ export const GetProjectResponse = zod.object({
   "pipelineId": zod.number().nullish(),
   "currentStageId": zod.number().nullish(),
   "investorId": zod.number().nullish(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "version": zod.number().describe('Optimistic concurrency version token — must be submitted unchanged on PATCH')
 })
 
 
@@ -425,7 +428,8 @@ export const UpdateProjectBody = zod.object({
   "attentionFlag": zod.boolean().optional(),
   "constructionPct": zod.number().min(updateProjectBodyConstructionPctMin).max(updateProjectBodyConstructionPctMax).optional(),
   "investorId": zod.number().nullish(),
-  "pipelineId": zod.number().nullish()
+  "pipelineId": zod.number().nullish(),
+  "version": zod.number().describe('Optimistic concurrency version token from the last GET — required, rejected with 409 if stale')
 })
 
 export const updateProjectResponsePipelineStagesItemProgressBaselineMin = 0;
@@ -494,7 +498,8 @@ export const UpdateProjectResponse = zod.object({
   "pipelineId": zod.number().nullish(),
   "currentStageId": zod.number().nullish(),
   "investorId": zod.number().nullish(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "version": zod.number().describe('Optimistic concurrency version token — must be submitted unchanged on PATCH')
 })
 
 

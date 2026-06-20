@@ -144,7 +144,6 @@ router.patch("/projects/:projectId/updates/:updateId/approve", requireAuth, asyn
 
   const [update] = await db.select().from(statusUpdatesTable).where(and(eq(statusUpdatesTable.id, updateId), eq(statusUpdatesTable.projectId, projectId)));
   if (!update) { res.status(404).json({ error: "Update not found" }); return; }
-  if (update.reviewStatus !== "pending") { res.status(409).json({ error: "Update already reviewed" }); return; }
 
   // Guard: target stage must still be in pipeline
   const [targetStage] = project.pipelineId
@@ -160,12 +159,25 @@ router.patch("/projects/:projectId/updates/:updateId/approve", requireAuth, asyn
     }
   }
 
-  const [approved] = await db.update(statusUpdatesTable).set({
+  // Atomic approval: only succeeds if the update is still pending — prevents double-approval
+  const approvedRows = await db.update(statusUpdatesTable).set({
     reviewStatus: "approved",
     reviewerId: req.user!.userId,
     reviewedAt: new Date(),
     sourceStageId: project.currentStageId ?? null,
-  }).where(eq(statusUpdatesTable.id, updateId)).returning();
+  }).where(
+    and(
+      eq(statusUpdatesTable.id, updateId),
+      eq(statusUpdatesTable.reviewStatus, "pending")
+    )
+  ).returning();
+
+  if (approvedRows.length === 0) {
+    res.status(409).json({ error: "Update has already been reviewed by another reviewer." });
+    return;
+  }
+
+  const [approved] = approvedRows;
 
   // Advance project
   await db.update(projectsTable).set({
@@ -200,15 +212,28 @@ router.patch("/projects/:projectId/updates/:updateId/reject", requireAuth, async
 
   const [update] = await db.select().from(statusUpdatesTable).where(and(eq(statusUpdatesTable.id, updateId), eq(statusUpdatesTable.projectId, projectId)));
   if (!update) { res.status(404).json({ error: "Update not found" }); return; }
-  if (update.reviewStatus !== "pending") { res.status(409).json({ error: "Update already reviewed" }); return; }
 
   const { reviewNote } = req.body ?? {};
-  const [rejected] = await db.update(statusUpdatesTable).set({
+
+  // Atomic rejection: only succeeds if the update is still pending — prevents double-review
+  const rejectedRows = await db.update(statusUpdatesTable).set({
     reviewStatus: "rejected",
     reviewerId: req.user!.userId,
     reviewedAt: new Date(),
     reviewNote: reviewNote ?? null,
-  }).where(eq(statusUpdatesTable.id, updateId)).returning();
+  }).where(
+    and(
+      eq(statusUpdatesTable.id, updateId),
+      eq(statusUpdatesTable.reviewStatus, "pending")
+    )
+  ).returning();
+
+  if (rejectedRows.length === 0) {
+    res.status(409).json({ error: "Update has already been reviewed by another reviewer." });
+    return;
+  }
+
+  const [rejected] = rejectedRows;
 
   if (project.investorId) {
     await createNotifications({
