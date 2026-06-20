@@ -1471,6 +1471,10 @@ components:
           type: integer
         fieldName:
           type: string
+        widget:
+          type: ["string", "null"]
+        baseType:
+          type: ["string", "null"]
         textValue:
           type: ["string", "null"]
         numValue:

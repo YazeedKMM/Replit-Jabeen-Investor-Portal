@@ -11,6 +11,10 @@ export interface FieldValue {
   fieldId: number;
   fieldName?: string;
   /** @nullable */
+  widget?: string | null;
+  /** @nullable */
+  baseType?: string | null;
+  /** @nullable */
   textValue?: string | null;
   /** @nullable */
   numValue?: number | null;

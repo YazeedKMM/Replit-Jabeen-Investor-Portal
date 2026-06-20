@@ -77,10 +77,11 @@ function ProtectedImage({
 // FieldValueDisplay: renders one field+value pair
 // ────────────────────────────────────────────────
 function FieldValueDisplay({
-  projectId, fieldValue,
+  projectId, fieldValue, onImageClick,
 }: {
   projectId: number;
-  fieldValue: StatusUpdate["fieldValues"][number] & { widget?: string; baseType?: string };
+  fieldValue: StatusUpdate["fieldValues"][number];
+  onImageClick?: (docId: string) => void;
 }) {
   const val = fieldValue.textValue ?? fieldValue.numValue?.toString() ?? fieldValue.dateValue
     ?? (fieldValue.boolValue != null ? String(fieldValue.boolValue) : null)
@@ -88,28 +89,41 @@ function FieldValueDisplay({
 
   if (!val) return null;
 
-  // Detect image fields (textValue that looks like a doc ID list, with image base type stored in fieldName hint)
-  // We rely on base type stored in field config — for display we check widget from the update's fieldValue
   const isImage = fieldValue.baseType === "image" || fieldValue.widget === "single-photo" || fieldValue.widget === "photo-gallery";
   const isFile = fieldValue.baseType === "file" || fieldValue.widget === "file-upload";
   const isBool = fieldValue.boolValue != null;
+  const docIds = String(val).split(",").filter(Boolean).map((s) => s.trim());
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-1.5">
       <p className="text-[10px] uppercase tracking-wider font-medium text-muted-foreground">{fieldValue.fieldName}</p>
       {isImage ? (
-        <div className="grid grid-cols-3 gap-2">
-          {String(val).split(",").filter(Boolean).map((id) => (
-            <ProtectedImage key={id} projectId={projectId} docId={id.trim()} alt={fieldValue.fieldName ?? "photo"} />
+        <div className={`grid gap-2 ${docIds.length === 1 ? "grid-cols-1" : docIds.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+          {docIds.map((id) => (
+            <div
+              key={id}
+              className={`relative overflow-hidden rounded border bg-muted ${onImageClick ? "cursor-zoom-in" : ""}`}
+              onClick={() => onImageClick?.(id)}
+            >
+              <ProtectedImage
+                projectId={projectId}
+                docId={id}
+                alt={fieldValue.fieldName ?? "photo"}
+                className="w-full h-full object-cover aspect-video"
+              />
+              {onImageClick && (
+                <div className="absolute inset-0 bg-black/0 hover:bg-black/20 flex items-center justify-center transition-colors">
+                  <ZoomIn className="h-5 w-5 text-white opacity-0 hover:opacity-100 transition-opacity" />
+                </div>
+              )}
+            </div>
           ))}
         </div>
       ) : isFile ? (
-        <a
-          href={`/api/projects/${projectId}/documents/${val}/download`}
-          download
+        <button
+          type="button"
           className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
-          onClick={(e) => {
-            e.preventDefault();
+          onClick={() => {
             const token = localStorage.getItem("jabeen_access_token");
             fetch(`/api/projects/${projectId}/documents/${val}/download`, {
               headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -120,65 +134,148 @@ function FieldValueDisplay({
             });
           }}
         >
-          <FileIcon className="h-3.5 w-3.5" /> Download file
-        </a>
+          <FileIcon className="h-3.5 w-3.5" /> Download attached file
+        </button>
       ) : isBool ? (
-        <p className="text-sm font-medium">{fieldValue.boolValue ? "Yes ✓" : "No ✗"}</p>
+        <p className="text-sm font-medium">{fieldValue.boolValue ? "✓ Yes" : "✗ No"}</p>
       ) : (
-        <p className="text-sm text-foreground">{String(val)}</p>
+        <p className="text-sm text-foreground break-words">{String(val)}</p>
       )}
     </div>
   );
 }
 
 // ────────────────────────────────────────────────
-// UpdateDetail: full read-only view of one update
+// UpdateDetail: full read-only view of one update (used in review dialog)
 // ────────────────────────────────────────────────
 function UpdateDetail({ update, projectId }: { update: StatusUpdate; projectId: number }) {
+  const [lightboxDocId, setLightboxDocId] = useState<string | null>(null);
+
+  // Separate image fields from other fields so images render full-width
+  const imageFields = update.fieldValues.filter(
+    (fv) => fv.baseType === "image" || fv.widget === "single-photo" || fv.widget === "photo-gallery"
+  );
+  const fileFields = update.fieldValues.filter(
+    (fv) => fv.baseType === "file" || fv.widget === "file-upload"
+  );
+  const otherFields = update.fieldValues.filter(
+    (fv) => !imageFields.includes(fv) && !fileFields.includes(fv)
+  );
+
   return (
-    <div className="space-y-4 text-sm">
-      <div className="grid grid-cols-2 gap-4">
+    <div className="space-y-5 text-sm">
+      {/* ── Summary row ── */}
+      <div className="grid grid-cols-2 gap-x-6 gap-y-3">
         <div>
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Target Stage</p>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Target Stage</p>
           <p className="font-semibold">{update.targetStage?.name ?? "Unknown"}</p>
         </div>
         <div>
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Project Progress</p>
-          <p className="font-semibold">{update.constructionPct}%</p>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Project Progress</p>
+          <div className="flex items-center gap-2 mt-0.5">
+            <div className="h-1.5 flex-1 bg-muted rounded-full overflow-hidden">
+              <div className="h-full bg-primary" style={{ width: `${update.constructionPct}%` }} />
+            </div>
+            <span className="font-semibold tabular-nums w-9 text-right">{update.constructionPct}%</span>
+          </div>
         </div>
         <div>
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Submitted by</p>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Submitted by</p>
           <p className="font-semibold">{update.author?.fullName}</p>
+          <p className="text-xs text-muted-foreground">{update.author?.companyName}</p>
         </div>
         <div>
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Date</p>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Submitted on</p>
           <p className="font-semibold">{format(new Date(update.createdAt), "MMM d, yyyy")}</p>
+          <p className="text-xs text-muted-foreground">{format(new Date(update.createdAt), "h:mm a")}</p>
         </div>
       </div>
 
+      {/* ── Notes ── */}
       {update.note && (
         <>
           <Separator />
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Notes</p>
-            <p className="bg-muted/30 p-3 rounded text-sm">{update.note}</p>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Notes from submitter</p>
+            <p className="bg-muted/30 p-3 rounded-md text-sm leading-relaxed">{update.note}</p>
           </div>
         </>
       )}
 
-      {update.fieldValues && update.fieldValues.length > 0 && (
+      {/* ── Text / choice / bool fields ── */}
+      {otherFields.length > 0 && (
         <>
           <Separator />
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-3">Submitted Field Data</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {update.fieldValues.map((fv) => (
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-3">Field Values</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+              {otherFields.map((fv) => (
                 <FieldValueDisplay key={fv.id} projectId={projectId} fieldValue={fv} />
               ))}
             </div>
           </div>
         </>
       )}
+
+      {/* ── File attachments ── */}
+      {fileFields.length > 0 && (
+        <>
+          <Separator />
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Attached Files</p>
+            <div className="space-y-2">
+              {fileFields.map((fv) => (
+                <FieldValueDisplay key={fv.id} projectId={projectId} fieldValue={fv} />
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Photos ── */}
+      {imageFields.length > 0 && (
+        <>
+          <Separator />
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Photos</p>
+            <div className="space-y-4">
+              {imageFields.map((fv) => (
+                <FieldValueDisplay key={fv.id} projectId={projectId} fieldValue={fv} onImageClick={setLightboxDocId} />
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Review result (if already reviewed) ── */}
+      {update.reviewStatus !== "pending" && update.reviewer && (
+        <>
+          <Separator />
+          <div className={`rounded-md border p-3 ${update.reviewStatus === "approved" ? "bg-emerald-50 border-emerald-200" : "bg-destructive/5 border-destructive/20"}`}>
+            <p className={`text-[10px] uppercase tracking-wider font-semibold mb-1 ${update.reviewStatus === "approved" ? "text-emerald-700" : "text-destructive"}`}>
+              {update.reviewStatus === "approved" ? "✓ Approved" : "✗ Rejected"} by {update.reviewer.fullName}
+              {update.reviewedAt && <span className="font-normal"> · {format(new Date(update.reviewedAt), "MMM d, yyyy")}</span>}
+            </p>
+            {update.reviewNote && (
+              <p className="text-sm text-muted-foreground mt-1">{update.reviewNote}</p>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* ── Lightbox ── */}
+      <Dialog open={!!lightboxDocId} onOpenChange={(o) => !o && setLightboxDocId(null)}>
+        <DialogContent className="max-w-5xl p-2 bg-black border-0">
+          {lightboxDocId && (
+            <ProtectedImage
+              projectId={projectId}
+              docId={lightboxDocId}
+              alt="Full size"
+              className="w-full h-auto max-h-[88vh] object-contain rounded"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -709,7 +806,7 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
 
       {/* ── PM Review Dialog ── */}
       <Dialog open={!!reviewUpdate} onOpenChange={(o) => { if (!o) { setReviewUpdate(null); setRejectMode(false); setRejectNote(""); } }}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[720px] max-h-[92vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Review Progress Update</DialogTitle>
             <DialogDescription>Review all submitted data before approving or rejecting.</DialogDescription>

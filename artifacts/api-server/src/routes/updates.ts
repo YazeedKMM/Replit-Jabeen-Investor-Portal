@@ -37,8 +37,8 @@ async function enrichUpdate(update: typeof statusUpdatesTable.$inferSelect) {
   }
   const fvRows = await db.select().from(fieldValuesTable).where(eq(fieldValuesTable.updateId, update.id));
   const fieldValues = await Promise.all(fvRows.map(async (fv) => {
-    const [field] = await db.select({ name: stageFieldsTable.name }).from(stageFieldsTable).where(eq(stageFieldsTable.id, fv.fieldId));
-    return { ...fv, fieldName: field?.name ?? "" };
+    const [field] = await db.select({ name: stageFieldsTable.name, widget: stageFieldsTable.widget, baseType: stageFieldsTable.baseType }).from(stageFieldsTable).where(eq(stageFieldsTable.id, fv.fieldId));
+    return { ...fv, fieldName: field?.name ?? "", widget: field?.widget ?? null, baseType: field?.baseType ?? null };
   }));
   return { ...update, author, reviewer, targetStage, fieldValues };
 }
