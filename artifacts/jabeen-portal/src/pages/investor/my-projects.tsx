@@ -125,7 +125,7 @@ export default function MyProjectsPage() {
 
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm font-medium">
-                    <span>Construction Progress</span>
+                    <span>Project Progress</span>
                     <span>{project.constructionPct}%</span>
                   </div>
                   <Progress value={project.constructionPct} className="h-2" />

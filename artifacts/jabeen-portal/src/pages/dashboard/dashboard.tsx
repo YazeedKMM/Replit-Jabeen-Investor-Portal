@@ -257,7 +257,7 @@ function NewProjectDialog({
 
               <FormField control={form.control} name="constructionPct" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Starting Construction % <span className="text-muted-foreground font-normal text-xs">(0 for new projects)</span></FormLabel>
+                  <FormLabel>Starting Project Progress <span className="text-muted-foreground font-normal text-xs">(0 for new projects)</span></FormLabel>
                   <FormControl>
                     <Input type="number" min="0" max="100" {...field} />
                   </FormControl>

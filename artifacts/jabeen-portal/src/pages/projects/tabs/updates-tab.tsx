@@ -143,8 +143,8 @@ function UpdateDetail({ update, projectId }: { update: StatusUpdate; projectId: 
           <p className="font-semibold">{update.targetStage?.name ?? "Unknown"}</p>
         </div>
         <div>
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Progress</p>
-          <p className="font-semibold">{update.constructionPct}% Complete</p>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Project Progress</p>
+          <p className="font-semibold">{update.constructionPct}%</p>
         </div>
         <div>
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Submitted by</p>
@@ -534,7 +534,7 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
                   {/* Construction % — locked to stage progressBaseline when pipeline is assigned */}
                   <FormField control={form.control} name="constructionPct" render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Construction Complete (%)</FormLabel>
+                      <FormLabel>Project Progress</FormLabel>
                       {selectedStage ? (
                         <div className="flex items-center gap-3 h-9 px-3 rounded-md border bg-muted/40 text-sm">
                           <div className="h-1.5 flex-1 bg-muted rounded-full overflow-hidden">
