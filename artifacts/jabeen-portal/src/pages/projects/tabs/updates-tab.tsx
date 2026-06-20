@@ -386,11 +386,14 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
   const selectedStage = allStages.find((s) => s.id === Number(watchedStageId));
   const stageFields = selectedStage?.fields ?? [];
 
-  // Clear field values and errors when stage changes
+  // When stage changes: clear field values/errors and sync constructionPct from progressBaseline
   useEffect(() => {
     setFieldValues({});
     setFieldErrors(new Set());
-  }, [watchedStageId]);
+    if (selectedStage) {
+      form.setValue("constructionPct", selectedStage.progressBaseline);
+    }
+  }, [watchedStageId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFileUpload = async (fieldId: number, file: File, append: boolean) => {
     setUploadingFields((prev) => new Set([...prev, fieldId]));
@@ -528,11 +531,28 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
                     </FormItem>
                   )} />
 
-                  {/* Construction % */}
+                  {/* Construction % — locked to stage progressBaseline when pipeline is assigned */}
                   <FormField control={form.control} name="constructionPct" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Construction Complete (%)</FormLabel>
-                      <FormControl><Input type="number" min="0" max="100" {...field} /></FormControl>
+                      {selectedStage ? (
+                        <div className="flex items-center gap-3 h-9 px-3 rounded-md border bg-muted/40 text-sm">
+                          <div className="h-1.5 flex-1 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-primary transition-all"
+                              style={{ width: `${selectedStage.progressBaseline}%` }}
+                            />
+                          </div>
+                          <span className="font-semibold tabular-nums w-10 text-right shrink-0">
+                            {selectedStage.progressBaseline}%
+                          </span>
+                          <span className="text-muted-foreground text-xs shrink-0">set by template</span>
+                        </div>
+                      ) : (
+                        <FormControl>
+                          <Input type="number" min="0" max="100" {...field} />
+                        </FormControl>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )} />
