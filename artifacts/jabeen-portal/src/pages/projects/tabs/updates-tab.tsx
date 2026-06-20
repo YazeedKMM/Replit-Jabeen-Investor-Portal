@@ -356,6 +356,7 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [fieldValues, setFieldValues] = useState<Record<number, string>>({});
   const [uploadingFields, setUploadingFields] = useState<Set<number>>(new Set());
+  const [fieldErrors, setFieldErrors] = useState<Set<number>>(new Set());
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -385,9 +386,10 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
   const selectedStage = allStages.find((s) => s.id === Number(watchedStageId));
   const stageFields = selectedStage?.fields ?? [];
 
-  // Clear field values when stage changes
+  // Clear field values and errors when stage changes
   useEffect(() => {
     setFieldValues({});
+    setFieldErrors(new Set());
   }, [watchedStageId]);
 
   const handleFileUpload = async (fieldId: number, file: File, append: boolean) => {
@@ -411,6 +413,18 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
   };
 
   const onSubmit = async (data: z.infer<typeof createUpdateSchema>) => {
+    // Validate required stage fields
+    const missingIds = new Set(
+      stageFields
+        .filter((f) => f.required && (!fieldValues[f.id] || fieldValues[f.id].trim() === ""))
+        .map((f) => f.id)
+    );
+    if (missingIds.size > 0) {
+      setFieldErrors(missingIds);
+      toast({ title: "Required fields missing", description: "Please fill in all required fields before submitting.", variant: "destructive" });
+      return;
+    }
+
     const fvPayload: FieldValueInput[] = stageFields
       .map((f) => {
         const val = fieldValues[f.id];
@@ -529,18 +543,29 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
                       <p className="text-sm font-semibold text-foreground">Stage Details</p>
                       {stageFields.map((f) => (
                         <div key={f.id} className="space-y-1.5">
-                          <Label className="text-sm font-medium">
+                          <Label className={`text-sm font-medium ${fieldErrors.has(f.id) ? "text-destructive" : ""}`}>
                             {f.name}
                             {f.required && <span className="text-destructive ml-0.5">*</span>}
                           </Label>
-                          <DynamicFieldInput
-                            field={f}
-                            projectId={project.id}
-                            value={fieldValues[f.id] ?? ""}
-                            onChange={(v) => setFieldValues((prev) => ({ ...prev, [f.id]: v }))}
-                            uploading={uploadingFields.has(f.id)}
-                            onFileUpload={(file) => handleFileUpload(f.id, file, f.widget === "photo-gallery")}
-                          />
+                          <div className={fieldErrors.has(f.id) ? "ring-1 ring-destructive rounded-md" : ""}>
+                            <DynamicFieldInput
+                              field={f}
+                              projectId={project.id}
+                              value={fieldValues[f.id] ?? ""}
+                              onChange={(v) => {
+                                setFieldValues((prev) => ({ ...prev, [f.id]: v }));
+                                if (v) setFieldErrors((prev) => { const s = new Set(prev); s.delete(f.id); return s; });
+                              }}
+                              uploading={uploadingFields.has(f.id)}
+                              onFileUpload={(file) => {
+                                setFieldErrors((prev) => { const s = new Set(prev); s.delete(f.id); return s; });
+                                handleFileUpload(f.id, file, f.widget === "photo-gallery");
+                              }}
+                            />
+                          </div>
+                          {fieldErrors.has(f.id) && (
+                            <p className="text-xs text-destructive">{f.name} is required.</p>
+                          )}
                         </div>
                       ))}
                     </div>
