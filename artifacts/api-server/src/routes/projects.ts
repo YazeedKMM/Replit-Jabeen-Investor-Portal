@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, and, or, isNull, desc, sql } from "drizzle-orm";
 import { db } from "@workspace/db";
-import { projectsTable, usersTable, stageTemplatesTable, stagesTable } from "@workspace/db";
+import { projectsTable, usersTable, stageTemplatesTable, stagesTable, stageFieldsTable } from "@workspace/db";
 import { requireAuth, type AuthenticatedRequest, MANAGER_ROLES, PRIVILEGED_ROLES, ADMIN_ROLE } from "../middlewares/requireAuth";
 import { deriveProjectStatus } from "../lib/status";
 import { getStatusThresholds } from "../lib/settings-cache";
@@ -255,7 +255,13 @@ router.get("/projects/:projectId", requireAuth, async (req: AuthenticatedRequest
   if (project.pipelineId) {
     const [tpl] = await db.select().from(stageTemplatesTable).where(eq(stageTemplatesTable.id, project.pipelineId));
     if (tpl) {
-      const stages = await db.select().from(stagesTable).where(eq(stagesTable.templateId, tpl.id)).orderBy(stagesTable.orderIndex);
+      const rawStages = await db.select().from(stagesTable).where(eq(stagesTable.templateId, tpl.id)).orderBy(stagesTable.orderIndex);
+      const stages = await Promise.all(
+        rawStages.map(async (s) => {
+          const fields = await db.select().from(stageFieldsTable).where(eq(stageFieldsTable.stageId, s.id)).orderBy(stageFieldsTable.position);
+          return { ...s, fields };
+        })
+      );
       pipeline = { ...tpl, stages };
     }
   }
