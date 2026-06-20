@@ -9,23 +9,23 @@ export interface AuthenticatedRequest extends Request {
 }
 
 // In-memory cache for account status checks — 30-second TTL
-// Keyed by userId, stores { active: boolean, expiresAt: number }
-const accountStatusCache = new Map<number, { active: boolean; expiresAt: number }>();
+// Keyed by userId, stores the live DB status (or null when the account is gone).
+const accountStatusCache = new Map<number, { status: string | null; expiresAt: number }>();
 const CACHE_TTL_MS = 30_000;
 
-async function isAccountActive(userId: number): Promise<boolean> {
+async function getAccountStatus(userId: number): Promise<string | null> {
   const now = Date.now();
   const cached = accountStatusCache.get(userId);
   if (cached && cached.expiresAt > now) {
-    return cached.active;
+    return cached.status;
   }
   const [row] = await db
     .select({ id: usersTable.id, status: usersTable.status })
     .from(usersTable)
     .where(eq(usersTable.id, userId));
-  const active = !!row && row.status === "active";
-  accountStatusCache.set(userId, { active, expiresAt: now + CACHE_TTL_MS });
-  return active;
+  const status = row ? row.status : null;
+  accountStatusCache.set(userId, { status, expiresAt: now + CACHE_TTL_MS });
+  return status;
 }
 
 /** Invalidate the cached account status for a user (call after status changes). */
@@ -60,10 +60,17 @@ export function requireAuth(req: AuthenticatedRequest, res: Response, next: Next
     return;
   }
   req.user = payload;
-  // DB re-validation: confirm the account is still active before allowing the request through
-  isAccountActive(payload.userId).then((active) => {
-    if (!active) {
+  // DB re-validation: confirm the live account state before allowing the request through.
+  // - missing / inactive  -> 401 (deactivated): force re-auth
+  // - pending             -> 403 ACCOUNT_PENDING: clear "awaiting activation" signal
+  // - active              -> proceed
+  getAccountStatus(payload.userId).then((status) => {
+    if (status === null || status === "inactive") {
       res.status(401).json({ error: "Account deactivated or not found" });
+      return;
+    }
+    if (status === "pending") {
+      res.status(403).json({ error: "Account pending activation", code: "ACCOUNT_PENDING" });
       return;
     }
     next();
@@ -123,4 +130,6 @@ export function requireRole(...roles: string[]) {
 export const MANAGER_ROLES = ["project-manager", "administrator"] as const;
 export const PRIVILEGED_ROLES = ["top-management", "project-manager", "administrator"] as const;
 export const ADMIN_ROLE = ["administrator"] as const;
-export const MFA_REQUIRED_ROLES = ["project-manager", "administrator"] as const;
+// Top Management has read access to the entire portfolio, so it is treated as a
+// privileged account that must enrol in MFA (same as project-manager / administrator).
+export const MFA_REQUIRED_ROLES = ["top-management", "project-manager", "administrator"] as const;

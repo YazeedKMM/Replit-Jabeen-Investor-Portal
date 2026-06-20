@@ -8,12 +8,9 @@ import {
 import { requireAuth, type AuthenticatedRequest, MANAGER_ROLES, PRIVILEGED_ROLES } from "../middlewares/requireAuth";
 import { createNotifications, getManagerIds } from "../lib/notifications";
 import { logAudit } from "../lib/audit";
+import { parseId } from "../lib/http";
 
 const router: IRouter = Router();
-
-function parseId(raw: string | string[]): number {
-  return parseInt(Array.isArray(raw) ? raw[0] : raw);
-}
 
 async function getProjectScoped(projectId: number, userId: number, role: string) {
   const [project] = await db.select().from(projectsTable).where(eq(projectsTable.id, projectId));
@@ -54,6 +51,8 @@ router.get("/projects/:projectId/updates", requireAuth, async (req: Authenticate
 });
 
 router.post("/projects/:projectId/updates", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
+  // Top Management is read-only — it can view but never submit updates.
+  if (req.user!.role === "top-management") { res.status(403).json({ error: "Top Management cannot submit updates" }); return; }
   const projectId = parseId(req.params.projectId);
   const project = await getProjectScoped(projectId, req.user!.userId, req.user!.role);
   if (!project) { res.status(404).json({ error: "Not found" }); return; }

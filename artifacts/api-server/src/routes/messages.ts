@@ -4,12 +4,9 @@ import { db } from "@workspace/db";
 import { messagesTable, projectsTable, usersTable } from "@workspace/db";
 import { requireAuth, type AuthenticatedRequest, PRIVILEGED_ROLES } from "../middlewares/requireAuth";
 import { createNotifications, getManagerIds } from "../lib/notifications";
+import { parseId } from "../lib/http";
 
 const router: IRouter = Router();
-
-function parseId(raw: string | string[]): number {
-  return parseInt(Array.isArray(raw) ? raw[0] : raw);
-}
 
 async function getProjectScoped(projectId: number, userId: number, role: string) {
   const [p] = await db.select().from(projectsTable).where(eq(projectsTable.id, projectId));

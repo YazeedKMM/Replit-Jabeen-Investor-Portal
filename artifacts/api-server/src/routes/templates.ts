@@ -2,14 +2,11 @@ import { Router, type IRouter } from "express";
 import { eq, and, ne, or, inArray, isNull, desc } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { stageTemplatesTable, stagesTable, stageFieldsTable, projectsTable } from "@workspace/db";
-import { requireAuth, type AuthenticatedRequest, MANAGER_ROLES } from "../middlewares/requireAuth";
+import { requireAuth, type AuthenticatedRequest, MANAGER_ROLES, PRIVILEGED_ROLES } from "../middlewares/requireAuth";
 import { logAudit } from "../lib/audit";
+import { parseId } from "../lib/http";
 
 const router: IRouter = Router();
-
-function parseId(raw: string | string[]): number {
-  return parseInt(Array.isArray(raw) ? raw[0] : raw);
-}
 
 const WIDGET_COMPAT: Record<string, string[]> = {
   "text": ["single-line", "multi-line", "email", "telephone"],
@@ -160,6 +157,8 @@ function validateStages(stages: any[]): string | null {
 }
 
 router.get("/templates", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
+  // Pipeline templates are configuration data — investors must not enumerate them.
+  if (!(PRIVILEGED_ROLES as readonly string[]).includes(req.user!.role)) { res.status(403).json({ error: "Forbidden" }); return; }
   const includeArchived = req.query.includeArchived === "true";
 
   const rows = includeArchived
@@ -211,6 +210,7 @@ router.post("/templates", requireAuth, async (req: AuthenticatedRequest, res): P
 });
 
 router.get("/templates/:templateId", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
+  if (!(PRIVILEGED_ROLES as readonly string[]).includes(req.user!.role)) { res.status(403).json({ error: "Forbidden" }); return; }
   const templateId = parseId(req.params.templateId);
   const full = await getFullTemplate(templateId);
   if (!full) { res.status(404).json({ error: "Not found" }); return; }

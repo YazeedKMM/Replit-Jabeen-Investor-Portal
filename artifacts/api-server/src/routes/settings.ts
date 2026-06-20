@@ -44,6 +44,21 @@ router.patch("/settings", requireAuth, async (req: AuthenticatedRequest, res): P
   if (!(ADMIN_ROLE as readonly string[]).includes(req.user!.role)) { res.status(403).json({ error: "Forbidden" }); return; }
 
   const allowed = ["stalledThresholdDays", "delayedThresholdDays", "outOfBandNotificationsEnabled", "loginThrottleMaxAttempts", "loginThrottleWindowSeconds"];
+  const numericKeys = ["stalledThresholdDays", "delayedThresholdDays", "loginThrottleMaxAttempts", "loginThrottleWindowSeconds"];
+
+  // Validate before persisting any value (avoid partial writes).
+  for (const key of numericKeys) {
+    if (req.body[key] !== undefined) {
+      const n = Number(req.body[key]);
+      if (!Number.isInteger(n) || n < 0) {
+        res.status(400).json({ error: `${key} must be a non-negative integer` }); return;
+      }
+    }
+  }
+  if (req.body.outOfBandNotificationsEnabled !== undefined && typeof req.body.outOfBandNotificationsEnabled !== "boolean") {
+    res.status(400).json({ error: "outOfBandNotificationsEnabled must be a boolean" }); return;
+  }
+
   for (const key of allowed) {
     if (req.body[key] !== undefined) {
       const value = String(req.body[key]);

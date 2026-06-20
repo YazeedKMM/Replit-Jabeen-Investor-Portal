@@ -4,12 +4,9 @@ import { db } from "@workspace/db";
 import { internalNotesTable, projectsTable, usersTable } from "@workspace/db";
 import { requireAuth, type AuthenticatedRequest, MANAGER_ROLES } from "../middlewares/requireAuth";
 import { createNotifications, getManagerIds } from "../lib/notifications";
+import { parseId } from "../lib/http";
 
 const router: IRouter = Router();
-
-function parseId(raw: string | string[]): number {
-  return parseInt(Array.isArray(raw) ? raw[0] : raw);
-}
 
 router.get("/projects/:projectId/notes", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
   if (!(MANAGER_ROLES as readonly string[]).includes(req.user!.role)) { res.status(403).json({ error: "Forbidden" }); return; }

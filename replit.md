@@ -51,6 +51,10 @@ Demo accounts:
 - Contract-first: OpenAPI spec drives both server validation (Zod) and client hooks (Orval codegen)
 - JWT dual-token: short-lived access token in localStorage, long-lived refresh token in httpOnly cookie
 - RBAC enforced at route middleware level: roles are `administrator`, `top-management`, `project-manager`, `investor`
+- MFA (TOTP) is mandatory for privileged roles — `administrator`, `project-manager`, AND `top-management` (read access to the whole portfolio); optional for `investor`. Privileged accounts cannot self-disable MFA (admin reset only)
+- Top Management is strictly read-only: it can view everything but cannot submit updates, upload documents, or post messages
+- Pipeline templates are configuration: only privileged roles (not investors) can list/read `/templates`
+- Unhandled errors return JSON via a global error handler (`lib/http.ts` `HttpError` + `parseId`); non-numeric path ids resolve to 404
 - All Orval `useQuery` hooks require explicit `queryKey` in options (generated type requires it)
 - Google Fonts must be loaded via `<link>` in `index.html`, NOT `@import url()` in CSS (Tailwind v4 inlines first)
 

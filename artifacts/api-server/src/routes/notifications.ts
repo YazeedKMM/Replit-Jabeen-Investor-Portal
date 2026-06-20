@@ -3,12 +3,9 @@ import { eq, and, desc } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { notificationsTable, projectsTable, usersTable } from "@workspace/db";
 import { requireAuth, type AuthenticatedRequest } from "../middlewares/requireAuth";
+import { parseId } from "../lib/http";
 
 const router: IRouter = Router();
-
-function parseId(raw: string | string[]): number {
-  return parseInt(Array.isArray(raw) ? raw[0] : raw);
-}
 
 async function enrichNotification(n: typeof notificationsTable.$inferSelect) {
   let projectName = null;

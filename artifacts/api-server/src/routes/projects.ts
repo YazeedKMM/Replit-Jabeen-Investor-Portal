@@ -5,9 +5,18 @@ import { projectsTable, usersTable, stageTemplatesTable, stagesTable, stageField
 import { requireAuth, type AuthenticatedRequest, MANAGER_ROLES, PRIVILEGED_ROLES, ADMIN_ROLE } from "../middlewares/requireAuth";
 import { deriveProjectStatus } from "../lib/status";
 import { getStatusThresholds } from "../lib/settings-cache";
-import { logAudit } from "../lib/audit";
+import { logAudit, logAuditDeduped } from "../lib/audit";
+import { HttpError, parseId } from "../lib/http";
 
 const router: IRouter = Router();
+
+/** Validate an optional construction percentage (integer 0–100). */
+function validateConstructionPct(value: unknown): void {
+  if (value === undefined || value === null) return;
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > 100) {
+    throw new HttpError(400, "constructionPct must be an integer between 0 and 100");
+  }
+}
 
 /**
  * Resolve a requested pipeline template ID to the latest non-archived version in that
@@ -156,6 +165,7 @@ router.post("/projects", requireAuth, async (req: AuthenticatedRequest, res): Pr
   if (!name || !sector || !agreementNumber) {
     res.status(400).json({ error: "name, sector, agreementNumber are required" }); return;
   }
+  validateConstructionPct(constructionPct);
 
   if (investorId) {
     const [inv] = await db.select().from(usersTable).where(and(eq(usersTable.id, investorId), eq(usersTable.role, "investor")));
@@ -240,7 +250,7 @@ router.get("/projects/export", requireAuth, async (req: AuthenticatedRequest, re
 });
 
 router.get("/projects/:projectId", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
-  const projectId = parseInt(Array.isArray(req.params.projectId) ? req.params.projectId[0] : req.params.projectId);
+  const projectId = parseId(req.params.projectId);
   const [project] = await db.select().from(projectsTable).where(eq(projectsTable.id, projectId));
   if (!project) { res.status(404).json({ error: "Project not found" }); return; }
 
@@ -286,9 +296,11 @@ router.get("/projects/:projectId", requireAuth, async (req: AuthenticatedRequest
     }).from(usersTable).where(eq(usersTable.id, project.investorId));
     investor = u ?? null;
 
-    // Audit: record privileged view of investor contact details
+    // Audit: record privileged view of investor contact details.
+    // Deduped to once per actor+project per hour so routine page loads/refreshes
+    // don't flood the audit log.
     if (investor) {
-      await logAudit({
+      await logAuditDeduped({
         action: "investor-contact-viewed",
         actorId: req.user!.userId,
         targetType: "project",
@@ -305,12 +317,13 @@ router.patch("/projects/:projectId", requireAuth, async (req: AuthenticatedReque
   if (!(MANAGER_ROLES as readonly string[]).includes(req.user!.role)) {
     res.status(403).json({ error: "Forbidden" }); return;
   }
-  const projectId = parseInt(Array.isArray(req.params.projectId) ? req.params.projectId[0] : req.params.projectId);
+  const projectId = parseId(req.params.projectId);
   const [project] = await db.select().from(projectsTable).where(eq(projectsTable.id, projectId));
   if (!project) { res.status(404).json({ error: "Not found" }); return; }
 
   // Optimistic concurrency: version is mandatory — reject if missing or stale
   const { name, sector, plotNumber, notes, attentionFlag, constructionPct, investorId, pipelineId: rawPipelineId, version } = req.body;
+  validateConstructionPct(constructionPct);
   if (version === undefined || version === null) {
     res.status(400).json({ error: "version is required for project updates. Fetch the project first and include its current version.", code: "VERSION_REQUIRED" });
     return;
@@ -383,7 +396,7 @@ router.delete("/projects/:projectId", requireAuth, async (req: AuthenticatedRequ
   if (!(ADMIN_ROLE as readonly string[]).includes(req.user!.role)) {
     res.status(403).json({ error: "Forbidden" }); return;
   }
-  const projectId = parseInt(Array.isArray(req.params.projectId) ? req.params.projectId[0] : req.params.projectId);
+  const projectId = parseId(req.params.projectId);
   const [project] = await db.select().from(projectsTable).where(eq(projectsTable.id, projectId));
   if (!project) { res.status(404).json({ error: "Not found" }); return; }
   await db.delete(projectsTable).where(eq(projectsTable.id, projectId));

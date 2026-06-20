@@ -201,6 +201,14 @@ router.post("/auth/mfa/setup", requireMfaStepToken, async (req: AuthenticatedReq
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.user.userId));
   if (!user) { res.status(404).json({ error: "User not found" }); return; }
 
+  // Don't let a fresh setup silently disable an already-active enrollment (which
+  // would break the user's working authenticator). Require an explicit disable
+  // (non-privileged) or admin reset before re-enrolling.
+  if (user.mfaEnabled) {
+    res.status(409).json({ error: "MFA is already enabled. Disable it (or ask an administrator to reset it) before re-enrolling." });
+    return;
+  }
+
   const { secret, otpauthUri } = generateTotpSecret(user.email);
   const encryptedSecret = encryptMfaData(secret);
   const qrCode = await generateQrCodeDataUrl(otpauthUri);

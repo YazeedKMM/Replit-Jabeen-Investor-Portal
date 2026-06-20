@@ -9,6 +9,7 @@ import { db } from "@workspace/db";
 import { documentsTable, projectsTable, usersTable } from "@workspace/db";
 import { requireAuth, type AuthenticatedRequest, PRIVILEGED_ROLES, ADMIN_ROLE } from "../middlewares/requireAuth";
 import { logAudit } from "../lib/audit";
+import { parseId } from "../lib/http";
 
 const router: IRouter = Router();
 
@@ -93,10 +94,6 @@ const upload = multer({
   },
 });
 
-function parseId(raw: string | string[]): number {
-  return parseInt(Array.isArray(raw) ? raw[0] : raw);
-}
-
 async function getProjectScoped(projectId: number, userId: number, role: string) {
   const [p] = await db.select().from(projectsTable).where(eq(projectsTable.id, projectId));
   if (!p) return null;
@@ -120,6 +117,8 @@ router.get("/projects/:projectId/documents", requireAuth, async (req: Authentica
 });
 
 router.post("/projects/:projectId/documents", requireAuth, upload.single("file"), async (req: AuthenticatedRequest, res): Promise<void> => {
+  // Top Management is read-only — it can view/download but never upload.
+  if (req.user!.role === "top-management") { res.status(403).json({ error: "Top Management cannot upload documents" }); return; }
   const projectId = parseId(req.params.projectId);
   const project = await getProjectScoped(projectId, req.user!.userId, req.user!.role);
   if (!project) { res.status(404).json({ error: "Not found" }); return; }

@@ -5,12 +5,12 @@ import { usersTable, projectsTable, refreshTokensTable } from "@workspace/db";
 import { requireAuth, invalidateAccountStatusCache, type AuthenticatedRequest, MANAGER_ROLES, ADMIN_ROLE, PRIVILEGED_ROLES } from "../middlewares/requireAuth";
 import { hashPassword, generateOtpPassword } from "../lib/auth";
 import { logAudit } from "../lib/audit";
+import { parseId } from "../lib/http";
 
 const router: IRouter = Router();
 
-function parseId(raw: string | string[]): number {
-  return parseInt(Array.isArray(raw) ? raw[0] : raw);
-}
+const VALID_ROLES = ["investor", "top-management", "project-manager", "administrator"];
+const VALID_STATUSES = ["pending", "active", "inactive"];
 
 function safeUser(user: typeof usersTable.$inferSelect) {
   const { passwordHash: _ph, mfaSecret: _ms, mfaRecoveryCodes: _mrc, ...rest } = user;
@@ -21,17 +21,28 @@ router.get("/users", requireAuth, async (req: AuthenticatedRequest, res): Promis
   if (!(MANAGER_ROLES as readonly string[]).includes(req.user!.role)) { res.status(403).json({ error: "Forbidden" }); return; }
   const { search, role, status } = req.query as Record<string, string>;
 
-  let rows = await db.select().from(usersTable).orderBy(usersTable.fullName);
+  // Filter in SQL rather than loading the whole table into memory.
+  const conditions = [];
   if (search) {
-    const s = search.toLowerCase();
-    rows = rows.filter((u) =>
-      u.fullName.toLowerCase().includes(s) ||
-      u.email.toLowerCase().includes(s) ||
-      u.companyName.toLowerCase().includes(s)
-    );
+    const like = `%${search.replace(/[%_\\]/g, (c) => `\\${c}`)}%`;
+    conditions.push(or(
+      ilike(usersTable.fullName, like),
+      ilike(usersTable.email, like),
+      ilike(usersTable.companyName, like),
+    ));
   }
-  if (role) rows = rows.filter((u) => u.role === role);
-  if (status) rows = rows.filter((u) => u.status === status);
+  if (role) {
+    if (!VALID_ROLES.includes(role)) { res.json([]); return; }
+    conditions.push(eq(usersTable.role, role as typeof usersTable.$inferSelect["role"]));
+  }
+  if (status) {
+    if (!VALID_STATUSES.includes(status)) { res.json([]); return; }
+    conditions.push(eq(usersTable.status, status as typeof usersTable.$inferSelect["status"]));
+  }
+
+  const rows = conditions.length
+    ? await db.select().from(usersTable).where(and(...conditions)).orderBy(usersTable.fullName)
+    : await db.select().from(usersTable).orderBy(usersTable.fullName);
   res.json(rows.map(safeUser));
 });
 
@@ -78,6 +89,12 @@ router.patch("/users/:userId", requireAuth, async (req: AuthenticatedRequest, re
   if (!user) { res.status(404).json({ error: "Not found" }); return; }
 
   const { fullName, companyName, title, phone, role, status } = req.body;
+  if (role !== undefined && !VALID_ROLES.includes(role)) {
+    res.status(400).json({ error: `Invalid role. Must be one of: ${VALID_ROLES.join(", ")}` }); return;
+  }
+  if (status !== undefined && !VALID_STATUSES.includes(status)) {
+    res.status(400).json({ error: `Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}` }); return;
+  }
   const updates: Record<string, unknown> = {};
   if (fullName !== undefined) updates.fullName = fullName;
   if (companyName !== undefined) updates.companyName = companyName;
@@ -159,7 +176,7 @@ router.post("/users/:userId/activate", requireAuth, async (req: AuthenticatedReq
     res.status(403).json({ error: "Project Managers can only activate Investor accounts" }); return;
   }
 
-  const { projectId } = req.body as { projectId?: number };
+  const { projectId } = (req.body ?? {}) as { projectId?: number };
 
   let project: typeof projectsTable.$inferSelect | undefined;
   if (projectId) {
