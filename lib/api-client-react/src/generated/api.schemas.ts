@@ -374,6 +374,14 @@ export interface Template {
   /** @nullable */
   description?: string | null;
   isDefault: boolean;
+  versionNumber: number;
+  /** @nullable */
+  parentTemplateId?: number | null;
+  /** @nullable */
+  archivedAt?: string | null;
+  wasEverAssigned?: boolean;
+  /** Number of projects currently assigned to any version in this template family */
+  assignedProjectCount?: number;
   stages: Stage[];
   createdAt: string;
 }
@@ -653,7 +661,24 @@ export interface TemplateSummary {
   description?: string | null;
   isDefault: boolean;
   stageCount: number;
+  versionNumber: number;
+  /** @nullable */
+  parentTemplateId?: number | null;
+  /** @nullable */
+  archivedAt?: string | null;
+  assignedProjectCount?: number;
   createdAt: string;
+}
+
+export interface ReplaceTemplateResult {
+  template: Template;
+  /** True if a new version was created (old version archived), false if mutated in place */
+  versionCreated: boolean;
+}
+
+export interface ArchiveResult {
+  archived: boolean;
+  id: number;
 }
 
 export type StageInputCategory = typeof StageInputCategory[keyof typeof StageInputCategory];
@@ -808,6 +833,13 @@ export const ListProjectsStatus = {
   stalled: 'stalled',
   complete: 'complete',
 } as const;
+
+export type ListTemplatesParams = {
+/**
+ * If true, include archived templates (admin/manager only)
+ */
+includeArchived?: boolean;
+};
 
 export type ListUsersParams = {
 search?: string;

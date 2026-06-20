@@ -21,6 +21,7 @@ import type {
 
 import type {
   ActivateUserInput,
+  ArchiveResult,
   AuditLogPage,
   AuthResult,
   DashboardStats,
@@ -30,6 +31,7 @@ import type {
   InternalNote,
   ListAuditLogParams,
   ListProjectsParams,
+  ListTemplatesParams,
   ListUsersParams,
   LoginInput,
   LoginResult,
@@ -49,6 +51,7 @@ import type {
   ProjectUpdate,
   RegisterInput,
   RejectInput,
+  ReplaceTemplateResult,
   SettingsUpdate,
   StatusUpdate,
   SystemSettings,
@@ -2658,20 +2661,27 @@ export const useMarkNotificationRead = <TError = ErrorType<unknown>,
       return useMutation(getMarkNotificationReadMutationOptions(options));
     }
 
-export const getListTemplatesUrl = () => {
+export const getListTemplatesUrl = (params?: ListTemplatesParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/api/templates`
+  return stringifiedParams.length > 0 ? `/api/templates?${stringifiedParams}` : `/api/templates`
 }
 
 /**
  * @summary List stage templates
  */
-export const listTemplates = async ( options?: RequestInit): Promise<TemplateSummary[]> => {
+export const listTemplates = async (params?: ListTemplatesParams, options?: RequestInit): Promise<TemplateSummary[]> => {
 
-  return customFetch<TemplateSummary[]>(getListTemplatesUrl(),
+  return customFetch<TemplateSummary[]>(getListTemplatesUrl(params),
   {
     ...options,
     method: 'GET'
@@ -2684,23 +2694,23 @@ export const listTemplates = async ( options?: RequestInit): Promise<TemplateSum
 
 
 
-export const getListTemplatesQueryKey = () => {
+export const getListTemplatesQueryKey = (params?: ListTemplatesParams,) => {
     return [
-    `/api/templates`
+    `/api/templates`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getListTemplatesQueryOptions = <TData = Awaited<ReturnType<typeof listTemplates>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTemplates>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getListTemplatesQueryOptions = <TData = Awaited<ReturnType<typeof listTemplates>>, TError = ErrorType<unknown>>(params?: ListTemplatesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTemplates>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getListTemplatesQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getListTemplatesQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTemplates>>> = ({ signal }) => listTemplates({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTemplates>>> = ({ signal }) => listTemplates(params, { signal, ...requestOptions });
 
 
 
@@ -2718,11 +2728,11 @@ export type ListTemplatesQueryError = ErrorType<unknown>
  */
 
 export function useListTemplates<TData = Awaited<ReturnType<typeof listTemplates>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTemplates>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+ params?: ListTemplatesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTemplates>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getListTemplatesQueryOptions(options)
+  const queryOptions = getListTemplatesQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -2892,12 +2902,12 @@ export const getReplaceTemplateUrl = (templateId: number,) => {
 }
 
 /**
- * @summary Replace template stages/fields (managers only)
+ * @summary Replace template stages/fields — creates new version if assigned to any project (managers only)
  */
 export const replaceTemplate = async (templateId: number,
-    templateInput: TemplateInput, options?: RequestInit): Promise<Template> => {
+    templateInput: TemplateInput, options?: RequestInit): Promise<ReplaceTemplateResult> => {
 
-  return customFetch<Template>(getReplaceTemplateUrl(templateId),
+  return customFetch<ReplaceTemplateResult>(getReplaceTemplateUrl(templateId),
   {
     ...options,
     method: 'PUT',
@@ -2942,7 +2952,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ReplaceTemplateMutationError = ErrorType<unknown>
 
     /**
- * @summary Replace template stages/fields (managers only)
+ * @summary Replace template stages/fields — creates new version if assigned to any project (managers only)
  */
 export const useReplaceTemplate = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceTemplate>>, TError,{templateId: number;data: BodyType<TemplateInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -2964,11 +2974,11 @@ export const getDeleteTemplateUrl = (templateId: number,) => {
 }
 
 /**
- * @summary Delete a template (managers only)
+ * @summary Delete (if never assigned) or archive (if ever assigned) a template (managers only)
  */
-export const deleteTemplate = async (templateId: number, options?: RequestInit): Promise<void> => {
+export const deleteTemplate = async (templateId: number, options?: RequestInit): Promise<ArchiveResult | void> => {
 
-  return customFetch<void>(getDeleteTemplateUrl(templateId),
+  return customFetch<ArchiveResult | void>(getDeleteTemplateUrl(templateId),
   {
     ...options,
     method: 'DELETE'
@@ -3012,7 +3022,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteTemplateMutationError = ErrorType<unknown>
 
     /**
- * @summary Delete a template (managers only)
+ * @summary Delete (if never assigned) or archive (if ever assigned) a template (managers only)
  */
 export const useDeleteTemplate = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTemplate>>, TError,{templateId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -3023,6 +3033,76 @@ export const useDeleteTemplate = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteTemplateMutationOptions(options));
+    }
+
+export const getArchiveTemplateUrl = (templateId: number,) => {
+
+
+
+
+  return `/api/templates/${templateId}/archive`
+}
+
+/**
+ * @summary Explicitly archive a template version (managers only)
+ */
+export const archiveTemplate = async (templateId: number, options?: RequestInit): Promise<ArchiveResult> => {
+
+  return customFetch<ArchiveResult>(getArchiveTemplateUrl(templateId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getArchiveTemplateMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof archiveTemplate>>, TError,{templateId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof archiveTemplate>>, TError,{templateId: number}, TContext> => {
+
+const mutationKey = ['archiveTemplate'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof archiveTemplate>>, {templateId: number}> = (props) => {
+          const {templateId} = props ?? {};
+
+          return  archiveTemplate(templateId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ArchiveTemplateMutationResult = NonNullable<Awaited<ReturnType<typeof archiveTemplate>>>
+
+    export type ArchiveTemplateMutationError = ErrorType<void>
+
+    /**
+ * @summary Explicitly archive a template version (managers only)
+ */
+export const useArchiveTemplate = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof archiveTemplate>>, TError,{templateId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof archiveTemplate>>,
+        TError,
+        {templateId: number},
+        TContext
+      > => {
+      return useMutation(getArchiveTemplateMutationOptions(options));
     }
 
 export const getListUsersUrl = (params?: ListUsersParams,) => {

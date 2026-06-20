@@ -22,7 +22,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Plus, Trash2, GripVertical, Save, Loader2, Eye } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ArrowLeft, Plus, Trash2, GripVertical, Save, Loader2, Eye, GitBranch, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -153,6 +154,9 @@ export default function TemplateBuilderPage() {
     name: "", description: "", isDefault: false, stages: []
   });
 
+  const isArchived = !isNew && !!serverTemplate?.archivedAt;
+  const assignedProjectCount = !isNew ? (serverTemplate as any)?.assignedProjectCount ?? 0 : 0;
+
   useEffect(() => {
     if (serverTemplate && !isNew) {
       setTemplate({
@@ -240,6 +244,14 @@ export default function TemplateBuilderPage() {
   const handleSave = async () => {
     if (!template.name) { toast({ title: "Name required", variant: "destructive" }); return; }
 
+    // If template is in use by projects, warn the user before creating a new version
+    if (!isNew && assignedProjectCount > 0) {
+      const confirmed = confirm(
+        `This template is currently assigned to ${assignedProjectCount} project${assignedProjectCount !== 1 ? "s" : ""}.\n\nSaving will create a new version (v${(serverTemplate?.versionNumber ?? 1) + 1}). Existing projects will remain on their current version — your changes apply only to new assignments.`
+      );
+      if (!confirmed) return;
+    }
+
     const payload: TemplateInput = {
       name: template.name,
       description: template.description,
@@ -264,8 +276,12 @@ export default function TemplateBuilderPage() {
         await createMutation.mutateAsync({ data: payload });
         toast({ title: "Template created" });
       } else {
-        await updateMutation.mutateAsync({ templateId, data: payload });
-        toast({ title: "Template updated" });
+        const result = await updateMutation.mutateAsync({ templateId, data: payload });
+        if (result.versionCreated) {
+          toast({ title: "New version created", description: "The previous version is archived. Existing projects remain pinned to their version." });
+        } else {
+          toast({ title: "Template updated" });
+        }
       }
       queryClient.invalidateQueries({ queryKey: ["/api/templates"] });
       setLocation("/templates");
@@ -287,13 +303,42 @@ export default function TemplateBuilderPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold">{isNew ? "New Template" : "Edit Template"}</h1>
+          <h1 className="text-2xl font-bold">
+            {isNew ? "New Template" : "Edit Template"}
+          </h1>
+          {!isNew && serverTemplate && (
+            <p className="text-sm text-muted-foreground flex items-center gap-1">
+              <GitBranch className="h-3.5 w-3.5" />
+              Version {serverTemplate.versionNumber}
+              {isArchived && <span className="text-amber-600 ml-1">(archived)</span>}
+            </p>
+          )}
         </div>
-        <Button onClick={handleSave} disabled={isSaving}>
-          {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-          Save Template
-        </Button>
+        {!isArchived && (
+          <Button onClick={handleSave} disabled={isSaving}>
+            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+            Save Template
+          </Button>
+        )}
       </div>
+
+      {isArchived && (
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertDescription>
+            This template version is archived and cannot be edited. Projects currently using it remain unaffected. To make changes, create a new template.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {!isNew && !isArchived && assignedProjectCount > 0 && (
+        <Alert>
+          <GitBranch className="h-4 w-4" />
+          <AlertDescription>
+            This template is currently assigned to <strong>{assignedProjectCount} project{assignedProjectCount !== 1 ? "s" : ""}</strong>. Saving will create a new version — existing projects remain on version {serverTemplate?.versionNumber}.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Card>
         <CardHeader>
@@ -304,16 +349,30 @@ export default function TemplateBuilderPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Template Name</Label>
-              <Input value={template.name} onChange={e => setTemplate({ ...template, name: e.target.value })} placeholder="e.g. Standard Industrial Project" />
+              <Input
+                value={template.name}
+                onChange={e => setTemplate({ ...template, name: e.target.value })}
+                placeholder="e.g. Standard Industrial Project"
+                disabled={isArchived}
+              />
             </div>
             <div className="flex items-center space-x-2 pt-8">
-              <Switch id="is-default" checked={template.isDefault} onCheckedChange={c => setTemplate({ ...template, isDefault: c })} />
+              <Switch
+                id="is-default"
+                checked={template.isDefault}
+                onCheckedChange={c => setTemplate({ ...template, isDefault: c })}
+                disabled={isArchived}
+              />
               <Label htmlFor="is-default">Set as default for new projects</Label>
             </div>
           </div>
           <div className="space-y-2">
             <Label>Description</Label>
-            <Textarea value={template.description} onChange={e => setTemplate({ ...template, description: e.target.value })} />
+            <Textarea
+              value={template.description}
+              onChange={e => setTemplate({ ...template, description: e.target.value })}
+              disabled={isArchived}
+            />
           </div>
         </CardContent>
       </Card>
@@ -324,23 +383,27 @@ export default function TemplateBuilderPage() {
             <h2 className="text-xl font-bold">Pipeline Stages</h2>
             <p className="text-sm text-muted-foreground">Define the steps a project moves through, in order.</p>
           </div>
-          <Button onClick={addStage} variant="outline" size="sm"><Plus className="mr-2 h-4 w-4" /> Add Stage</Button>
+          {!isArchived && (
+            <Button onClick={addStage} variant="outline" size="sm"><Plus className="mr-2 h-4 w-4" /> Add Stage</Button>
+          )}
         </div>
 
         {template.stages.length === 0 ? (
           <div className="text-center p-8 border border-dashed rounded-lg bg-muted/20">
-            <p className="text-muted-foreground">No stages defined yet. Click Add Stage to begin.</p>
+            <p className="text-muted-foreground">No stages defined yet.{!isArchived && " Click Add Stage to begin."}</p>
           </div>
         ) : (
           <Accordion type="multiple" className="space-y-4">
             {template.stages.map((stage, index) => (
               <AccordionItem value={stage.id} key={stage.id} className="border rounded-lg bg-card px-4">
                 <div className="flex items-center w-full gap-2">
-                  <div className="flex flex-col gap-1 px-1">
-                    <Button variant="ghost" size="icon" className="h-6 w-6" disabled={index === 0} onClick={(e) => { e.preventDefault(); moveStage(index, -1); }}>
-                      <GripVertical className="h-4 w-4 rotate-90" />
-                    </Button>
-                  </div>
+                  {!isArchived && (
+                    <div className="flex flex-col gap-1 px-1">
+                      <Button variant="ghost" size="icon" className="h-6 w-6" disabled={index === 0} onClick={(e) => { e.preventDefault(); moveStage(index, -1); }}>
+                        <GripVertical className="h-4 w-4 rotate-90" />
+                      </Button>
+                    </div>
+                  )}
                   <AccordionTrigger className="hover:no-underline py-4 flex-1">
                     <div className="flex items-center gap-4 text-left">
                       <span className="font-semibold text-lg flex items-center gap-2">
@@ -350,20 +413,22 @@ export default function TemplateBuilderPage() {
                       <span className="text-xs text-muted-foreground font-normal">{stage.progressBaseline}% baseline</span>
                     </div>
                   </AccordionTrigger>
-                  <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => removeStage(stage.id)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  {!isArchived && (
+                    <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => removeStage(stage.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
 
                 <AccordionContent className="pt-2 pb-6 space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted/30 rounded-md">
                     <div className="space-y-2">
                       <Label>Stage Name</Label>
-                      <Input value={stage.name} onChange={e => updateStage(stage.id, { name: e.target.value })} />
+                      <Input value={stage.name} onChange={e => updateStage(stage.id, { name: e.target.value })} disabled={isArchived} />
                     </div>
                     <div className="space-y-2">
                       <Label>Category</Label>
-                      <Select value={stage.category} onValueChange={(v: StageInputCategory) => updateStage(stage.id, { category: v })}>
+                      <Select value={stage.category} onValueChange={(v: StageInputCategory) => updateStage(stage.id, { category: v })} disabled={isArchived}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="on-hold">On Hold (Pre-start)</SelectItem>
@@ -374,18 +439,20 @@ export default function TemplateBuilderPage() {
                     </div>
                     <div className="space-y-2">
                       <Label>Progress Baseline (%)</Label>
-                      <Input type="number" min="0" max="100" value={stage.progressBaseline} onChange={e => updateStage(stage.id, { progressBaseline: Number(e.target.value) })} />
+                      <Input type="number" min="0" max="100" value={stage.progressBaseline} onChange={e => updateStage(stage.id, { progressBaseline: Number(e.target.value) })} disabled={isArchived} />
                     </div>
                     <div className="space-y-2 md:col-span-3">
                       <Label>Description</Label>
-                      <Input value={stage.description} onChange={e => updateStage(stage.id, { description: e.target.value })} />
+                      <Input value={stage.description} onChange={e => updateStage(stage.id, { description: e.target.value })} disabled={isArchived} />
                     </div>
                   </div>
 
                   <div>
                     <div className="flex justify-between items-center mb-3">
                       <Label className="text-base font-semibold">Custom Data Fields</Label>
-                      <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => addField(stage.id)}><Plus className="mr-1 h-3 w-3" /> Add Field</Button>
+                      {!isArchived && (
+                        <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => addField(stage.id)}><Plus className="mr-1 h-3 w-3" /> Add Field</Button>
+                      )}
                     </div>
 
                     {stage.fields.length === 0 ? (
@@ -398,16 +465,15 @@ export default function TemplateBuilderPage() {
 
                           return (
                             <div key={field.id} className="border rounded-lg bg-background overflow-hidden">
-                              {/* Field Config Row */}
                               <div className="flex flex-col md:flex-row gap-3 items-start p-3">
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 flex-1 w-full">
                                   <div className="space-y-1">
                                     <Label className="text-xs">Field Label</Label>
-                                    <Input className="h-8 text-sm" value={field.name} onChange={e => updateField(stage.id, field.id, { name: e.target.value })} />
+                                    <Input className="h-8 text-sm" value={field.name} onChange={e => updateField(stage.id, field.id, { name: e.target.value })} disabled={isArchived} />
                                   </div>
                                   <div className="space-y-1">
                                     <Label className="text-xs">Data Type</Label>
-                                    <Select value={field.baseType} onValueChange={(v) => changeBaseType(stage.id, field.id, v)}>
+                                    <Select value={field.baseType} onValueChange={(v) => changeBaseType(stage.id, field.id, v)} disabled={isArchived}>
                                       <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                                       <SelectContent>
                                         <SelectItem value="text">Text</SelectItem>
@@ -426,6 +492,7 @@ export default function TemplateBuilderPage() {
                                     <Select
                                       value={field.widget}
                                       onValueChange={(v: any) => updateField(stage.id, field.id, { widget: v })}
+                                      disabled={isArchived}
                                     >
                                       <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                                       <SelectContent>
@@ -437,18 +504,19 @@ export default function TemplateBuilderPage() {
                                   </div>
                                   <div className="space-y-1 flex flex-col justify-end pb-1">
                                     <div className="flex items-center space-x-2">
-                                      <Switch id={`req-${field.id}`} checked={field.required} onCheckedChange={c => updateField(stage.id, field.id, { required: c })} />
+                                      <Switch id={`req-${field.id}`} checked={field.required} onCheckedChange={c => updateField(stage.id, field.id, { required: c })} disabled={isArchived} />
                                       <Label htmlFor={`req-${field.id}`} className="text-xs font-normal">Required</Label>
                                     </div>
                                   </div>
                                 </div>
 
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0 self-end md:self-center" onClick={() => removeField(stage.id, field.id)}>
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
+                                {!isArchived && (
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0 self-end md:self-center" onClick={() => removeField(stage.id, field.id)}>
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                )}
                               </div>
 
-                              {/* Options input for choice types */}
                               {needsOptions && (
                                 <div className="px-3 pb-3">
                                   <Label className="text-xs">Options <span className="text-muted-foreground font-normal">(one per line)</span></Label>
@@ -457,11 +525,11 @@ export default function TemplateBuilderPage() {
                                     value={field.optionsStr}
                                     onChange={e => updateField(stage.id, field.id, { optionsStr: e.target.value })}
                                     placeholder={"Option A\nOption B\nOption C"}
+                                    disabled={isArchived}
                                   />
                                 </div>
                               )}
 
-                              {/* Live preview */}
                               <div className="px-3 pb-3">
                                 <FieldPreview field={field} />
                               </div>

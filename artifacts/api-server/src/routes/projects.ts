@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, ilike, or, sql, inArray, desc } from "drizzle-orm";
+import { eq, and, or, inArray, isNull, desc } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { projectsTable, usersTable, stageTemplatesTable, stagesTable } from "@workspace/db";
 import { requireAuth, type AuthenticatedRequest, MANAGER_ROLES, PRIVILEGED_ROLES, ADMIN_ROLE } from "../middlewares/requireAuth";
@@ -8,9 +8,47 @@ import { logAudit } from "../lib/audit";
 
 const router: IRouter = Router();
 
+/**
+ * Resolve a requested pipeline template ID to the latest non-archived version in that
+ * template's family. This ensures that even if a user selects an older version from the
+ * picker (e.g. due to a race condition), they are always pinned to the current version.
+ * Returns the resolved ID, or null if no active version exists.
+ */
+async function resolveToLatestActiveVersion(requestedId: number): Promise<number | null> {
+  const [tpl] = await db.select().from(stageTemplatesTable).where(eq(stageTemplatesTable.id, requestedId));
+  if (!tpl) return null;
+  if (tpl.archivedAt) return null; // requested version is already archived
+
+  const rootId = tpl.parentTemplateId ?? tpl.id;
+
+  // Find the highest non-archived version in this family
+  const [latest] = await db.select()
+    .from(stageTemplatesTable)
+    .where(
+      and(
+        or(
+          eq(stageTemplatesTable.id, rootId),
+          eq(stageTemplatesTable.parentTemplateId, rootId)
+        ),
+        isNull(stageTemplatesTable.archivedAt)
+      )
+    )
+    .orderBy(desc(stageTemplatesTable.versionNumber))
+    .limit(1);
+
+  return latest?.id ?? null;
+}
+
+/** Mark a template version as having been assigned (durable "ever assigned" tracking). */
+async function markTemplateAssigned(templateId: number): Promise<void> {
+  await db.update(stageTemplatesTable)
+    .set({ wasEverAssigned: true })
+    .where(eq(stageTemplatesTable.id, templateId));
+}
+
 async function buildProjectScope(userId: number, role: string) {
   const isPrivileged = (PRIVILEGED_ROLES as readonly string[]).includes(role);
-  return isPrivileged ? null : userId; // null means no filter needed (see all)
+  return isPrivileged ? null : userId;
 }
 
 async function enrichProject(project: typeof projectsTable.$inferSelect, forRole: string) {
@@ -55,11 +93,7 @@ router.get("/projects", requireAuth, async (req: AuthenticatedRequest, res): Pro
   const role = req.user!.role;
   const isPrivileged = (PRIVILEGED_ROLES as readonly string[]).includes(role);
 
-  let query = db.select().from(projectsTable);
-
-  // Scope
   if (!isPrivileged) {
-    // Investor: only own projects
     const results = await db.select().from(projectsTable).where(eq(projectsTable.investorId, userId));
     const enriched = await Promise.all(results.map((p) => enrichProject(p, role)));
     let filtered = enriched;
@@ -98,21 +132,31 @@ router.post("/projects", requireAuth, async (req: AuthenticatedRequest, res): Pr
   if (!(MANAGER_ROLES as readonly string[]).includes(req.user!.role)) {
     res.status(403).json({ error: "Forbidden" }); return;
   }
-  const { name, sector, agreementNumber, plotNumber, pipelineId, constructionPct, investorId, notes } = req.body;
+  const { name, sector, agreementNumber, plotNumber, pipelineId: rawPipelineId, constructionPct, investorId, notes } = req.body;
   if (!name || !sector || !agreementNumber) {
     res.status(400).json({ error: "name, sector, agreementNumber are required" }); return;
   }
 
-  // Validate investorId is investor role
   if (investorId) {
     const [inv] = await db.select().from(usersTable).where(and(eq(usersTable.id, investorId), eq(usersTable.role, "investor")));
     if (!inv) { res.status(400).json({ error: "Assigned investor must be an Investor account" }); return; }
   }
 
-  // Find first stage of pipeline
+  // Resolve pipeline to latest non-archived version
+  let resolvedPipelineId: number | null = null;
+  if (rawPipelineId) {
+    resolvedPipelineId = await resolveToLatestActiveVersion(rawPipelineId);
+    if (!resolvedPipelineId) {
+      res.status(400).json({ error: "The selected pipeline template is archived or does not exist" }); return;
+    }
+  }
+
   let currentStageId: number | null = null;
-  if (pipelineId) {
-    const [firstStage] = await db.select().from(stagesTable).where(eq(stagesTable.templateId, pipelineId)).orderBy(stagesTable.orderIndex).limit(1);
+  if (resolvedPipelineId) {
+    const [firstStage] = await db.select().from(stagesTable)
+      .where(eq(stagesTable.templateId, resolvedPipelineId))
+      .orderBy(stagesTable.orderIndex)
+      .limit(1);
     currentStageId = firstStage?.id ?? null;
   }
 
@@ -122,11 +166,16 @@ router.post("/projects", requireAuth, async (req: AuthenticatedRequest, res): Pr
     agreementNumber,
     plotNumber: plotNumber ?? null,
     notes: notes ?? null,
-    pipelineId: pipelineId ?? null,
+    pipelineId: resolvedPipelineId,
     constructionPct: constructionPct ?? 0,
     investorId: investorId ?? null,
     currentStageId,
   }).returning();
+
+  // Mark the template version as having been assigned
+  if (resolvedPipelineId) {
+    await markTemplateAssigned(resolvedPipelineId);
+  }
 
   await logAudit({ action: "project.created", actorId: req.user!.userId, targetType: "project", targetId: project.id });
   const enriched = await enrichProject(project, req.user!.role);
@@ -173,7 +222,7 @@ router.get("/projects/:projectId", requireAuth, async (req: AuthenticatedRequest
     res.status(404).json({ error: "Project not found" }); return;
   }
 
-  // Fetch full pipeline
+  // Fetch the specific pinned template version — stages from that version
   let pipeline = null;
   if (project.pipelineId) {
     const [tpl] = await db.select().from(stageTemplatesTable).where(eq(stageTemplatesTable.id, project.pipelineId));
@@ -214,7 +263,7 @@ router.patch("/projects/:projectId", requireAuth, async (req: AuthenticatedReque
   const [project] = await db.select().from(projectsTable).where(eq(projectsTable.id, projectId));
   if (!project) { res.status(404).json({ error: "Not found" }); return; }
 
-  const { name, sector, plotNumber, notes, attentionFlag, constructionPct, investorId, pipelineId } = req.body;
+  const { name, sector, plotNumber, notes, attentionFlag, constructionPct, investorId, pipelineId: rawPipelineId } = req.body;
 
   if (investorId !== undefined && investorId !== null) {
     const [inv] = await db.select().from(usersTable).where(and(eq(usersTable.id, investorId), eq(usersTable.role, "investor")));
@@ -230,14 +279,28 @@ router.patch("/projects/:projectId", requireAuth, async (req: AuthenticatedReque
   if (constructionPct !== undefined) updates.constructionPct = constructionPct;
   if (investorId !== undefined) updates.investorId = investorId;
 
-  // Pipeline change: reset to first stage
-  if (pipelineId !== undefined) {
-    updates.pipelineId = pipelineId;
-    if (pipelineId) {
-      const [firstStage] = await db.select().from(stagesTable).where(eq(stagesTable.templateId, pipelineId)).orderBy(stagesTable.orderIndex).limit(1);
-      updates.currentStageId = firstStage?.id ?? null;
-    } else {
+  // Pipeline change: only resolve/validate when the pipeline is actually changing.
+  // If the submitted pipelineId matches the project's current pipelineId (even if that
+  // version is now archived), treat it as a no-op to avoid breaking edits for projects
+  // already pinned to an archived version.
+  if (rawPipelineId !== undefined && rawPipelineId !== project.pipelineId) {
+    if (rawPipelineId === null) {
+      updates.pipelineId = null;
       updates.currentStageId = null;
+    } else {
+      const resolvedPipelineId = await resolveToLatestActiveVersion(rawPipelineId);
+      if (!resolvedPipelineId) {
+        res.status(400).json({ error: "The selected pipeline template is archived or does not exist" }); return;
+      }
+      updates.pipelineId = resolvedPipelineId;
+      const [firstStage] = await db.select().from(stagesTable)
+        .where(eq(stagesTable.templateId, resolvedPipelineId))
+        .orderBy(stagesTable.orderIndex)
+        .limit(1);
+      updates.currentStageId = firstStage?.id ?? null;
+
+      // Mark the resolved template version as having been assigned
+      await markTemplateAssigned(resolvedPipelineId);
     }
   }
 

@@ -13,5 +13,11 @@ export interface TemplateSummary {
   description?: string | null;
   isDefault: boolean;
   stageCount: number;
+  versionNumber: number;
+  /** @nullable */
+  parentTemplateId?: number | null;
+  /** @nullable */
+  archivedAt?: Date | null;
+  assignedProjectCount?: number;
   createdAt: Date;
 }

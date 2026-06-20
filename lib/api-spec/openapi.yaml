@@ -633,6 +633,12 @@ paths:
       operationId: listTemplates
       tags: [templates]
       summary: List stage templates
+      parameters:
+        - name: includeArchived
+          in: query
+          schema:
+            type: boolean
+          description: If true, include archived templates (admin/manager only)
       responses:
         "200":
           description: Templates
@@ -677,7 +683,7 @@ paths:
     put:
       operationId: replaceTemplate
       tags: [templates]
-      summary: Replace template stages/fields (managers only)
+      summary: Replace template stages/fields — creates new version if assigned to any project (managers only)
       parameters:
         - $ref: "#/components/parameters/templateId"
       requestBody:
@@ -688,20 +694,43 @@ paths:
               $ref: "#/components/schemas/TemplateInput"
       responses:
         "200":
-          description: Updated template
+          description: Updated or newly versioned template
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Template"
+                $ref: "#/components/schemas/ReplaceTemplateResult"
     delete:
       operationId: deleteTemplate
       tags: [templates]
-      summary: Delete a template (managers only)
+      summary: Delete (if never assigned) or archive (if ever assigned) a template (managers only)
       parameters:
         - $ref: "#/components/parameters/templateId"
       responses:
+        "200":
+          description: Archived (template was assigned — soft-deleted)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArchiveResult"
         "204":
-          description: Deleted
+          description: Hard-deleted (template was never assigned)
+
+  /templates/{templateId}/archive:
+    post:
+      operationId: archiveTemplate
+      tags: [templates]
+      summary: Explicitly archive a template version (managers only)
+      parameters:
+        - $ref: "#/components/parameters/templateId"
+      responses:
+        "200":
+          description: Archived
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArchiveResult"
+        "409":
+          description: Template is not assigned and can be hard-deleted instead
 
   # --- USERS ---
   /users:
@@ -1637,7 +1666,7 @@ components:
     # --- TEMPLATE ---
     TemplateSummary:
       type: object
-      required: [id, name, isDefault, stageCount, createdAt]
+      required: [id, name, isDefault, stageCount, versionNumber, createdAt]
       properties:
         id:
           type: integer
@@ -1649,13 +1678,22 @@ components:
           type: boolean
         stageCount:
           type: integer
+        versionNumber:
+          type: integer
+        parentTemplateId:
+          type: ["integer", "null"]
+        archivedAt:
+          type: ["string", "null"]
+          format: date-time
+        assignedProjectCount:
+          type: integer
         createdAt:
           type: string
           format: date-time
 
     Template:
       type: object
-      required: [id, name, isDefault, stages, createdAt]
+      required: [id, name, isDefault, stages, versionNumber, createdAt]
       properties:
         id:
           type: integer
@@ -1665,6 +1703,18 @@ components:
           type: ["string", "null"]
         isDefault:
           type: boolean
+        versionNumber:
+          type: integer
+        parentTemplateId:
+          type: ["integer", "null"]
+        archivedAt:
+          type: ["string", "null"]
+          format: date-time
+        wasEverAssigned:
+          type: boolean
+        assignedProjectCount:
+          type: integer
+          description: Number of projects currently assigned to any version in this template family
         stages:
           type: array
           items:
@@ -1672,6 +1722,25 @@ components:
         createdAt:
           type: string
           format: date-time
+
+    ReplaceTemplateResult:
+      type: object
+      required: [template, versionCreated]
+      properties:
+        template:
+          $ref: "#/components/schemas/Template"
+        versionCreated:
+          type: boolean
+          description: True if a new version was created (old version archived), false if mutated in place
+
+    ArchiveResult:
+      type: object
+      required: [archived, id]
+      properties:
+        archived:
+          type: boolean
+        id:
+          type: integer
 
     TemplateInput:
       type: object

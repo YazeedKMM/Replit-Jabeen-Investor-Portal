@@ -13,6 +13,14 @@ export interface Template {
   /** @nullable */
   description?: string | null;
   isDefault: boolean;
+  versionNumber: number;
+  /** @nullable */
+  parentTemplateId?: number | null;
+  /** @nullable */
+  archivedAt?: Date | null;
+  wasEverAssigned?: boolean;
+  /** Number of projects currently assigned to any version in this template family */
+  assignedProjectCount?: number;
   stages: Stage[];
   createdAt: Date;
 }

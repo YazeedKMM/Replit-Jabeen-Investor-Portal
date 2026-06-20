@@ -365,6 +365,11 @@ export const GetProjectResponse = zod.object({
   "name": zod.string(),
   "description": zod.string().nullish(),
   "isDefault": zod.boolean(),
+  "versionNumber": zod.number(),
+  "parentTemplateId": zod.number().nullish(),
+  "archivedAt": zod.coerce.date().nullish(),
+  "wasEverAssigned": zod.boolean().optional(),
+  "assignedProjectCount": zod.number().optional().describe('Number of projects currently assigned to any version in this template family'),
   "stages": zod.array(zod.object({
   "id": zod.number(),
   "name": zod.string(),
@@ -459,6 +464,11 @@ export const UpdateProjectResponse = zod.object({
   "name": zod.string(),
   "description": zod.string().nullish(),
   "isDefault": zod.boolean(),
+  "versionNumber": zod.number(),
+  "parentTemplateId": zod.number().nullish(),
+  "archivedAt": zod.coerce.date().nullish(),
+  "wasEverAssigned": zod.boolean().optional(),
+  "assignedProjectCount": zod.number().optional().describe('Number of projects currently assigned to any version in this template family'),
   "stages": zod.array(zod.object({
   "id": zod.number(),
   "name": zod.string(),
@@ -966,12 +976,20 @@ export const MarkNotificationReadResponse = zod.object({
 /**
  * @summary List stage templates
  */
+export const ListTemplatesQueryParams = zod.object({
+  "includeArchived": zod.coerce.boolean().optional().describe('If true, include archived templates (admin\/manager only)')
+})
+
 export const ListTemplatesResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
   "description": zod.string().nullish(),
   "isDefault": zod.boolean(),
   "stageCount": zod.number(),
+  "versionNumber": zod.number(),
+  "parentTemplateId": zod.number().nullish(),
+  "archivedAt": zod.coerce.date().nullish(),
+  "assignedProjectCount": zod.number().optional(),
   "createdAt": zod.coerce.date()
 })
 export const ListTemplatesResponse = zod.array(ListTemplatesResponseItem)
@@ -1035,6 +1053,11 @@ export const GetTemplateResponse = zod.object({
   "name": zod.string(),
   "description": zod.string().nullish(),
   "isDefault": zod.boolean(),
+  "versionNumber": zod.number(),
+  "parentTemplateId": zod.number().nullish(),
+  "archivedAt": zod.coerce.date().nullish(),
+  "wasEverAssigned": zod.boolean().optional(),
+  "assignedProjectCount": zod.number().optional().describe('Number of projects currently assigned to any version in this template family'),
   "stages": zod.array(zod.object({
   "id": zod.number(),
   "name": zod.string(),
@@ -1060,7 +1083,7 @@ export const GetTemplateResponse = zod.object({
 
 
 /**
- * @summary Replace template stages/fields (managers only)
+ * @summary Replace template stages/fields — creates new version if assigned to any project (managers only)
  */
 export const ReplaceTemplateParams = zod.object({
   "templateId": zod.coerce.number()
@@ -1103,22 +1126,28 @@ export const ReplaceTemplateBody = zod.object({
 }))
 })
 
-export const replaceTemplateResponseStagesItemProgressBaselineMin = 0;
-export const replaceTemplateResponseStagesItemProgressBaselineMax = 100;
+export const replaceTemplateResponseTemplateStagesItemProgressBaselineMin = 0;
+export const replaceTemplateResponseTemplateStagesItemProgressBaselineMax = 100;
 
 
 
 export const ReplaceTemplateResponse = zod.object({
+  "template": zod.object({
   "id": zod.number(),
   "name": zod.string(),
   "description": zod.string().nullish(),
   "isDefault": zod.boolean(),
+  "versionNumber": zod.number(),
+  "parentTemplateId": zod.number().nullish(),
+  "archivedAt": zod.coerce.date().nullish(),
+  "wasEverAssigned": zod.boolean().optional(),
+  "assignedProjectCount": zod.number().optional().describe('Number of projects currently assigned to any version in this template family'),
   "stages": zod.array(zod.object({
   "id": zod.number(),
   "name": zod.string(),
   "description": zod.string().nullish(),
   "orderIndex": zod.number(),
-  "progressBaseline": zod.number().min(replaceTemplateResponseStagesItemProgressBaselineMin).max(replaceTemplateResponseStagesItemProgressBaselineMax),
+  "progressBaseline": zod.number().min(replaceTemplateResponseTemplateStagesItemProgressBaselineMin).max(replaceTemplateResponseTemplateStagesItemProgressBaselineMax),
   "category": zod.enum(['on-hold', 'active', 'complete']),
   "fields": zod.array(zod.object({
   "id": zod.number(),
@@ -1134,14 +1163,34 @@ export const ReplaceTemplateResponse = zod.object({
 }))
 })),
   "createdAt": zod.coerce.date()
+}),
+  "versionCreated": zod.boolean().describe('True if a new version was created (old version archived), false if mutated in place')
 })
 
 
 /**
- * @summary Delete a template (managers only)
+ * @summary Delete (if never assigned) or archive (if ever assigned) a template (managers only)
  */
 export const DeleteTemplateParams = zod.object({
   "templateId": zod.coerce.number()
+})
+
+export const DeleteTemplateResponse = zod.object({
+  "archived": zod.boolean(),
+  "id": zod.number()
+})
+
+
+/**
+ * @summary Explicitly archive a template version (managers only)
+ */
+export const ArchiveTemplateParams = zod.object({
+  "templateId": zod.coerce.number()
+})
+
+export const ArchiveTemplateResponse = zod.object({
+  "archived": zod.boolean(),
+  "id": zod.number()
 })
 
 

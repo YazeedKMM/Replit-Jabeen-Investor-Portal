@@ -9,6 +9,10 @@ export const stageTemplatesTable = pgTable("stage_templates", {
   name: text("name").notNull(),
   description: text("description"),
   isDefault: boolean("is_default").notNull().default(false),
+  parentTemplateId: integer("parent_template_id").references((): import("drizzle-orm/pg-core").AnyPgColumn => stageTemplatesTable.id, { onDelete: "set null" }),
+  versionNumber: integer("version_number").notNull().default(1),
+  archivedAt: timestamp("archived_at", { withTimezone: true }),
+  wasEverAssigned: boolean("was_ever_assigned").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

@@ -7,6 +7,7 @@
  */
 
 export * from './activateUserInput';
+export * from './archiveResult';
 export * from './auditLogEntry';
 export * from './auditLogPage';
 export * from './authResult';
@@ -21,6 +22,7 @@ export * from './investorContact';
 export * from './listAuditLogParams';
 export * from './listProjectsParams';
 export * from './listProjectsStatus';
+export * from './listTemplatesParams';
 export * from './listUsersParams';
 export * from './listUsersRole';
 export * from './listUsersStatus';
@@ -45,6 +47,7 @@ export * from './projectSummaryDerivedStatus';
 export * from './projectUpdate';
 export * from './registerInput';
 export * from './rejectInput';
+export * from './replaceTemplateResult';
 export * from './sectorCount';
 export * from './settingsUpdate';
 export * from './stage';
