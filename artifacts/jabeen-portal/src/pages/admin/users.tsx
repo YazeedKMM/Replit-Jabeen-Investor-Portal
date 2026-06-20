@@ -157,7 +157,7 @@ export default function UsersPage() {
     try {
       await activateUser.mutateAsync({
         userId: activateTarget.id,
-        data: data.projectId ? { projectId: parseInt(data.projectId) } : undefined,
+        data: data.projectId && data.projectId !== "none" ? { projectId: parseInt(data.projectId) } : undefined,
       });
       invalidateUsers();
       toast({ title: "Account activated", description: `${activateTarget.fullName} can now access the portal.` });
@@ -483,7 +483,7 @@ export default function UsersPage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {!isPM && <SelectItem value="">No project link</SelectItem>}
+                        {!isPM && <SelectItem value="none">No project link</SelectItem>}
                         {projects?.map(p => (
                           <SelectItem key={p.id} value={String(p.id)}>
                             {p.name} <span className="text-muted-foreground ml-1">({p.agreementNumber})</span>
