@@ -20,6 +20,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  ActivateUserInput,
   AuditLogPage,
   AuthResult,
   DashboardStats,
@@ -3179,6 +3180,78 @@ export const useResetUserPassword = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getResetUserPasswordMutationOptions(options));
+    }
+
+export const getActivateUserUrl = (userId: number,) => {
+
+
+
+
+  return `/api/users/${userId}/activate`
+}
+
+/**
+ * @summary Activate a pending account and optionally link to a project (PM&#58; investors only; Admin&#58; any pending)
+ */
+export const activateUser = async (userId: number,
+    activateUserInput?: ActivateUserInput, options?: RequestInit): Promise<User> => {
+
+  return customFetch<User>(getActivateUserUrl(userId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      activateUserInput,)
+  }
+);}
+
+
+
+
+export const getActivateUserMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof activateUser>>, TError,{userId: number;data?: BodyType<ActivateUserInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof activateUser>>, TError,{userId: number;data?: BodyType<ActivateUserInput>}, TContext> => {
+
+const mutationKey = ['activateUser'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof activateUser>>, {userId: number;data?: BodyType<ActivateUserInput>}> = (props) => {
+          const {userId,data} = props ?? {};
+
+          return  activateUser(userId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ActivateUserMutationResult = NonNullable<Awaited<ReturnType<typeof activateUser>>>
+    export type ActivateUserMutationBody = BodyType<ActivateUserInput> | undefined
+    export type ActivateUserMutationError = ErrorType<void>
+
+    /**
+ * @summary Activate a pending account and optionally link to a project (PM&#58; investors only; Admin&#58; any pending)
+ */
+export const useActivateUser = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof activateUser>>, TError,{userId: number;data?: BodyType<ActivateUserInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof activateUser>>,
+        TError,
+        {userId: number;data?: BodyType<ActivateUserInput>},
+        TContext
+      > => {
+      return useMutation(getActivateUserMutationOptions(options));
     }
 
 export const getListAuditLogUrl = (params?: ListAuditLogParams,) => {

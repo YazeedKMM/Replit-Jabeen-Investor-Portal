@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { UserUpdateRole } from './userUpdateRole';
+import type { UserUpdateStatus } from './userUpdateStatus';
 
 export interface UserUpdate {
   /**
@@ -29,5 +30,5 @@ export interface UserUpdate {
      */
   phone?: string | null;
   role?: UserUpdateRole;
-  active?: boolean;
+  status?: UserUpdateStatus;
 }

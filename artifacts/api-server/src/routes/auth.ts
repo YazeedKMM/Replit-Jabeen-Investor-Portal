@@ -58,6 +58,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     return;
   }
   const passwordHash = hashPassword(password);
+  // Self-registered accounts always start as pending (FR-AUTH-005)
   const [user] = await db.insert(usersTable).values({
     email: normalized,
     fullName,
@@ -65,9 +66,10 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     title: title ?? null,
     phone: phone ?? null,
     role: "investor",
+    status: "pending",
     passwordHash,
   }).returning();
-  const accessToken = signAccessToken({ userId: user.id, role: user.role });
+  const accessToken = signAccessToken({ userId: user.id, role: user.role, status: user.status });
   const refreshToken = generateRefreshToken();
   await db.insert(refreshTokensTable).values({ userId: user.id, token: refreshToken, expiresAt: refreshTokenExpiresAt() });
   setRefreshCookie(res, refreshToken);
@@ -92,7 +94,7 @@ router.post("/auth/login", async (req, res): Promise<void> => {
     res.status(401).json({ error: "Invalid email or password" });
     return;
   }
-  if (!user.active) {
+  if (user.status === "inactive") {
     res.status(403).json({ error: "Account deactivated" });
     return;
   }
@@ -100,7 +102,8 @@ router.post("/auth/login", async (req, res): Promise<void> => {
     res.status(401).json({ error: "Invalid email or password" });
     return;
   }
-  const accessToken = signAccessToken({ userId: user.id, role: user.role });
+  // Pending accounts can sign in — they'll see the activation notice in the portal
+  const accessToken = signAccessToken({ userId: user.id, role: user.role, status: user.status });
   const refreshToken = generateRefreshToken();
   await db.insert(refreshTokensTable).values({ userId: user.id, token: refreshToken, expiresAt: refreshTokenExpiresAt() });
   setRefreshCookie(res, refreshToken);
@@ -132,8 +135,14 @@ router.post("/auth/refresh", async (req, res): Promise<void> => {
     return;
   }
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, stored.userId));
-  if (!user || !user.active) {
+  if (!user || user.status === "inactive") {
     res.status(401).json({ error: "Account not found or deactivated" });
+    return;
+  }
+  // Pending accounts may not refresh — they must re-login after activation
+  // (Activation invalidates refresh tokens; re-login then yields an active-status token)
+  if (user.status === "pending") {
+    res.status(403).json({ error: "Account pending activation", code: "ACCOUNT_PENDING" });
     return;
   }
   // Rotate token
@@ -141,7 +150,7 @@ router.post("/auth/refresh", async (req, res): Promise<void> => {
   const newRefreshToken = generateRefreshToken();
   await db.insert(refreshTokensTable).values({ userId: user.id, token: newRefreshToken, expiresAt: refreshTokenExpiresAt() });
   setRefreshCookie(res, newRefreshToken);
-  const accessToken = signAccessToken({ userId: user.id, role: user.role });
+  const accessToken = signAccessToken({ userId: user.id, role: user.role, status: user.status });
   const { passwordHash: _ph, ...safeUser } = user;
   res.json({ accessToken, user: safeUser });
 });

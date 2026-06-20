@@ -63,7 +63,7 @@ export const LoginResponse = zod.object({
   "title": zod.string().nullish(),
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
-  "active": zod.boolean(),
+  "status": zod.enum(['pending', 'active', 'inactive']),
   "createdAt": zod.coerce.date()
 })
 })
@@ -82,7 +82,7 @@ export const RefreshTokenResponse = zod.object({
   "title": zod.string().nullish(),
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
-  "active": zod.boolean(),
+  "status": zod.enum(['pending', 'active', 'inactive']),
   "createdAt": zod.coerce.date()
 })
 })
@@ -99,7 +99,7 @@ export const GetMeResponse = zod.object({
   "title": zod.string().nullish(),
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
-  "active": zod.boolean(),
+  "status": zod.enum(['pending', 'active', 'inactive']),
   "createdAt": zod.coerce.date()
 })
 
@@ -134,7 +134,7 @@ export const UpdateMeResponse = zod.object({
   "title": zod.string().nullish(),
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
-  "active": zod.boolean(),
+  "status": zod.enum(['pending', 'active', 'inactive']),
   "createdAt": zod.coerce.date()
 })
 
@@ -448,7 +448,7 @@ export const ListUpdatesResponseItem = zod.object({
   "title": zod.string().nullish(),
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
-  "active": zod.boolean(),
+  "status": zod.enum(['pending', 'active', 'inactive']),
   "createdAt": zod.coerce.date()
 }).optional(),
   "sourceStageId": zod.number().nullish(),
@@ -473,7 +473,7 @@ export const ListUpdatesResponseItem = zod.object({
   "title": zod.string().nullish(),
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
-  "active": zod.boolean(),
+  "status": zod.enum(['pending', 'active', 'inactive']),
   "createdAt": zod.coerce.date()
 }).optional(),
   "reviewedAt": zod.coerce.date().nullish(),
@@ -543,7 +543,7 @@ export const ApproveUpdateResponse = zod.object({
   "title": zod.string().nullish(),
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
-  "active": zod.boolean(),
+  "status": zod.enum(['pending', 'active', 'inactive']),
   "createdAt": zod.coerce.date()
 }).optional(),
   "sourceStageId": zod.number().nullish(),
@@ -568,7 +568,7 @@ export const ApproveUpdateResponse = zod.object({
   "title": zod.string().nullish(),
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
-  "active": zod.boolean(),
+  "status": zod.enum(['pending', 'active', 'inactive']),
   "createdAt": zod.coerce.date()
 }).optional(),
   "reviewedAt": zod.coerce.date().nullish(),
@@ -616,7 +616,7 @@ export const RejectUpdateResponse = zod.object({
   "title": zod.string().nullish(),
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
-  "active": zod.boolean(),
+  "status": zod.enum(['pending', 'active', 'inactive']),
   "createdAt": zod.coerce.date()
 }).optional(),
   "sourceStageId": zod.number().nullish(),
@@ -641,7 +641,7 @@ export const RejectUpdateResponse = zod.object({
   "title": zod.string().nullish(),
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
-  "active": zod.boolean(),
+  "status": zod.enum(['pending', 'active', 'inactive']),
   "createdAt": zod.coerce.date()
 }).optional(),
   "reviewedAt": zod.coerce.date().nullish(),
@@ -684,7 +684,7 @@ export const ListProjectDocumentsResponseItem = zod.object({
   "title": zod.string().nullish(),
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
-  "active": zod.boolean(),
+  "status": zod.enum(['pending', 'active', 'inactive']),
   "createdAt": zod.coerce.date()
 }).optional(),
   "createdAt": zod.coerce.date()
@@ -724,7 +724,7 @@ export const ListAllDocumentsResponseItem = zod.object({
   "title": zod.string().nullish(),
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
-  "active": zod.boolean(),
+  "status": zod.enum(['pending', 'active', 'inactive']),
   "createdAt": zod.coerce.date()
 }).optional(),
   "createdAt": zod.coerce.date()
@@ -767,7 +767,7 @@ export const ListMessagesResponseItem = zod.object({
   "title": zod.string().nullish(),
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
-  "active": zod.boolean(),
+  "status": zod.enum(['pending', 'active', 'inactive']),
   "createdAt": zod.coerce.date()
 }).optional(),
   "authorRole": zod.string(),
@@ -812,7 +812,7 @@ export const ListInternalNotesResponseItem = zod.object({
   "title": zod.string().nullish(),
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
-  "active": zod.boolean(),
+  "status": zod.enum(['pending', 'active', 'inactive']),
   "createdAt": zod.coerce.date()
 }).optional(),
   "body": zod.string(),
@@ -1073,7 +1073,8 @@ export const DeleteTemplateParams = zod.object({
  */
 export const ListUsersQueryParams = zod.object({
   "search": zod.coerce.string().optional(),
-  "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']).optional()
+  "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']).optional(),
+  "status": zod.enum(['pending', 'active', 'inactive']).optional()
 })
 
 export const ListUsersResponseItem = zod.object({
@@ -1084,7 +1085,7 @@ export const ListUsersResponseItem = zod.object({
   "title": zod.string().nullish(),
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
-  "active": zod.boolean(),
+  "status": zod.enum(['pending', 'active', 'inactive']),
   "createdAt": zod.coerce.date()
 })
 export const ListUsersResponse = zod.array(ListUsersResponseItem)
@@ -1130,7 +1131,7 @@ export const GetUserResponse = zod.object({
   "title": zod.string().nullish(),
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
-  "active": zod.boolean(),
+  "status": zod.enum(['pending', 'active', 'inactive']),
   "createdAt": zod.coerce.date()
 })
 
@@ -1160,7 +1161,7 @@ export const UpdateUserBody = zod.object({
   "title": zod.string().max(updateUserBodyTitleMax).nullish(),
   "phone": zod.string().max(updateUserBodyPhoneMax).nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']).optional(),
-  "active": zod.boolean().optional()
+  "status": zod.enum(['pending', 'active', 'inactive']).optional()
 })
 
 export const UpdateUserResponse = zod.object({
@@ -1171,7 +1172,7 @@ export const UpdateUserResponse = zod.object({
   "title": zod.string().nullish(),
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
-  "active": zod.boolean(),
+  "status": zod.enum(['pending', 'active', 'inactive']),
   "createdAt": zod.coerce.date()
 })
 
@@ -1193,6 +1194,30 @@ export const ResetUserPasswordParams = zod.object({
 
 export const ResetUserPasswordResponse = zod.object({
   "temporaryPassword": zod.string()
+})
+
+
+/**
+ * @summary Activate a pending account and optionally link to a project (PM&#58; investors only; Admin&#58; any pending)
+ */
+export const ActivateUserParams = zod.object({
+  "userId": zod.coerce.number()
+})
+
+export const ActivateUserBody = zod.object({
+  "projectId": zod.number().optional().describe('Optional project to link the investor to upon activation')
+})
+
+export const ActivateUserResponse = zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "fullName": zod.string(),
+  "companyName": zod.string(),
+  "title": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
+  "status": zod.enum(['pending', 'active', 'inactive']),
+  "createdAt": zod.coerce.date()
 })
 
 

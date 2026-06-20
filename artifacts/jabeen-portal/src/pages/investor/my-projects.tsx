@@ -1,14 +1,20 @@
-import { useListProjects } from "@workspace/api-client-react";
+import { useListProjects, getListProjectsQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Building2, MapPin, Calendar, ArrowRight, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Building2, MapPin, Calendar, ArrowRight, AlertTriangle, Clock, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function MyProjectsPage() {
-  const { data: projects, isLoading } = useListProjects();
+  const { user, checkActivationStatus } = useAuth();
+  const { data: projects, isLoading } = useListProjects(
+    undefined,
+    { query: { queryKey: getListProjectsQueryKey(), enabled: user?.status === "active" } }
+  );
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -23,6 +29,42 @@ export default function MyProjectsPage() {
   const getStatusLabel = (status: string) => {
     return status.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
   };
+
+  if (user?.status === "pending") {
+    return (
+      <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">My Projects</h1>
+          <p className="text-muted-foreground text-lg">Track and manage your industrial investments</p>
+        </div>
+        <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900/50">
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center gap-6">
+            <div className="rounded-full bg-amber-100 dark:bg-amber-900/30 p-5">
+              <Clock className="h-10 w-10 text-amber-600 dark:text-amber-400" />
+            </div>
+            <div className="space-y-2 max-w-md">
+              <h3 className="text-2xl font-bold text-amber-900 dark:text-amber-200">Account Pending Activation</h3>
+              <p className="text-amber-800 dark:text-amber-300 text-base leading-relaxed">
+                Your account has been registered and is awaiting activation by a JABEEN administrator. You will gain access to your project portfolio once your account has been reviewed and activated.
+              </p>
+            </div>
+            <div className="bg-amber-100 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-lg px-6 py-4 text-sm text-amber-800 dark:text-amber-300 max-w-sm">
+              <p className="font-medium mb-1">What happens next?</p>
+              <p>A project manager will review your registration and link you to your project. Once activated, sign back in to access your portfolio.</p>
+            </div>
+            <Button
+              variant="outline"
+              className="border-amber-300 text-amber-800 hover:bg-amber-100"
+              onClick={checkActivationStatus}
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              I've been activated — sign in again
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">

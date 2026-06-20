@@ -21,6 +21,22 @@ export function requireAuth(req: AuthenticatedRequest, res: Response, next: Next
   next();
 }
 
+export function requireActiveAccount(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
+  if (!req.user) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  if (req.user.status === "pending") {
+    res.status(403).json({ error: "Account pending activation" });
+    return;
+  }
+  if (req.user.status === "inactive") {
+    res.status(403).json({ error: "Account deactivated" });
+    return;
+  }
+  next();
+}
+
 export function requireRole(...roles: string[]) {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
     if (!req.user || !roles.includes(req.user.role)) {

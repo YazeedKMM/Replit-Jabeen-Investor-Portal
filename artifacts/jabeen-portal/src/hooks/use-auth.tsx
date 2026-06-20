@@ -22,6 +22,8 @@ interface AuthContextType {
   register: (data: RegisterInput) => Promise<AuthResult>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
+  /** Re-login to pick up a fresh access token after activation. Clears the local token so the user is redirected to login. */
+  checkActivationStatus: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -112,6 +114,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [logoutMutation, queryClient]);
 
+  // Force a fresh login so the pending user picks up their new active-status token.
+  // Clears the local access token (refresh token is already invalidated server-side on activation)
+  // which causes the app to redirect to the login page.
+  const checkActivationStatus = useCallback(() => {
+    setToken(null);
+    localStorage.removeItem(TOKEN_KEY);
+    queryClient.clear();
+  }, [queryClient]);
+
   return (
     <AuthContext.Provider
       value={{
@@ -121,6 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         register,
         logout: performLogout,
         isAuthenticated: !!user,
+        checkActivationStatus,
       }}
     >
       {children}

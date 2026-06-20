@@ -653,6 +653,11 @@ paths:
           schema:
             type: string
             enum: [investor, top-management, project-manager, administrator]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, active, inactive]
       responses:
         "200":
           description: Users
@@ -737,6 +742,33 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PasswordReset"
+
+  /users/{userId}/activate:
+    post:
+      operationId: activateUser
+      tags: [users]
+      summary: Activate a pending account and optionally link to a project (PM&#58; investors only; Admin&#58; any pending)
+      parameters:
+        - $ref: "#/components/parameters/userId"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActivateUserInput"
+      responses:
+        "200":
+          description: Activated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Account is not pending
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
 
   # --- AUDIT LOG ---
   /audit-log:
@@ -909,7 +941,7 @@ components:
     # --- USER ---
     User:
       type: object
-      required: [id, email, fullName, companyName, role, active, createdAt]
+      required: [id, email, fullName, companyName, role, status, createdAt]
       properties:
         id:
           type: integer
@@ -926,8 +958,9 @@ components:
         role:
           type: string
           enum: [investor, top-management, project-manager, administrator]
-        active:
-          type: boolean
+        status:
+          type: string
+          enum: [pending, active, inactive]
         createdAt:
           type: string
           format: date-time
@@ -977,8 +1010,16 @@ components:
         role:
           type: string
           enum: [investor, top-management, project-manager, administrator]
-        active:
-          type: boolean
+        status:
+          type: string
+          enum: [pending, active, inactive]
+
+    ActivateUserInput:
+      type: object
+      properties:
+        projectId:
+          type: integer
+          description: Optional project to link the investor to upon activation
 
     UserCreated:
       type: object

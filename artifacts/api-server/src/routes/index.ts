@@ -12,21 +12,28 @@ import templatesRouter from "./templates";
 import usersRouter from "./users";
 import auditRouter from "./audit";
 import settingsRouter from "./settings";
+import { requireAuth, requireActiveAccount } from "../middlewares/requireAuth";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(authRouter);
-router.use(projectsRouter);
-router.use(updatesRouter);
-router.use(documentsRouter);
-router.use(messagesRouter);
-router.use(notesRouter);
-router.use(notificationsRouter);
-router.use(dashboardRouter);
-router.use(templatesRouter);
-router.use(usersRouter);
-router.use(auditRouter);
-router.use(settingsRouter);
+
+const protectedRouter: IRouter = Router();
+protectedRouter.use(requireAuth);
+protectedRouter.use(requireActiveAccount);
+protectedRouter.use(projectsRouter);
+protectedRouter.use(updatesRouter);
+protectedRouter.use(documentsRouter);
+protectedRouter.use(messagesRouter);
+protectedRouter.use(notesRouter);
+protectedRouter.use(notificationsRouter);
+protectedRouter.use(dashboardRouter);
+protectedRouter.use(templatesRouter);
+protectedRouter.use(usersRouter);
+protectedRouter.use(auditRouter);
+protectedRouter.use(settingsRouter);
+
+router.use(protectedRouter);
 
 export default router;

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { UserRole } from './userRole';
+import type { UserStatus } from './userStatus';
 
 export interface User {
   id: number;
@@ -17,6 +18,6 @@ export interface User {
   /** @nullable */
   phone?: string | null;
   role: UserRole;
-  active: boolean;
+  status: UserStatus;
   createdAt: Date;
 }

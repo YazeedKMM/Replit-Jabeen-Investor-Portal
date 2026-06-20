@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, and, ilike, or } from "drizzle-orm";
 import { db } from "@workspace/db";
-import { usersTable, projectsTable } from "@workspace/db";
+import { usersTable, projectsTable, refreshTokensTable } from "@workspace/db";
 import { requireAuth, type AuthenticatedRequest, MANAGER_ROLES, ADMIN_ROLE, PRIVILEGED_ROLES } from "../middlewares/requireAuth";
 import { hashPassword, generateOtpPassword } from "../lib/auth";
 import { logAudit } from "../lib/audit";
@@ -19,7 +19,7 @@ function safeUser(user: typeof usersTable.$inferSelect) {
 
 router.get("/users", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
   if (!(MANAGER_ROLES as readonly string[]).includes(req.user!.role)) { res.status(403).json({ error: "Forbidden" }); return; }
-  const { search, role } = req.query as Record<string, string>;
+  const { search, role, status } = req.query as Record<string, string>;
 
   let rows = await db.select().from(usersTable).orderBy(usersTable.fullName);
   if (search) {
@@ -31,6 +31,7 @@ router.get("/users", requireAuth, async (req: AuthenticatedRequest, res): Promis
     );
   }
   if (role) rows = rows.filter((u) => u.role === role);
+  if (status) rows = rows.filter((u) => u.status === status);
   res.json(rows.map(safeUser));
 });
 
@@ -53,8 +54,10 @@ router.post("/users", requireAuth, async (req: AuthenticatedRequest, res): Promi
   const temporaryPassword = generateOtpPassword();
   const passwordHash = hashPassword(temporaryPassword);
 
+  // Admin-created accounts start as active
   const [user] = await db.insert(usersTable).values({
     email: normalized, fullName, companyName, title: title ?? null, phone: phone ?? null, role, passwordHash,
+    status: "active",
   }).returning();
 
   await logAudit({ action: "user.created", actorId: req.user!.userId, targetType: "user", targetId: user.id, detail: `role:${role}` });
@@ -76,14 +79,14 @@ router.patch("/users/:userId", requireAuth, async (req: AuthenticatedRequest, re
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
   if (!user) { res.status(404).json({ error: "Not found" }); return; }
 
-  const { fullName, companyName, title, phone, role, active } = req.body;
+  const { fullName, companyName, title, phone, role, status } = req.body;
   const updates: Record<string, unknown> = {};
   if (fullName !== undefined) updates.fullName = fullName;
   if (companyName !== undefined) updates.companyName = companyName;
   if (title !== undefined) updates.title = title;
   if (phone !== undefined) updates.phone = phone;
   if (role !== undefined) updates.role = role;
-  if (active !== undefined) updates.active = active;
+  if (status !== undefined) updates.status = status;
 
   const [updated] = await db.update(usersTable).set(updates).where(eq(usersTable.id, userId)).returning();
   await logAudit({ action: "user.updated", actorId: req.user!.userId, targetType: "user", targetId: userId });
@@ -114,6 +117,64 @@ router.post("/users/:userId/reset-password", requireAuth, async (req: Authentica
   await db.update(usersTable).set({ passwordHash: hashPassword(temporaryPassword) }).where(eq(usersTable.id, userId));
   await logAudit({ action: "user.password-reset", actorId: req.user!.userId, targetType: "user", targetId: userId });
   res.json({ temporaryPassword });
+});
+
+// POST /users/:userId/activate — activate a pending account and optionally link to a project
+// PMs can only activate investor accounts; Admins can activate any pending account
+router.post("/users/:userId/activate", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
+  const actorRole = req.user!.role;
+  if (!(MANAGER_ROLES as readonly string[]).includes(actorRole)) { res.status(403).json({ error: "Forbidden" }); return; }
+
+  const userId = parseId(req.params.userId);
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
+  if (!user) { res.status(404).json({ error: "Not found" }); return; }
+
+  if (user.status !== "pending") {
+    res.status(400).json({ error: "Account is not pending activation" }); return;
+  }
+
+  // PMs can only activate investor accounts
+  if (actorRole === "project-manager" && user.role !== "investor") {
+    res.status(403).json({ error: "Project Managers can only activate Investor accounts" }); return;
+  }
+
+  const { projectId } = req.body as { projectId?: number };
+
+  // Validate project BEFORE making any state changes (atomicity)
+  let project: typeof projectsTable.$inferSelect | undefined;
+  if (projectId) {
+    if (user.role !== "investor") {
+      res.status(400).json({ error: "Project linking is only available for Investor accounts" }); return;
+    }
+    const [found] = await db.select().from(projectsTable).where(eq(projectsTable.id, projectId));
+    if (!found) { res.status(404).json({ error: "Project not found" }); return; }
+    project = found;
+  }
+
+  // All validation passed — activate the account
+  const [activated] = await db.update(usersTable)
+    .set({ status: "active" })
+    .where(eq(usersTable.id, userId))
+    .returning();
+
+  // Link to project if provided
+  if (project) {
+    await db.update(projectsTable).set({ investorId: userId }).where(eq(projectsTable.id, project.id));
+  }
+
+  // Invalidate all existing refresh tokens so the user must re-login
+  // and receive a fresh access token that reflects their new 'active' status
+  await db.delete(refreshTokensTable).where(eq(refreshTokensTable.userId, userId));
+
+  await logAudit({
+    action: "user.activated",
+    actorId: req.user!.userId,
+    targetType: "user",
+    targetId: userId,
+    detail: projectId ? `linked-to-project:${projectId}` : undefined,
+  });
+
+  res.json(safeUser(activated));
 });
 
 export default router;

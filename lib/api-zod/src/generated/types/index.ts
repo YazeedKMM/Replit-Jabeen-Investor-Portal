@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './activateUserInput';
 export * from './auditLogEntry';
 export * from './auditLogPage';
 export * from './authResult';
@@ -22,6 +23,7 @@ export * from './listProjectsParams';
 export * from './listProjectsStatus';
 export * from './listUsersParams';
 export * from './listUsersRole';
+export * from './listUsersStatus';
 export * from './loginInput';
 export * from './message';
 export * from './messageInput';
@@ -68,5 +70,7 @@ export * from './userCreated';
 export * from './userInput';
 export * from './userInputRole';
 export * from './userRole';
+export * from './userStatus';
 export * from './userUpdate';
 export * from './userUpdateRole';
+export * from './userUpdateStatus';

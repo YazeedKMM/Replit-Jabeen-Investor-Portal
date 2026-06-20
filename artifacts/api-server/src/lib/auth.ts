@@ -9,6 +9,7 @@ const REFRESH_TOKEN_LIFETIME = 7 * 24 * 60 * 60; // 7 days
 export interface JwtPayload {
   userId: number;
   role: string;
+  status: string;
 }
 
 export function hashPassword(password: string): string {

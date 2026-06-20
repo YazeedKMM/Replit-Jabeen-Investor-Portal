@@ -32,11 +32,11 @@ async function seed() {
 
   // ── Users ──────────────────────────────────────────────────────────
   const seedUsers = [
-    { email: "admin@jabeen.sa", fullName: "JABEEN Admin", companyName: "JABEEN / RCJY", role: "administrator" as const, password: "Admin@2026!" },
-    { email: "pm1@jabeen.sa", fullName: "Khalid Al-Rashidi", companyName: "JABEEN / RCJY", role: "project-manager" as const, password: "Manager@2026!" },
-    { email: "tm1@jabeen.sa", fullName: "Fatima Al-Dosari", companyName: "JABEEN / RCJY", role: "top-management" as const, password: "TopMgmt@2026!" },
-    { email: "investor1@acmecorp.com", fullName: "Ahmed Al-Mutairi", companyName: "Acme Industrial Co.", role: "investor" as const, password: "Investor@2026!" },
-    { email: "investor2@gulfpetro.com", fullName: "Sara Al-Zahrani", companyName: "Gulf Petrochemicals Ltd.", role: "investor" as const, password: "Investor@2026!" },
+    { email: "admin@jabeen.sa", fullName: "JABEEN Admin", companyName: "JABEEN / RCJY", role: "administrator" as const, password: "Admin@2026!", status: "active" as const },
+    { email: "pm1@jabeen.sa", fullName: "Khalid Al-Rashidi", companyName: "JABEEN / RCJY", role: "project-manager" as const, password: "Manager@2026!", status: "active" as const },
+    { email: "tm1@jabeen.sa", fullName: "Fatima Al-Dosari", companyName: "JABEEN / RCJY", role: "top-management" as const, password: "TopMgmt@2026!", status: "active" as const },
+    { email: "investor1@acmecorp.com", fullName: "Ahmed Al-Mutairi", companyName: "Acme Industrial Co.", role: "investor" as const, password: "Investor@2026!", status: "active" as const },
+    { email: "investor2@gulfpetro.com", fullName: "Sara Al-Zahrani", companyName: "Gulf Petrochemicals Ltd.", role: "investor" as const, password: "Investor@2026!", status: "active" as const },
   ];
 
   const createdUsers: Record<string, number> = {};
@@ -51,6 +51,7 @@ async function seed() {
       fullName: u.fullName,
       companyName: u.companyName,
       role: u.role,
+      status: u.status,
       passwordHash: hash(u.password),
     }).returning({ id: usersTable.id });
     createdUsers[u.email] = created.id;
@@ -58,7 +59,6 @@ async function seed() {
   }
 
   // ── RCJY Standard Pipeline ─────────────────────────────────────────
-  // Seed the canonical RCJY 7-stage pipeline (RD-006)
   const [existingTemplate] = await db.select().from(stageTemplatesTable).where(eq(stageTemplatesTable.name, "RCJY Standard Pipeline"));
   let templateId: number;
 
@@ -204,7 +204,6 @@ async function seed() {
   }
 
   // ── Sample Projects ────────────────────────────────────────────────
-  // Get the first stage of the pipeline
   const [firstStage] = await db.select({ id: stagesTable.id }).from(stagesTable).where(eq(stagesTable.templateId, templateId)).orderBy(stagesTable.orderIndex).limit(1);
   const firstStageId = firstStage?.id;
 
@@ -241,7 +240,6 @@ async function seed() {
     const [existing] = await db.select({ id: projectsTable.id }).from(projectsTable).where(eq(projectsTable.agreementNumber, p.agreementNumber));
     if (existing) { console.log(`  Project already exists: ${p.name}`); continue; }
 
-    const stageRecord = p.currentStageIndex === 3 ? null : thirdStage; // simplify: use thirdStage for design stage
     const [stageAtIndex] = await db
       .select({ id: stagesTable.id })
       .from(stagesTable)
@@ -259,7 +257,7 @@ async function seed() {
       pipelineId: templateId,
       currentStageId: stageAtIndex?.id ?? firstStageId,
       investorId: createdUsers[p.investorEmail],
-      lastUpdateAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
+      lastUpdateAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
     });
     console.log(`  Created project: ${p.name}`);
   }

@@ -6,8 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ListUsersRole } from './listUsersRole';
+import type { ListUsersStatus } from './listUsersStatus';
 
 export type ListUsersParams = {
 search?: string;
 role?: ListUsersRole;
+status?: ListUsersStatus;
 };

@@ -47,6 +47,15 @@ export const UserRole = {
   administrator: 'administrator',
 } as const;
 
+export type UserStatus = typeof UserStatus[keyof typeof UserStatus];
+
+
+export const UserStatus = {
+  pending: 'pending',
+  active: 'active',
+  inactive: 'inactive',
+} as const;
+
 export interface User {
   id: number;
   email: string;
@@ -57,7 +66,7 @@ export interface User {
   /** @nullable */
   phone?: string | null;
   role: UserRole;
-  active: boolean;
+  status: UserStatus;
   createdAt: string;
 }
 
@@ -128,6 +137,15 @@ export const UserUpdateRole = {
   administrator: 'administrator',
 } as const;
 
+export type UserUpdateStatus = typeof UserUpdateStatus[keyof typeof UserUpdateStatus];
+
+
+export const UserUpdateStatus = {
+  pending: 'pending',
+  active: 'active',
+  inactive: 'inactive',
+} as const;
+
 export interface UserUpdate {
   /**
      * @minLength 2
@@ -150,7 +168,12 @@ export interface UserUpdate {
      */
   phone?: string | null;
   role?: UserUpdateRole;
-  active?: boolean;
+  status?: UserUpdateStatus;
+}
+
+export interface ActivateUserInput {
+  /** Optional project to link the investor to upon activation */
+  projectId?: number;
 }
 
 export interface UserCreated {
@@ -745,6 +768,7 @@ export const ListProjectsStatus = {
 export type ListUsersParams = {
 search?: string;
 role?: ListUsersRole;
+status?: ListUsersStatus;
 };
 
 export type ListUsersRole = typeof ListUsersRole[keyof typeof ListUsersRole];
@@ -755,6 +779,15 @@ export const ListUsersRole = {
   'top-management': 'top-management',
   'project-manager': 'project-manager',
   administrator: 'administrator',
+} as const;
+
+export type ListUsersStatus = typeof ListUsersStatus[keyof typeof ListUsersStatus];
+
+
+export const ListUsersStatus = {
+  pending: 'pending',
+  active: 'active',
+  inactive: 'inactive',
 } as const;
 
 export type ListAuditLogParams = {

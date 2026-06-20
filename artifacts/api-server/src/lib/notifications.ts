@@ -33,7 +33,7 @@ export async function getManagerIds(): Promise<number[]> {
     .where(
       and(
         inArray(usersTable.role, ["project-manager", "administrator"]),
-        eq(usersTable.active, true)
+        eq(usersTable.status, "active")
       )
     );
   return managers.map((m) => m.id);

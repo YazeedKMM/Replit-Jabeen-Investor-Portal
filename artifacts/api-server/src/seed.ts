@@ -32,11 +32,11 @@ async function seed() {
 
   // ── Users ──────────────────────────────────────────────────────────
   const seedUsers = [
-    { email: "admin@jabeen.sa", fullName: "JABEEN Admin", companyName: "JABEEN / RCJY", role: "administrator" as const, password: "Admin@2026!" },
-    { email: "pm1@jabeen.sa", fullName: "Khalid Al-Rashidi", companyName: "JABEEN / RCJY", role: "project-manager" as const, password: "Manager@2026!" },
-    { email: "tm1@jabeen.sa", fullName: "Fatima Al-Dosari", companyName: "JABEEN / RCJY", role: "top-management" as const, password: "TopMgmt@2026!" },
-    { email: "investor1@acmecorp.com", fullName: "Ahmed Al-Mutairi", companyName: "Acme Industrial Co.", role: "investor" as const, password: "Investor@2026!" },
-    { email: "investor2@gulfpetro.com", fullName: "Sara Al-Zahrani", companyName: "Gulf Petrochemicals Ltd.", role: "investor" as const, password: "Investor@2026!" },
+    { email: "admin@jabeen.sa", fullName: "JABEEN Admin", companyName: "JABEEN / RCJY", role: "administrator" as const, password: "Admin@2026!", status: "active" as const },
+    { email: "pm1@jabeen.sa", fullName: "Khalid Al-Rashidi", companyName: "JABEEN / RCJY", role: "project-manager" as const, password: "Manager@2026!", status: "active" as const },
+    { email: "tm1@jabeen.sa", fullName: "Fatima Al-Dosari", companyName: "JABEEN / RCJY", role: "top-management" as const, password: "TopMgmt@2026!", status: "active" as const },
+    { email: "investor1@acmecorp.com", fullName: "Ahmed Al-Mutairi", companyName: "Acme Industrial Co.", role: "investor" as const, password: "Investor@2026!", status: "active" as const },
+    { email: "investor2@gulfpetro.com", fullName: "Sara Al-Zahrani", companyName: "Gulf Petrochemicals Ltd.", role: "investor" as const, password: "Investor@2026!", status: "active" as const },
   ];
 
   const createdUsers: Record<string, number> = {};
@@ -51,6 +51,7 @@ async function seed() {
       fullName: u.fullName,
       companyName: u.companyName,
       role: u.role,
+      status: u.status,
       passwordHash: hash(u.password),
     }).returning({ id: usersTable.id });
     createdUsers[u.email] = created.id;
