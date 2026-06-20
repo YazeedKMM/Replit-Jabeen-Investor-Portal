@@ -1,6 +1,6 @@
 import { db } from "@workspace/db";
-import { statusUpdatesTable, stagesTable, documentsTable } from "@workspace/db";
-import { and, eq, lt, desc } from "drizzle-orm";
+import { statusUpdatesTable, stagesTable, documentsTable, stageFieldsTable } from "@workspace/db";
+import { and, eq } from "drizzle-orm";
 
 export type DerivedStatus = "on-track" | "delayed" | "stalled" | "complete";
 
@@ -9,7 +9,6 @@ export async function deriveProjectStatus(project: {
   currentStageId: number | null;
   lastUpdateAt: Date | null;
 }, stalledDays = 45, delayedDays = 30): Promise<DerivedStatus> {
-  // Fetch current stage
   if (!project.currentStageId) {
     return "stalled";
   }
@@ -21,25 +20,42 @@ export async function deriveProjectStatus(project: {
 
   if (!stage) return "stalled";
 
-  // Complete
   if (stage.category === "complete") return "complete";
 
-  // Stalled: on-hold category
   if (stage.category === "on-hold") return "stalled";
 
   const now = new Date();
   const lastUpdate = project.lastUpdateAt;
 
-  // Stalled: no update ever or > stalledDays
   if (!lastUpdate) return "stalled";
   const daysSinceUpdate = (now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24);
 
   if (daysSinceUpdate > stalledDays) return "stalled";
 
-  // Delayed: > delayedDays
   if (daysSinceUpdate > delayedDays) return "delayed";
 
-  // Delayed: no approved current-stage document
+  // Delayed: no approved current-stage document.
+  // FR-DOC-010: only applies when the stage defines at least one required
+  // file or image field. Stages with no such field are never delayed for
+  // the missing-document reason.
+  const requiredDocFields = await db
+    .select({ baseType: stageFieldsTable.baseType })
+    .from(stageFieldsTable)
+    .where(
+      and(
+        eq(stageFieldsTable.stageId, project.currentStageId),
+        eq(stageFieldsTable.required, true)
+      )
+    );
+
+  const stageRequiresDoc = requiredDocFields.some(
+    (f) => f.baseType === "file" || f.baseType === "image"
+  );
+
+  if (!stageRequiresDoc) {
+    return "on-track";
+  }
+
   const [doc] = await db
     .select({ id: documentsTable.id })
     .from(documentsTable)

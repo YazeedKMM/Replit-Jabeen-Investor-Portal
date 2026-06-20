@@ -1,9 +1,10 @@
 import { Router, type IRouter } from "express";
-import { eq, and, or, inArray, isNull, desc } from "drizzle-orm";
+import { eq, and, or, isNull, desc } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { projectsTable, usersTable, stageTemplatesTable, stagesTable } from "@workspace/db";
 import { requireAuth, type AuthenticatedRequest, MANAGER_ROLES, PRIVILEGED_ROLES, ADMIN_ROLE } from "../middlewares/requireAuth";
 import { deriveProjectStatus } from "../lib/status";
+import { getStatusThresholds } from "../lib/settings-cache";
 import { logAudit } from "../lib/audit";
 
 const router: IRouter = Router();
@@ -51,8 +52,11 @@ async function buildProjectScope(userId: number, role: string) {
   return isPrivileged ? null : userId;
 }
 
-async function enrichProject(project: typeof projectsTable.$inferSelect, forRole: string) {
-  const derivedStatus = await deriveProjectStatus(project);
+async function enrichProject(project: typeof projectsTable.$inferSelect, forRole: string, stalledDays?: number, delayedDays?: number) {
+  const thresholds = stalledDays === undefined || delayedDays === undefined ? await getStatusThresholds() : null;
+  const resolvedStalledDays = stalledDays ?? thresholds!.stalledDays;
+  const resolvedDelayedDays = delayedDays ?? thresholds!.delayedDays;
+  const derivedStatus = await deriveProjectStatus(project, resolvedStalledDays, resolvedDelayedDays);
 
   let currentStage = null;
   if (project.currentStageId) {
@@ -92,10 +96,11 @@ router.get("/projects", requireAuth, async (req: AuthenticatedRequest, res): Pro
   const userId = req.user!.userId;
   const role = req.user!.role;
   const isPrivileged = (PRIVILEGED_ROLES as readonly string[]).includes(role);
+  const { stalledDays, delayedDays } = await getStatusThresholds();
 
   if (!isPrivileged) {
     const results = await db.select().from(projectsTable).where(eq(projectsTable.investorId, userId));
-    const enriched = await Promise.all(results.map((p) => enrichProject(p, role)));
+    const enriched = await Promise.all(results.map((p) => enrichProject(p, role, stalledDays, delayedDays)));
     let filtered = enriched;
     if (status) filtered = filtered.filter((p) => p.derivedStatus === status);
     res.json(filtered);
@@ -108,7 +113,7 @@ router.get("/projects", requireAuth, async (req: AuthenticatedRequest, res): Pro
     ? await db.select().from(projectsTable).where(and(...conditions))
     : await db.select().from(projectsTable);
 
-  let enriched = await Promise.all(rows.map((p) => enrichProject(p, role)));
+  let enriched = await Promise.all(rows.map((p) => enrichProject(p, role, stalledDays, delayedDays)));
 
   if (search) {
     const s = search.toLowerCase();
@@ -186,8 +191,9 @@ router.get("/projects/export", requireAuth, async (req: AuthenticatedRequest, re
   if (!(MANAGER_ROLES as readonly string[]).includes(req.user!.role)) {
     res.status(403).json({ error: "Forbidden" }); return;
   }
+  const { stalledDays, delayedDays } = await getStatusThresholds();
   const rows = await db.select().from(projectsTable);
-  const enriched = await Promise.all(rows.map((p) => enrichProject(p, req.user!.role)));
+  const enriched = await Promise.all(rows.map((p) => enrichProject(p, req.user!.role, stalledDays, delayedDays)));
 
   const header = ["Agreement Number", "Name", "Sector", "Plot Number", "Pipeline", "Current Stage", "Construction %", "Derived Status", "Investor Company", "Investor Email", "Last Update", "Attention Flag"];
   const csvRows = enriched.map((p) => [
@@ -232,7 +238,8 @@ router.get("/projects/:projectId", requireAuth, async (req: AuthenticatedRequest
     }
   }
 
-  const derivedStatus = await deriveProjectStatus(project);
+  const { stalledDays, delayedDays } = await getStatusThresholds();
+  const derivedStatus = await deriveProjectStatus(project, stalledDays, delayedDays);
 
   let currentStage = null;
   if (project.currentStageId) {

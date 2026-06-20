@@ -1,9 +1,9 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
 import { db } from "@workspace/db";
-import { projectsTable, stagesTable } from "@workspace/db";
+import { projectsTable } from "@workspace/db";
 import { requireAuth, type AuthenticatedRequest, PRIVILEGED_ROLES } from "../middlewares/requireAuth";
 import { deriveProjectStatus } from "../lib/status";
+import { getStatusThresholds } from "../lib/settings-cache";
 
 const router: IRouter = Router();
 
@@ -12,10 +12,13 @@ router.get("/dashboard", requireAuth, async (req: AuthenticatedRequest, res): Pr
     res.status(403).json({ error: "Forbidden" }); return;
   }
 
-  const projects = await db.select().from(projectsTable);
+  const [{ stalledDays, delayedDays }, projects] = await Promise.all([
+    getStatusThresholds(),
+    db.select().from(projectsTable),
+  ]);
 
   const statuses = await Promise.all(projects.map(async (p) => {
-    const status = await deriveProjectStatus(p);
+    const status = await deriveProjectStatus(p, stalledDays, delayedDays);
     return { project: p, status };
   }));
 
@@ -36,7 +39,6 @@ router.get("/dashboard", requireAuth, async (req: AuthenticatedRequest, res): Pr
   }
   const bySector = Object.entries(bySectorMap).map(([sector, count]) => ({ sector, count }));
 
-  // Recent updates: last 5 updated projects
   const recentUpdates = statuses
     .filter((s) => s.project.lastUpdateAt)
     .sort((a, b) => new Date(b.project.lastUpdateAt!).getTime() - new Date(a.project.lastUpdateAt!).getTime())

@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { systemSettingsTable } from "@workspace/db";
 import { requireAuth, type AuthenticatedRequest, ADMIN_ROLE } from "../middlewares/requireAuth";
+import { invalidateSettingsCache } from "../lib/settings-cache";
 
 const router: IRouter = Router();
 
@@ -55,6 +56,7 @@ router.patch("/settings", requireAuth, async (req: AuthenticatedRequest, res): P
     }
   }
 
+  invalidateSettingsCache();
   const map = await getSettingsMap();
   res.json(mapToResponse(map));
 });
