@@ -4,6 +4,7 @@ import { ProtectedRoute } from "@/components/protected-route";
 
 // Existing Imports
 import LoginPage from "@/pages/auth/login";
+import MfaSetupPage from "@/pages/auth/mfa-setup";
 import MyProjectsPage from "@/pages/investor/my-projects";
 import DashboardPage from "@/pages/dashboard/dashboard";
 import ProfilePage from "@/pages/profile/profile";
@@ -28,6 +29,7 @@ export function AppRouter() {
   return (
     <Switch>
       <Route path="/login" component={LoginPage} />
+      <Route path="/mfa/setup" component={MfaSetupPage} />
       <Route path="/" component={RoleRedirect} />
       
       {/* Investor Route */}

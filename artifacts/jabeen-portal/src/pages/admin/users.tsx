@@ -4,6 +4,7 @@ import {
   useCreateUser,
   useUpdateUser,
   useResetUserPassword,
+  useResetUserMfa,
   useActivateUser,
   useListProjects,
   getListUsersQueryKey,
@@ -20,7 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Plus, UserX, UserCheck, KeyRound, Loader2, Copy, Check, UserCog, Clock } from "lucide-react";
+import { Search, Plus, UserX, UserCheck, KeyRound, Loader2, Copy, Check, UserCog, Clock, ShieldOff } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -85,6 +86,7 @@ export default function UsersPage() {
   const createUser = useCreateUser();
   const updateUser = useUpdateUser();
   const resetPassword = useResetUserPassword();
+  const resetMfa = useResetUserMfa();
   const activateUser = useActivateUser();
 
   const form = useForm<z.infer<typeof createUserSchema>>({
@@ -132,6 +134,21 @@ export default function UsersPage() {
       setCreatedUserTempPassword({ name: u.fullName, pass: res.temporaryPassword });
     } catch (error) {
       toast({ title: "Error", description: "Failed to reset password", variant: "destructive" });
+    }
+  };
+
+  const handleResetMfa = async (u: User) => {
+    if (!u.mfaEnabled) {
+      toast({ title: "MFA not enabled", description: `${u.fullName} does not have MFA enabled.` });
+      return;
+    }
+    if (!confirm(`Reset MFA for ${u.fullName}? They will need to re-enroll next time they log in.`)) return;
+    try {
+      await resetMfa.mutateAsync({ userId: u.id });
+      invalidateUsers();
+      toast({ title: "MFA Reset", description: `MFA has been disabled for ${u.fullName}.` });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to reset MFA", variant: "destructive" });
     }
   };
 
@@ -352,6 +369,15 @@ export default function UsersPage() {
                         <TableCell>{getStatusBadge(u.status)}</TableCell>
                         {isAdmin && (
                           <TableCell className="text-right space-x-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleResetMfa(u)}
+                              title={u.mfaEnabled ? "Reset MFA" : "MFA not enabled"}
+                              className={u.mfaEnabled ? "text-amber-600 hover:text-amber-700 hover:bg-amber-50" : "text-muted-foreground/40 cursor-default"}
+                            >
+                              <ShieldOff className="h-4 w-4" />
+                            </Button>
                             <Button variant="ghost" size="icon" onClick={() => handleResetPassword(u)} title="Reset Password">
                               <KeyRound className="h-4 w-4" />
                             </Button>

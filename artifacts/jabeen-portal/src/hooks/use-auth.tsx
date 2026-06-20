@@ -11,6 +11,7 @@ import {
   type LoginInput,
   type RegisterInput,
   type AuthResult,
+  type LoginResult,
 } from "@workspace/api-client-react";
 
 const TOKEN_KEY = "jabeen_access_token";
@@ -18,10 +19,13 @@ const TOKEN_KEY = "jabeen_access_token";
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (data: LoginInput) => Promise<AuthResult>;
+  /** Returns LoginResult — may include mfaRequired/mfaSetupRequired instead of accessToken */
+  login: (data: LoginInput) => Promise<LoginResult>;
   register: (data: RegisterInput) => Promise<AuthResult>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
+  /** Called after MFA step resolves — sets token + user in context */
+  handleAuthResult: (result: AuthResult) => void;
   /** Re-login to pick up a fresh access token after activation. Clears the local token so the user is redirected to login. */
   checkActivationStatus: () => void;
 }
@@ -87,9 +91,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const login = useCallback(
-    async (data: LoginInput) => {
+    async (data: LoginInput): Promise<LoginResult> => {
       const result = await loginMutation.mutateAsync({ data });
-      handleAuthResult(result);
+      // Only set token if we got a full session (no MFA step pending)
+      if (result.accessToken && result.user) {
+        handleAuthResult({ accessToken: result.accessToken, user: result.user });
+      }
       return result;
     },
     [loginMutation, handleAuthResult],
@@ -114,9 +121,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [logoutMutation, queryClient]);
 
-  // Force a fresh login so the pending user picks up their new active-status token.
-  // Clears the local access token (refresh token is already invalidated server-side on activation)
-  // which causes the app to redirect to the login page.
   const checkActivationStatus = useCallback(() => {
     setToken(null);
     localStorage.removeItem(TOKEN_KEY);
@@ -132,6 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         register,
         logout: performLogout,
         isAuthenticated: !!user,
+        handleAuthResult,
         checkActivationStatus,
       }}
     >

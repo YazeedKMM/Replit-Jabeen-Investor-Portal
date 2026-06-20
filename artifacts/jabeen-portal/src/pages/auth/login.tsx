@@ -17,6 +17,10 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Building2, ArrowRight } from "lucide-react";
+import { MfaVerifyStep } from "./mfa-verify";
+import { MfaSetupFlow } from "./mfa-setup";
+
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -32,11 +36,17 @@ const registerSchema = z.object({
   phone: z.string().optional(),
 });
 
+type MfaStepState =
+  | { type: "none" }
+  | { type: "verify"; mfaToken: string }
+  | { type: "setup"; mfaToken: string };
+
 export default function LoginPage() {
   const [, setLocation] = useLocation();
-  const { login, register, user, isLoading } = useAuth();
+  const { login, register, user, isLoading, handleAuthResult } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
+  const [mfaStep, setMfaStep] = useState<MfaStepState>({ type: "none" });
   const searchParams = new URLSearchParams(window.location.search);
   const redirect = searchParams.get("redirect");
 
@@ -69,16 +79,34 @@ export default function LoginPage() {
     },
   });
 
+  const navigateAfterLogin = (role: string) => {
+    if (redirect) {
+      setLocation(redirect);
+    } else if (role === "investor") {
+      setLocation("/my-projects");
+    } else {
+      setLocation("/dashboard");
+    }
+  };
+
   const onLoginSubmit = async (data: z.infer<typeof loginSchema>) => {
     try {
       const result = await login(data);
-      toast({ title: "Welcome back", description: "Successfully signed in." });
-      if (redirect) {
-        setLocation(redirect);
-      } else if (result.user.role === "investor") {
-        setLocation("/my-projects");
-      } else {
-        setLocation("/dashboard");
+
+      if (result.mfaRequired && result.mfaToken) {
+        setMfaStep({ type: "verify", mfaToken: result.mfaToken });
+        return;
+      }
+
+      if (result.mfaSetupRequired && result.mfaToken) {
+        setMfaStep({ type: "setup", mfaToken: result.mfaToken });
+        return;
+      }
+
+      // Full session issued
+      if (result.accessToken && result.user) {
+        toast({ title: "Welcome back", description: "Successfully signed in." });
+        navigateAfterLogin(result.user.role);
       }
     } catch (error: any) {
       toast({
@@ -87,6 +115,18 @@ export default function LoginPage() {
         variant: "destructive",
       });
     }
+  };
+
+  const onMfaVerifySuccess = (accessToken: string, user: any) => {
+    handleAuthResult({ accessToken, user });
+    toast({ title: "Welcome back", description: "Signed in with MFA." });
+    navigateAfterLogin(user.role);
+  };
+
+  const onMfaSetupComplete = (accessToken: string, user: any) => {
+    handleAuthResult({ accessToken, user });
+    toast({ title: "MFA Enabled", description: "Your account is now protected with two-factor authentication." });
+    navigateAfterLogin(user.role);
   };
 
   const onRegisterSubmit = async (data: z.infer<typeof registerSchema>) => {
@@ -133,155 +173,177 @@ export default function LoginPage() {
       {/* Form Side */}
       <div className="w-full md:w-1/2 lg:w-[40%] flex items-center justify-center p-8 bg-card relative">
         <div className="w-full max-w-[420px]">
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-8 h-12 p-1 bg-muted">
-              <TabsTrigger value="login" className="text-sm font-semibold rounded-md h-full data-[state=active]:bg-background data-[state=active]:shadow-sm">Sign In</TabsTrigger>
-              <TabsTrigger value="register" className="text-sm font-semibold rounded-md h-full data-[state=active]:bg-background data-[state=active]:shadow-sm">Register</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="login" className="space-y-6">
-              <div className="space-y-2">
-                <h2 className="text-2xl font-bold tracking-tight text-foreground">Welcome back</h2>
-                <p className="text-muted-foreground text-sm">Enter your credentials to access the portal</p>
-              </div>
+
+          {/* MFA Verify Step */}
+          {mfaStep.type === "verify" && (
+            <MfaVerifyStep
+              mfaToken={mfaStep.mfaToken}
+              onSuccess={onMfaVerifySuccess}
+              onBack={() => setMfaStep({ type: "none" })}
+            />
+          )}
+
+          {/* MFA Setup Step */}
+          {mfaStep.type === "setup" && (
+            <MfaSetupFlow
+              mfaToken={mfaStep.mfaToken}
+              onComplete={onMfaSetupComplete}
+              isRequired
+            />
+          )}
+
+          {/* Normal Login / Register */}
+          {mfaStep.type === "none" && (
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-8 h-12 p-1 bg-muted">
+                <TabsTrigger value="login" className="text-sm font-semibold rounded-md h-full data-[state=active]:bg-background data-[state=active]:shadow-sm">Sign In</TabsTrigger>
+                <TabsTrigger value="register" className="text-sm font-semibold rounded-md h-full data-[state=active]:bg-background data-[state=active]:shadow-sm">Register</TabsTrigger>
+              </TabsList>
               
-              <Form {...loginForm}>
-                <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-5">
-                  <FormField
-                    control={loginForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Work Email</FormLabel>
-                        <FormControl>
-                          <Input placeholder="name@company.com" {...field} className="h-11" data-testid="input-email" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={loginForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <Input type="password" placeholder="••••••••" {...field} className="h-11" data-testid="input-password" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button type="submit" className="w-full h-11 text-base font-semibold mt-2" disabled={loginForm.formState.isSubmitting} data-testid="button-submit-login">
-                    {loginForm.formState.isSubmitting ? "Signing in..." : "Sign in to portal"}
-                    {!loginForm.formState.isSubmitting && <ArrowRight className="ml-2 h-4 w-4" />}
-                  </Button>
-                </form>
-              </Form>
-            </TabsContent>
-
-            <TabsContent value="register" className="space-y-6">
-              <div className="space-y-2">
-                <h2 className="text-2xl font-bold tracking-tight text-foreground">Investor Registration</h2>
-                <p className="text-muted-foreground text-sm">Create an account to track your industrial project</p>
-              </div>
-
-              <Form {...registerForm}>
-                <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+              <TabsContent value="login" className="space-y-6">
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-bold tracking-tight text-foreground">Welcome back</h2>
+                  <p className="text-muted-foreground text-sm">Enter your credentials to access the portal</p>
+                </div>
+                
+                <Form {...loginForm}>
+                  <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-5">
                     <FormField
-                      control={registerForm.control}
-                      name="fullName"
+                      control={loginForm.control}
+                      name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Full Name</FormLabel>
+                          <FormLabel>Work Email</FormLabel>
                           <FormControl>
-                            <Input placeholder="John Doe" {...field} className="h-10" />
+                            <Input placeholder="name@company.com" {...field} className="h-11" data-testid="input-email" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                     <FormField
-                      control={registerForm.control}
-                      name="companyName"
+                      control={loginForm.control}
+                      name="password"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Company</FormLabel>
+                          <FormLabel>Password</FormLabel>
                           <FormControl>
-                            <Input placeholder="Acme Corp" {...field} className="h-10" />
+                            <Input type="password" placeholder="••••••••" {...field} className="h-11" data-testid="input-password" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                  </div>
-                  
-                  <FormField
-                    control={registerForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Work Email</FormLabel>
-                        <FormControl>
-                          <Input placeholder="name@company.com" {...field} className="h-10" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={registerForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <Input type="password" placeholder="••••••••" {...field} className="h-10" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <Button type="submit" className="w-full h-11 text-base font-semibold mt-2" disabled={loginForm.formState.isSubmitting} data-testid="button-submit-login">
+                      {loginForm.formState.isSubmitting ? "Signing in..." : "Sign in to portal"}
+                      {!loginForm.formState.isSubmitting && <ArrowRight className="ml-2 h-4 w-4" />}
+                    </Button>
+                  </form>
+                </Form>
+              </TabsContent>
 
-                  <div className="grid grid-cols-2 gap-4">
+              <TabsContent value="register" className="space-y-6">
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-bold tracking-tight text-foreground">Investor Registration</h2>
+                  <p className="text-muted-foreground text-sm">Create an account to track your industrial project</p>
+                </div>
+
+                <Form {...registerForm}>
+                  <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={registerForm.control}
+                        name="fullName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Full Name</FormLabel>
+                            <FormControl>
+                              <Input placeholder="John Doe" {...field} className="h-10" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={registerForm.control}
+                        name="companyName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Company</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Acme Corp" {...field} className="h-10" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
                     <FormField
                       control={registerForm.control}
-                      name="title"
+                      name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Job Title <span className="text-muted-foreground font-normal">(Optional)</span></FormLabel>
+                          <FormLabel>Work Email</FormLabel>
                           <FormControl>
-                            <Input placeholder="Project Manager" {...field} className="h-10" />
+                            <Input placeholder="name@company.com" {...field} className="h-10" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+                    
                     <FormField
                       control={registerForm.control}
-                      name="phone"
+                      name="password"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Phone <span className="text-muted-foreground font-normal">(Optional)</span></FormLabel>
+                          <FormLabel>Password</FormLabel>
                           <FormControl>
-                            <Input placeholder="+966..." {...field} className="h-10" />
+                            <Input type="password" placeholder="••••••••" {...field} className="h-10" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                  </div>
 
-                  <Button type="submit" className="w-full h-11 text-base font-semibold mt-4" disabled={registerForm.formState.isSubmitting} data-testid="button-submit-register">
-                    {registerForm.formState.isSubmitting ? "Creating account..." : "Register Account"}
-                  </Button>
-                </form>
-              </Form>
-            </TabsContent>
-          </Tabs>
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={registerForm.control}
+                        name="title"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Job Title <span className="text-muted-foreground font-normal">(Optional)</span></FormLabel>
+                            <FormControl>
+                              <Input placeholder="Project Manager" {...field} className="h-10" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={registerForm.control}
+                        name="phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Phone <span className="text-muted-foreground font-normal">(Optional)</span></FormLabel>
+                            <FormControl>
+                              <Input placeholder="+966..." {...field} className="h-10" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <Button type="submit" className="w-full h-11 text-base font-semibold mt-4" disabled={registerForm.formState.isSubmitting} data-testid="button-submit-register">
+                      {registerForm.formState.isSubmitting ? "Creating account..." : "Register Account"}
+                    </Button>
+                  </form>
+                </Form>
+              </TabsContent>
+            </Tabs>
+          )}
         </div>
       </div>
     </div>

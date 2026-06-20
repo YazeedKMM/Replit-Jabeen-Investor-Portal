@@ -19,5 +19,6 @@ export interface User {
   phone?: string | null;
   role: UserRole;
   status: UserStatus;
+  mfaEnabled: boolean;
   createdAt: Date;
 }

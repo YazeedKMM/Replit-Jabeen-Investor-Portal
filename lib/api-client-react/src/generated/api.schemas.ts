@@ -67,12 +67,56 @@ export interface User {
   phone?: string | null;
   role: UserRole;
   status: UserStatus;
+  mfaEnabled: boolean;
   createdAt: string;
 }
 
 export interface AuthResult {
   accessToken: string;
   user: User;
+}
+
+/**
+ * Login response — either a full session or an MFA step token
+ */
+export interface LoginResult {
+  /** Present only when full session is issued */
+  accessToken?: string;
+  user?: User;
+  /** True when the user has MFA enrolled and must provide a TOTP code */
+  mfaRequired?: boolean;
+  /** True when the user is privileged and must enroll in MFA before accessing the portal */
+  mfaSetupRequired?: boolean;
+  /** Short-lived token used to complete the MFA step (mfaVerify or mfaSetup) */
+  mfaToken?: string;
+}
+
+export interface MfaSetupResult {
+  /** otpauth:// URI for authenticator apps */
+  otpauthUri: string;
+  /** QR code as a base64 PNG data URL */
+  qrCode: string;
+  /** Raw TOTP secret for manual entry */
+  secret: string;
+}
+
+export interface MfaCodeInput {
+  /** 6-digit TOTP code */
+  code: string;
+}
+
+export interface MfaVerifyInput {
+  /** 6-digit TOTP code */
+  code?: string;
+  /** Recovery code (alternative to TOTP code) */
+  recoveryCode?: string;
+}
+
+export interface MfaSetupVerifyResult {
+  accessToken: string;
+  user: User;
+  /** One-time recovery codes — display to user and never return again */
+  recoveryCodes: string[];
 }
 
 export interface ProfileUpdate {

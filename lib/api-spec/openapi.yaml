@@ -85,17 +85,83 @@ paths:
               $ref: "#/components/schemas/LoginInput"
       responses:
         "200":
-          description: Authenticated
+          description: Authenticated (or MFA step required)
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuthResult"
+                $ref: "#/components/schemas/LoginResult"
         "401":
           description: Invalid credentials
         "403":
           description: Account deactivated
         "429":
           description: Too many attempts
+
+  /auth/mfa/setup:
+    post:
+      operationId: mfaSetup
+      tags: [auth]
+      summary: Start MFA enrollment (generate TOTP secret + QR code)
+      responses:
+        "200":
+          description: MFA setup data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MfaSetupResult"
+
+  /auth/mfa/verify-setup:
+    post:
+      operationId: mfaVerifySetup
+      tags: [auth]
+      summary: Confirm first TOTP code to activate MFA and receive recovery codes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MfaCodeInput"
+      responses:
+        "200":
+          description: MFA activated — full session issued and recovery codes returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MfaSetupVerifyResult"
+        "401":
+          description: Invalid TOTP code
+
+  /auth/mfa/verify:
+    post:
+      operationId: mfaVerify
+      tags: [auth]
+      summary: Submit TOTP code or recovery code to complete login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MfaVerifyInput"
+      responses:
+        "200":
+          description: Full session issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+        "401":
+          description: Invalid code
+
+  /auth/mfa:
+    delete:
+      operationId: disableMfa
+      tags: [auth]
+      summary: Disable own MFA (non-privileged accounts only)
+      responses:
+        "204":
+          description: MFA disabled
+        "403":
+          description: Forbidden (privileged accounts must contact admin)
 
   /auth/logout:
     post:
@@ -770,6 +836,21 @@ paths:
         "404":
           description: Not found
 
+  /users/{userId}/mfa/reset:
+    post:
+      operationId: resetUserMfa
+      tags: [users]
+      summary: Reset a user's MFA (admin only) — clears secret and disables MFA
+      parameters:
+        - $ref: "#/components/parameters/userId"
+      responses:
+        "204":
+          description: MFA reset
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
   # --- AUDIT LOG ---
   /audit-log:
     get:
@@ -920,6 +1001,71 @@ components:
         user:
           $ref: "#/components/schemas/User"
 
+    LoginResult:
+      type: object
+      description: Login response — either a full session or an MFA step token
+      properties:
+        accessToken:
+          type: string
+          description: Present only when full session is issued
+        user:
+          $ref: "#/components/schemas/User"
+        mfaRequired:
+          type: boolean
+          description: True when the user has MFA enrolled and must provide a TOTP code
+        mfaSetupRequired:
+          type: boolean
+          description: True when the user is privileged and must enroll in MFA before accessing the portal
+        mfaToken:
+          type: string
+          description: Short-lived token used to complete the MFA step (mfaVerify or mfaSetup)
+
+    MfaSetupResult:
+      type: object
+      required: [otpauthUri, qrCode, secret]
+      properties:
+        otpauthUri:
+          type: string
+          description: otpauth:// URI for authenticator apps
+        qrCode:
+          type: string
+          description: QR code as a base64 PNG data URL
+        secret:
+          type: string
+          description: Raw TOTP secret for manual entry
+
+    MfaCodeInput:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+          description: 6-digit TOTP code
+
+    MfaVerifyInput:
+      type: object
+      properties:
+        code:
+          type: string
+          description: 6-digit TOTP code
+        recoveryCode:
+          type: string
+          description: Recovery code (alternative to TOTP code)
+
+    MfaSetupVerifyResult:
+      type: object
+      required: [accessToken, user, recoveryCodes]
+      properties:
+        accessToken:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+        recoveryCodes:
+          type: array
+          items:
+            type: string
+          description: One-time recovery codes — display to user and never return again
+
     ProfileUpdate:
       type: object
       properties:
@@ -941,7 +1087,7 @@ components:
     # --- USER ---
     User:
       type: object
-      required: [id, email, fullName, companyName, role, status, createdAt]
+      required: [id, email, fullName, companyName, role, status, createdAt, mfaEnabled]
       properties:
         id:
           type: integer
@@ -961,6 +1107,8 @@ components:
         status:
           type: string
           enum: [pending, active, inactive]
+        mfaEnabled:
+          type: boolean
         createdAt:
           type: string
           format: date-time

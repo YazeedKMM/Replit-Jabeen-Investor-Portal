@@ -54,6 +54,43 @@ export const LoginBody = zod.object({
 })
 
 export const LoginResponse = zod.object({
+  "accessToken": zod.string().optional().describe('Present only when full session is issued'),
+  "user": zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "fullName": zod.string(),
+  "companyName": zod.string(),
+  "title": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
+  "status": zod.enum(['pending', 'active', 'inactive']),
+  "mfaEnabled": zod.boolean(),
+  "createdAt": zod.coerce.date()
+}).optional(),
+  "mfaRequired": zod.boolean().optional().describe('True when the user has MFA enrolled and must provide a TOTP code'),
+  "mfaSetupRequired": zod.boolean().optional().describe('True when the user is privileged and must enroll in MFA before accessing the portal'),
+  "mfaToken": zod.string().optional().describe('Short-lived token used to complete the MFA step (mfaVerify or mfaSetup)')
+}).describe('Login response — either a full session or an MFA step token')
+
+
+/**
+ * @summary Start MFA enrollment (generate TOTP secret + QR code)
+ */
+export const MfaSetupResponse = zod.object({
+  "otpauthUri": zod.string().describe('otpauth:\/\/ URI for authenticator apps'),
+  "qrCode": zod.string().describe('QR code as a base64 PNG data URL'),
+  "secret": zod.string().describe('Raw TOTP secret for manual entry')
+})
+
+
+/**
+ * @summary Confirm first TOTP code to activate MFA and receive recovery codes
+ */
+export const MfaVerifySetupBody = zod.object({
+  "code": zod.string().describe('6-digit TOTP code')
+})
+
+export const MfaVerifySetupResponse = zod.object({
   "accessToken": zod.string(),
   "user": zod.object({
   "id": zod.number(),
@@ -64,6 +101,33 @@ export const LoginResponse = zod.object({
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
   "status": zod.enum(['pending', 'active', 'inactive']),
+  "mfaEnabled": zod.boolean(),
+  "createdAt": zod.coerce.date()
+}),
+  "recoveryCodes": zod.array(zod.string()).describe('One-time recovery codes — display to user and never return again')
+})
+
+
+/**
+ * @summary Submit TOTP code or recovery code to complete login
+ */
+export const MfaVerifyBody = zod.object({
+  "code": zod.string().optional().describe('6-digit TOTP code'),
+  "recoveryCode": zod.string().optional().describe('Recovery code (alternative to TOTP code)')
+})
+
+export const MfaVerifyResponse = zod.object({
+  "accessToken": zod.string(),
+  "user": zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "fullName": zod.string(),
+  "companyName": zod.string(),
+  "title": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
+  "status": zod.enum(['pending', 'active', 'inactive']),
+  "mfaEnabled": zod.boolean(),
   "createdAt": zod.coerce.date()
 })
 })
@@ -83,6 +147,7 @@ export const RefreshTokenResponse = zod.object({
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
   "status": zod.enum(['pending', 'active', 'inactive']),
+  "mfaEnabled": zod.boolean(),
   "createdAt": zod.coerce.date()
 })
 })
@@ -100,6 +165,7 @@ export const GetMeResponse = zod.object({
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
   "status": zod.enum(['pending', 'active', 'inactive']),
+  "mfaEnabled": zod.boolean(),
   "createdAt": zod.coerce.date()
 })
 
@@ -135,6 +201,7 @@ export const UpdateMeResponse = zod.object({
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
   "status": zod.enum(['pending', 'active', 'inactive']),
+  "mfaEnabled": zod.boolean(),
   "createdAt": zod.coerce.date()
 })
 
@@ -449,6 +516,7 @@ export const ListUpdatesResponseItem = zod.object({
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
   "status": zod.enum(['pending', 'active', 'inactive']),
+  "mfaEnabled": zod.boolean(),
   "createdAt": zod.coerce.date()
 }).optional(),
   "sourceStageId": zod.number().nullish(),
@@ -474,6 +542,7 @@ export const ListUpdatesResponseItem = zod.object({
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
   "status": zod.enum(['pending', 'active', 'inactive']),
+  "mfaEnabled": zod.boolean(),
   "createdAt": zod.coerce.date()
 }).optional(),
   "reviewedAt": zod.coerce.date().nullish(),
@@ -544,6 +613,7 @@ export const ApproveUpdateResponse = zod.object({
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
   "status": zod.enum(['pending', 'active', 'inactive']),
+  "mfaEnabled": zod.boolean(),
   "createdAt": zod.coerce.date()
 }).optional(),
   "sourceStageId": zod.number().nullish(),
@@ -569,6 +639,7 @@ export const ApproveUpdateResponse = zod.object({
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
   "status": zod.enum(['pending', 'active', 'inactive']),
+  "mfaEnabled": zod.boolean(),
   "createdAt": zod.coerce.date()
 }).optional(),
   "reviewedAt": zod.coerce.date().nullish(),
@@ -617,6 +688,7 @@ export const RejectUpdateResponse = zod.object({
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
   "status": zod.enum(['pending', 'active', 'inactive']),
+  "mfaEnabled": zod.boolean(),
   "createdAt": zod.coerce.date()
 }).optional(),
   "sourceStageId": zod.number().nullish(),
@@ -642,6 +714,7 @@ export const RejectUpdateResponse = zod.object({
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
   "status": zod.enum(['pending', 'active', 'inactive']),
+  "mfaEnabled": zod.boolean(),
   "createdAt": zod.coerce.date()
 }).optional(),
   "reviewedAt": zod.coerce.date().nullish(),
@@ -685,6 +758,7 @@ export const ListProjectDocumentsResponseItem = zod.object({
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
   "status": zod.enum(['pending', 'active', 'inactive']),
+  "mfaEnabled": zod.boolean(),
   "createdAt": zod.coerce.date()
 }).optional(),
   "createdAt": zod.coerce.date()
@@ -725,6 +799,7 @@ export const ListAllDocumentsResponseItem = zod.object({
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
   "status": zod.enum(['pending', 'active', 'inactive']),
+  "mfaEnabled": zod.boolean(),
   "createdAt": zod.coerce.date()
 }).optional(),
   "createdAt": zod.coerce.date()
@@ -768,6 +843,7 @@ export const ListMessagesResponseItem = zod.object({
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
   "status": zod.enum(['pending', 'active', 'inactive']),
+  "mfaEnabled": zod.boolean(),
   "createdAt": zod.coerce.date()
 }).optional(),
   "authorRole": zod.string(),
@@ -813,6 +889,7 @@ export const ListInternalNotesResponseItem = zod.object({
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
   "status": zod.enum(['pending', 'active', 'inactive']),
+  "mfaEnabled": zod.boolean(),
   "createdAt": zod.coerce.date()
 }).optional(),
   "body": zod.string(),
@@ -1086,6 +1163,7 @@ export const ListUsersResponseItem = zod.object({
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
   "status": zod.enum(['pending', 'active', 'inactive']),
+  "mfaEnabled": zod.boolean(),
   "createdAt": zod.coerce.date()
 })
 export const ListUsersResponse = zod.array(ListUsersResponseItem)
@@ -1132,6 +1210,7 @@ export const GetUserResponse = zod.object({
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
   "status": zod.enum(['pending', 'active', 'inactive']),
+  "mfaEnabled": zod.boolean(),
   "createdAt": zod.coerce.date()
 })
 
@@ -1173,6 +1252,7 @@ export const UpdateUserResponse = zod.object({
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
   "status": zod.enum(['pending', 'active', 'inactive']),
+  "mfaEnabled": zod.boolean(),
   "createdAt": zod.coerce.date()
 })
 
@@ -1217,7 +1297,16 @@ export const ActivateUserResponse = zod.object({
   "phone": zod.string().nullish(),
   "role": zod.enum(['investor', 'top-management', 'project-manager', 'administrator']),
   "status": zod.enum(['pending', 'active', 'inactive']),
+  "mfaEnabled": zod.boolean(),
   "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Reset a user's MFA (admin only) — clears secret and disables MFA
+ */
+export const ResetUserMfaParams = zod.object({
+  "userId": zod.coerce.number()
 })
 
 

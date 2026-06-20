@@ -5,11 +5,16 @@ import crypto from "crypto";
 const JWT_SECRET = process.env.SESSION_SECRET ?? "jabeen-dev-secret-change-in-prod";
 const ACCESS_TOKEN_LIFETIME = 30 * 60; // 30 minutes
 const REFRESH_TOKEN_LIFETIME = 7 * 24 * 60 * 60; // 7 days
+const MFA_TOKEN_LIFETIME = 5 * 60; // 5 minutes — short-lived, used only to complete MFA step
 
 export interface JwtPayload {
   userId: number;
   role: string;
   status: string;
+  /** Set to true when password was verified but TOTP not yet verified */
+  mfaPending?: boolean;
+  /** Set to true for privileged accounts that have not yet enrolled in MFA */
+  mfaSetupRequired?: boolean;
 }
 
 export function hashPassword(password: string): string {
@@ -22,6 +27,11 @@ export function verifyPassword(password: string, hash: string): boolean {
 
 export function signAccessToken(payload: JwtPayload): string {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: ACCESS_TOKEN_LIFETIME });
+}
+
+/** Signs a short-lived token used only for the MFA completion step */
+export function signMfaStepToken(payload: JwtPayload): string {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: MFA_TOKEN_LIFETIME });
 }
 
 export function verifyAccessToken(token: string): JwtPayload | null {
