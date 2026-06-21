@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Building2, ArrowRight } from "lucide-react";
+import { ArrowRight, ShieldCheck, Activity, MapPin } from "lucide-react";
 import { MfaVerifyStep } from "./mfa-verify";
 import { MfaSetupFlow } from "./mfa-setup";
 
@@ -146,25 +146,74 @@ export default function LoginPage() {
   return (
     <div className="min-h-[100dvh] flex flex-col md:flex-row bg-background">
       {/* Brand Side */}
-      <div className="w-full md:w-1/2 lg:w-[60%] bg-primary flex flex-col p-8 md:p-12 text-primary-foreground justify-between relative overflow-hidden">
-        {/* Subtle geometric pattern overlay */}
-        <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '32px 32px' }} />
-        
-        <div className="relative z-10">
-          <img src="/jabeen-logo.svg" alt="JABEEN" className="h-14 w-auto brightness-0 invert" />
+      <div className="relative w-full md:w-1/2 lg:w-[60%] min-h-[42vh] md:min-h-0 flex flex-col p-8 md:p-12 text-white justify-between overflow-hidden bg-[#0c0a08]">
+        {/* Jubail Industrial City — petrochemical complex at golden hour */}
+        <img
+          src={`${BASE}/jubail-refinery.webp`}
+          alt=""
+          aria-hidden="true"
+          width={1920}
+          height={1080}
+          decoding="async"
+          className="absolute inset-0 h-full w-full object-cover object-[60%_center]"
+        />
+        {/* Legibility scrim — darken left + bottom where text sits, so it holds AA contrast over the photo */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: 'linear-gradient(105deg, rgba(7,5,3,0.86) 0%, rgba(7,5,3,0.62) 34%, rgba(7,5,3,0.18) 64%, rgba(7,5,3,0.08) 100%)' }}
+        />
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: 'linear-gradient(0deg, rgba(7,5,3,0.72) 0%, rgba(7,5,3,0) 32%)' }}
+        />
+        {/* Faint warm wash to seat the photo in the gold identity */}
+        <div className="absolute inset-0 pointer-events-none mix-blend-soft-light bg-primary/15" />
+
+        <div className="relative z-10 login-rise" style={{ ['--rise-delay' as any]: '0ms' }}>
+          <img src={`${BASE}/jabeen-logo.svg`} alt="JABEEN" className="h-14 w-auto brightness-0 invert" />
         </div>
-        
+
         <div className="relative z-10 max-w-xl mt-12 md:mt-0">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] mb-6">
-            Industrial Project Lifecycle Tracking
+          <span
+            className="login-rise inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white/90 backdrop-blur-sm"
+            style={{ ['--rise-delay' as any]: '80ms' }}
+          >
+            <MapPin className="h-3.5 w-3.5" />
+            Jubail Industrial City
+          </span>
+          <h1
+            className="login-rise text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.08] mt-5 mb-5"
+            style={{ ['--rise-delay' as any]: '140ms', textShadow: '0 2px 24px rgba(0,0,0,0.45)' }}
+          >
+            Industrial Project<br className="hidden lg:block" /> Lifecycle Tracking
           </h1>
-          <p className="text-primary-foreground/80 text-lg md:text-xl font-medium max-w-md">
+          <p
+            className="login-rise text-white/85 text-lg md:text-xl font-medium max-w-md"
+            style={{ ['--rise-delay' as any]: '210ms', textShadow: '0 1px 16px rgba(0,0,0,0.4)' }}
+          >
             The authoritative portal for Jubail Industrial City investors to track construction and operational milestones.
           </p>
+
+          <div
+            className="login-rise mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm font-medium text-white/80"
+            style={{ ['--rise-delay' as any]: '280ms' }}
+          >
+            <span className="inline-flex items-center gap-2">
+              <Activity className="h-4 w-4 text-primary-foreground/90" aria-hidden="true" />
+              Real-time milestones
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-primary-foreground/90" aria-hidden="true" />
+              Secure investor access
+            </span>
+          </div>
         </div>
-        
-        <div className="relative z-10 mt-12 md:mt-0">
-          <p className="text-sm font-medium text-primary-foreground/60">
+
+        <div
+          className="relative z-10 mt-12 md:mt-0 login-rise"
+          style={{ ['--rise-delay' as any]: '340ms' }}
+        >
+          <p className="text-sm font-medium text-white/55">
             © {new Date().getFullYear()} Royal Commission for Jubail and Yanbu
           </p>
         </div>
@@ -172,7 +221,7 @@ export default function LoginPage() {
 
       {/* Form Side */}
       <div className="w-full md:w-1/2 lg:w-[40%] flex items-center justify-center p-8 bg-card relative">
-        <div className="w-full max-w-[420px]">
+        <div className="w-full max-w-[420px] login-rise" style={{ ['--rise-delay' as any]: '120ms' }}>
 
           {/* MFA Verify Step */}
           {mfaStep.type === "verify" && (
@@ -215,7 +264,7 @@ export default function LoginPage() {
                         <FormItem>
                           <FormLabel>Work Email</FormLabel>
                           <FormControl>
-                            <Input placeholder="name@company.com" {...field} className="h-11" data-testid="input-email" />
+                            <Input type="email" inputMode="email" autoComplete="email" autoCapitalize="none" spellCheck={false} placeholder="name@company.com" {...field} className="h-11" data-testid="input-email" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -228,14 +277,14 @@ export default function LoginPage() {
                         <FormItem>
                           <FormLabel>Password</FormLabel>
                           <FormControl>
-                            <Input type="password" placeholder="••••••••" {...field} className="h-11" data-testid="input-password" />
+                            <Input type="password" autoComplete="current-password" placeholder="••••••••" {...field} className="h-11" data-testid="input-password" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    <Button type="submit" className="w-full h-11 text-base font-semibold mt-2" disabled={loginForm.formState.isSubmitting} data-testid="button-submit-login">
-                      {loginForm.formState.isSubmitting ? "Signing in..." : "Sign in to portal"}
+                    <Button type="submit" className="login-press w-full h-11 text-base font-semibold mt-2" disabled={loginForm.formState.isSubmitting} data-testid="button-submit-login">
+                      {loginForm.formState.isSubmitting ? "Signing in…" : "Sign in to portal"}
                       {!loginForm.formState.isSubmitting && <ArrowRight className="ml-2 h-4 w-4" />}
                     </Button>
                   </form>
@@ -258,7 +307,7 @@ export default function LoginPage() {
                           <FormItem>
                             <FormLabel>Full Name</FormLabel>
                             <FormControl>
-                              <Input placeholder="John Doe" {...field} className="h-10" />
+                              <Input autoComplete="name" placeholder="John Doe" {...field} className="h-10" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -271,7 +320,7 @@ export default function LoginPage() {
                           <FormItem>
                             <FormLabel>Company</FormLabel>
                             <FormControl>
-                              <Input placeholder="Acme Corp" {...field} className="h-10" />
+                              <Input autoComplete="organization" placeholder="Acme Corp" {...field} className="h-10" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -286,7 +335,7 @@ export default function LoginPage() {
                         <FormItem>
                           <FormLabel>Work Email</FormLabel>
                           <FormControl>
-                            <Input placeholder="name@company.com" {...field} className="h-10" />
+                            <Input type="email" inputMode="email" autoComplete="email" autoCapitalize="none" spellCheck={false} placeholder="name@company.com" {...field} className="h-10" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -300,7 +349,7 @@ export default function LoginPage() {
                         <FormItem>
                           <FormLabel>Password</FormLabel>
                           <FormControl>
-                            <Input type="password" placeholder="••••••••" {...field} className="h-10" />
+                            <Input type="password" autoComplete="new-password" placeholder="••••••••" {...field} className="h-10" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -315,7 +364,7 @@ export default function LoginPage() {
                           <FormItem>
                             <FormLabel>Job Title <span className="text-muted-foreground font-normal">(Optional)</span></FormLabel>
                             <FormControl>
-                              <Input placeholder="Project Manager" {...field} className="h-10" />
+                              <Input autoComplete="organization-title" placeholder="Project Manager" {...field} className="h-10" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -328,7 +377,7 @@ export default function LoginPage() {
                           <FormItem>
                             <FormLabel>Phone <span className="text-muted-foreground font-normal">(Optional)</span></FormLabel>
                             <FormControl>
-                              <Input placeholder="+966..." {...field} className="h-10" />
+                              <Input type="tel" inputMode="tel" autoComplete="tel" placeholder="+966…" {...field} className="h-10" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -336,8 +385,8 @@ export default function LoginPage() {
                       />
                     </div>
 
-                    <Button type="submit" className="w-full h-11 text-base font-semibold mt-4" disabled={registerForm.formState.isSubmitting} data-testid="button-submit-register">
-                      {registerForm.formState.isSubmitting ? "Creating account..." : "Register Account"}
+                    <Button type="submit" className="login-press w-full h-11 text-base font-semibold mt-4" disabled={registerForm.formState.isSubmitting} data-testid="button-submit-register">
+                      {registerForm.formState.isSubmitting ? "Creating account…" : "Register Account"}
                     </Button>
                   </form>
                 </Form>

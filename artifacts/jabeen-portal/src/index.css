@@ -179,3 +179,62 @@
     pointer-events: none;
   }
 }
+
+/* ----------------------------------------------------------------------------
+   Login experience polish
+   Strong custom ease-out curve; only transform + opacity are animated so the
+   work stays on the GPU. Entrance plays once on mount (login is seen
+   occasionally, so a gentle stagger reads as intentional, not sluggish).
+---------------------------------------------------------------------------- */
+:root {
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes login-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-rise {
+  opacity: 0;
+  animation: login-rise 560ms var(--ease-out-strong) forwards;
+  animation-delay: var(--rise-delay, 0ms);
+  will-change: transform, opacity;
+}
+
+/* Press feedback — scoped to login so the global Button is untouched.
+   Subtle scale confirms the press; release is implicitly snappy. */
+.login-press {
+  transition: transform 160ms var(--ease-out-strong);
+}
+.login-press:active {
+  transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-rise {
+    animation-duration: 220ms;
+    animation-name: login-fade;
+  }
+  .login-press {
+    transition: none;
+  }
+  .login-press:active {
+    transform: none;
+  }
+}
+
+@keyframes login-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
