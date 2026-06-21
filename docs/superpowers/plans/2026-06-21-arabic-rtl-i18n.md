@@ -203,7 +203,8 @@ export function LanguageSwitcher() {
 }
 ```
 - [ ] **Step 2:** In `header.tsx`, import and render `<LanguageSwitcher />` in the right-hand control cluster (next to the notifications bell / `CitySwitcher`).
-- [ ] **Step 3: Commit** `git add -A artifacts/jabeen-portal/src && git commit -m "feat(web): header language switcher"`
+- [ ] **Step 3:** Add the switcher to the **login page** too (it is standalone and does NOT use `Header`/`AppLayout`, so it needs its own). In `pages/auth/login.tsx`, render `<LanguageSwitcher />` absolutely positioned in the top corner on the **start side of the form panel** (the right/form column), e.g. inside the form-side container: `<div className="absolute top-4 end-4 z-20"><LanguageSwitcher /></div>`. It works pre-auth because i18n is global and the switcher only calls `i18n.changeLanguage`. Confirm toggling on the login screen flips the page to RTL/Arabic immediately and persists.
+- [ ] **Step 4: Commit** `git add -A artifacts/jabeen-portal/src && git commit -m "feat(web): language switcher in header and on login page"`
 
 ---
 
