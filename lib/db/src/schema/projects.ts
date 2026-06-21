@@ -1,11 +1,14 @@
 import { pgTable, serial, text, boolean, integer, timestamp } from "drizzle-orm/pg-core";
 import { usersTable } from "./users";
 import { stageTemplatesTable, stagesTable } from "./templates";
+import { citiesTable } from "./cities";
+import { projectCategoriesTable } from "./project_categories";
 
 export const projectsTable = pgTable("projects", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  sector: text("sector").notNull(),
+  cityId: integer("city_id").notNull().references(() => citiesTable.id, { onDelete: "restrict" }),
+  categoryId: integer("category_id").notNull().references(() => projectCategoriesTable.id, { onDelete: "restrict" }),
   agreementNumber: text("agreement_number").notNull().unique(),
   plotNumber: text("plot_number"),
   notes: text("notes"),
