@@ -13,6 +13,7 @@ import usersRouter from "./users";
 import auditRouter from "./audit";
 import settingsRouter from "./settings";
 import citiesRouter from "./cities";
+import categoriesRouter from "./categories";
 import { requireAuth, requireActiveAccount } from "../middlewares/requireAuth";
 
 const router: IRouter = Router();
@@ -35,6 +36,7 @@ protectedRouter.use(usersRouter);
 protectedRouter.use(auditRouter);
 protectedRouter.use(settingsRouter);
 protectedRouter.use(citiesRouter);
+protectedRouter.use(categoriesRouter);
 
 router.use(protectedRouter);
 
