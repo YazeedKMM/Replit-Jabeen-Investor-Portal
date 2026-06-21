@@ -1,6 +1,7 @@
 import { Bell } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/use-auth";
+import { CitySwitcher } from "@/components/city-switcher";
 import { NotificationPanel } from "./notification-panel";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useGetUnreadCount, getGetUnreadCountQueryKey } from "@workspace/api-client-react";
@@ -22,6 +23,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-4 border-b bg-background px-4 md:px-6 shadow-sm">
       <SidebarTrigger className="-ml-2" />
+      <CitySwitcher />
       <div className="flex-1" />
       <div className="flex items-center gap-4">
         <div className="flex flex-col items-end hidden md:flex">
