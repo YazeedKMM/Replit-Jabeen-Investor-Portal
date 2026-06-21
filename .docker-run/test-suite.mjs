@@ -98,6 +98,15 @@ async function main() {
   A.pm = s.token; A.pmSecret = s.secret;
   check("login: pm via MFA setup", !!A.pm, `mfa=${s.mfa}`);
 
+  // City + category id maps for project creation / scoping tests
+  const CITY = {}, CAT = {};
+  { const rc = await api("GET", "/cities", { token: A.pm });
+    for (const c of (rc.data || [])) CITY[c.code] = c.id;
+    const rk = await api("GET", "/project-categories", { token: A.pm });
+    for (const c of (rk.data || [])) CAT[c.code] = c.id; }
+  check("cities: list reachable by PM", Object.keys(CITY).length >= 4, `codes ${Object.keys(CITY)}`);
+  check("categories: list reachable by PM", Object.keys(CAT).length >= 5, `codes ${Object.keys(CAT)}`);
+
   // #5: re-running setup on an already-enrolled account must not clobber it
   r = await api("POST", "/auth/mfa/setup", { token: A.admin });
   check("MFA setup on already-enrolled account -> 409 (#5)", r.status === 409, `got ${r.status}`);
@@ -127,7 +136,8 @@ async function main() {
   console.log("\n=== PROJECTS ===");
   // Investor scoping
   r = await api("GET", "/projects", { token: A.inv1 });
-  check("projects: investor1 sees only own", r.status === 200 && r.data.length === 1 && r.data[0].id === 1, `count ${r.data?.length}`);
+  check("projects: investor1 sees only own (across cities)", r.status === 200 && r.data.length === 2 && r.data.every(p => p.id === 1 || p.id === 3), `count ${r.data?.length}`);
+  check("projects: investor project carries city+category", !!r.data?.[0]?.city && !!r.data?.[0]?.category, `city=${!!r.data?.[0]?.city} cat=${!!r.data?.[0]?.category}`);
   check("projects: investor list hides other investor contact", r.data?.[0]?.investor == null, "investor contact leaked to owner-investor (n/a)");
   r = await api("GET", "/projects/2", { token: A.inv1 });
   check("projects: investor1 GET other project -> 404", r.status === 404, `got ${r.status}`);
@@ -138,22 +148,22 @@ async function main() {
   check("projects: TM sees all (2+)", r.status === 200 && r.data.length >= 2, `count ${r.data?.length}`);
   check("projects: TM sees investor contact", !!r.data?.find(p => p.investor), "no investor enriched");
   // Investor cannot create
-  r = await api("POST", "/projects", { token: A.inv1, body: { name: "x", sector: "y", agreementNumber: "Z-"+ts } });
+  r = await api("POST", "/projects", { token: A.inv1, body: { name: "x", cityId: CITY.JUB, categoryId: CAT.PETRO, agreementNumber: "Z-"+ts } });
   check("projects: investor POST -> 403", r.status === 403, `got ${r.status}`);
   // TM cannot create / export (read-only)
-  r = await api("POST", "/projects", { token: A.tm, body: { name: "x", sector: "y", agreementNumber: "Z2-"+ts } });
+  r = await api("POST", "/projects", { token: A.tm, body: { name: "x", cityId: CITY.JUB, categoryId: CAT.PETRO, agreementNumber: "Z2-"+ts } });
   check("projects: TM POST -> 403", r.status === 403, `got ${r.status}`);
   r = await api("GET", "/projects/export", { token: A.tm });
   check("projects: TM export -> 403", r.status === 403, `got ${r.status}`);
   // PM create
-  r = await api("POST", "/projects", { token: A.pm, body: { name: "Test Facility "+ts, sector: "Petrochemicals & Plastics", agreementNumber: "TST-"+ts, plotNumber: "P-"+ts, constructionPct: 10, investorId: 4 } });
+  r = await api("POST", "/projects", { token: A.pm, body: { name: "Test Facility "+ts, cityId: CITY.JUB, categoryId: CAT.PETRO, agreementNumber: "TST-"+ts, plotNumber: "P-"+ts, constructionPct: 10, investorId: 4 } });
   const projId = r.data?.id;
   check("projects: PM create -> 201", r.status === 201 && !!projId, `status ${r.status} ${JSON.stringify(r.data).slice(0,120)}`);
   // invalid investor (assign a PM as investor)
-  r = await api("POST", "/projects", { token: A.pm, body: { name: "Bad", sector: "s", agreementNumber: "BAD-"+ts, investorId: 2 } });
+  r = await api("POST", "/projects", { token: A.pm, body: { name: "Bad", cityId: CITY.JUB, categoryId: CAT.PETRO, agreementNumber: "BAD-"+ts, investorId: 2 } });
   check("projects: create with non-investor investorId -> 400", r.status === 400, `got ${r.status}`);
   // constructionPct out of range
-  r = await api("POST", "/projects", { token: A.pm, body: { name: "Range", sector: "s", agreementNumber: "RNG-"+ts, constructionPct: 150 } });
+  r = await api("POST", "/projects", { token: A.pm, body: { name: "Range", cityId: CITY.JUB, categoryId: CAT.PETRO, agreementNumber: "RNG-"+ts, constructionPct: 150 } });
   check("projects: constructionPct=150 should be rejected (<=100)", r.status === 400, `got ${r.status} (constructionPct=${r.data?.constructionPct})`);
   const rangeProjId = r.data?.id;
   // Optimistic concurrency
@@ -174,6 +184,60 @@ async function main() {
   r = await api("DELETE", `/projects/${projId}`, { token: A.admin });
   check("projects: admin delete -> 204", r.status === 204, `got ${r.status}`);
   if (rangeProjId) await api("DELETE", `/projects/${rangeProjId}`, { token: A.admin });
+
+  console.log("\n=== CITY SCOPING & CATALOG ===");
+  // PM sees only assigned-city projects (JUB/YNB)
+  r = await api("GET", "/projects", { token: A.pm });
+  const pmCityIds = new Set((r.data||[]).map(p => p.cityId));
+  check("scoping: pm1 list excludes RAS/JZN", r.status === 200 && !pmCityIds.has(CITY.RAS) && !pmCityIds.has(CITY.JZN), `cities ${[...pmCityIds]}`);
+  check("scoping: pm1 list includes JUB/YNB", pmCityIds.has(CITY.JUB) || pmCityIds.has(CITY.YNB), `cities ${[...pmCityIds]}`);
+  // PM direct access to an out-of-scope project -> 403 (project 3 = RAS, project 4 = JZN)
+  r = await api("GET", "/projects/3", { token: A.pm });
+  check("scoping: pm1 GET RAS project -> 403", r.status === 403, `got ${r.status}`);
+  r = await api("GET", "/projects/4", { token: A.pm });
+  check("scoping: pm1 GET JZN project -> 403", r.status === 403, `got ${r.status}`);
+  r = await api("PATCH", "/projects/3", { token: A.pm, body: { name: "x", version: 1 } });
+  check("scoping: pm1 PATCH RAS project -> 403", r.status === 403, `got ${r.status}`);
+  // PM create in an unassigned city -> 403
+  r = await api("POST", "/projects", { token: A.pm, body: { name: "Scope "+ts, cityId: CITY.RAS, categoryId: CAT.MINING, agreementNumber: "SCP-"+ts } });
+  check("scoping: pm1 create in RAS -> 403", r.status === 403, `got ${r.status}`);
+  // Missing cityId/categoryId -> 400
+  r = await api("POST", "/projects", { token: A.pm, body: { name: "NoCity "+ts, agreementNumber: "NOC-"+ts } });
+  check("projects: create missing cityId/categoryId -> 400", r.status === 400, `got ${r.status}`);
+  // Admin & TM see all four cities
+  r = await api("GET", "/projects", { token: A.admin });
+  const adminCityIds = new Set((r.data||[]).map(p => p.cityId));
+  check("scoping: admin sees all 4 cities", [CITY.JUB,CITY.YNB,CITY.RAS,CITY.JZN].every(id => adminCityIds.has(id)), `cities ${[...adminCityIds]}`);
+  r = await api("GET", "/projects", { token: A.tm });
+  const tmCityIds = new Set((r.data||[]).map(p => p.cityId));
+  check("scoping: TM sees RAS & JZN too", tmCityIds.has(CITY.RAS) && tmCityIds.has(CITY.JZN), `cities ${[...tmCityIds]}`);
+  // ?cityId filter (admin) returns only that city
+  r = await api("GET", `/projects?cityId=${CITY.JUB}`, { token: A.admin });
+  check("filter: ?cityId=JUB returns only JUB", r.status === 200 && r.data.length > 0 && r.data.every(p => p.cityId === CITY.JUB), `n=${r.data?.length}`);
+  // Cities CRUD authorization
+  r = await api("POST", "/cities", { token: A.pm, body: { code: "X1", name: "X", shortName: "X" } });
+  check("cities: PM create -> 403", r.status === 403, `got ${r.status}`);
+  r = await api("POST", "/cities", { token: A.inv1, body: { code: "X1", name: "X", shortName: "X" } });
+  check("cities: investor create -> 403", r.status === 403, `got ${r.status}`);
+  r = await api("POST", "/cities", { token: A.admin, body: { code: "TST"+ts.toString().slice(-4), name: "Test City", shortName: "TestCity" } });
+  const testCityId = r.data?.id;
+  check("cities: admin create -> 201", r.status === 201 && !!testCityId, `got ${r.status}`);
+  // Categories CRUD authorization
+  r = await api("POST", "/project-categories", { token: A.pm, body: { code: "C1", name: "C" } });
+  check("categories: PM create -> 403", r.status === 403, `got ${r.status}`);
+  r = await api("POST", "/project-categories", { token: A.admin, body: { code: "TSTC"+ts.toString().slice(-4), name: "Test Category" } });
+  const testCatId = r.data?.id;
+  check("categories: admin create -> 201", r.status === 201 && !!testCatId, `got ${r.status}`);
+  // In-use guards: cannot disable/delete a city/category with projects
+  r = await api("PATCH", `/cities/${CITY.JUB}`, { token: A.admin, body: { enabled: false } });
+  check("cities: disable in-use JUB -> 409", r.status === 409, `got ${r.status}`);
+  r = await api("DELETE", `/cities/${CITY.JUB}`, { token: A.admin });
+  check("cities: delete in-use JUB -> 409", r.status === 409, `got ${r.status}`);
+  r = await api("PATCH", `/project-categories/${CAT.PETRO}`, { token: A.admin, body: { enabled: false } });
+  check("categories: disable in-use PETRO -> 409", r.status === 409, `got ${r.status}`);
+  // Cleanup the throwaway test city/category (they have no projects)
+  if (testCityId) { r = await api("DELETE", `/cities/${testCityId}`, { token: A.admin }); check("cities: delete unused test city -> 204", r.status === 204, `got ${r.status}`); }
+  if (testCatId) { r = await api("DELETE", `/project-categories/${testCatId}`, { token: A.admin }); check("categories: delete unused test category -> 204", r.status === 204, `got ${r.status}`); }
 
   console.log("\n=== TEMPLATES ===");
   r = await api("GET", "/templates", { token: A.pm });
@@ -203,7 +267,7 @@ async function main() {
   r = await api("PUT", `/templates/${newTplId}`, { token: A.pm, body: { name: "QA Template Renamed "+ts } });
   check("templates: PUT never-assigned mutates in place", r.status === 200 && r.data?.versionCreated === false, `status ${r.status} vc=${r.data?.versionCreated}`);
   // Assign a throwaway project to this template, then PUT -> immutable, must version.
-  r = await api("POST", "/projects", { token: A.pm, body: { name: "Tpl Assign "+ts, sector: "s", agreementNumber: "TPLA-"+ts, pipelineId: newTplId } });
+  r = await api("POST", "/projects", { token: A.pm, body: { name: "Tpl Assign "+ts, cityId: CITY.JUB, categoryId: CAT.PETRO, agreementNumber: "TPLA-"+ts, pipelineId: newTplId } });
   const tplAssignProj = r.data?.id;
   r = await api("PUT", `/templates/${newTplId}`, { token: A.pm, body: { name: "QA v2 "+ts, description: "v2" } });
   check("templates: PUT assigned template creates new version", r.status === 200 && r.data?.versionCreated === true, `status ${r.status} vc=${r.data?.versionCreated}`);
@@ -346,7 +410,7 @@ async function main() {
   for (const [role, tok, expect] of [["admin", A.admin, 200], ["pm", A.pm, 200], ["tm", A.tm, 200], ["inv1", A.inv1, 403]]) {
     r = await api("GET", "/dashboard", { token: tok });
     check(`dashboard: ${role} -> ${expect}`, r.status === expect, `got ${r.status}`);
-    if (expect === 200) check(`dashboard: ${role} KPIs present`, typeof r.data?.total === "number" && Array.isArray(r.data?.byStatus), "missing KPIs");
+    if (expect === 200) check(`dashboard: ${role} KPIs present`, typeof r.data?.total === "number" && Array.isArray(r.data?.byStatus) && Array.isArray(r.data?.byCategory) && Array.isArray(r.data?.byCity), "missing KPIs");
   }
 
   console.log("\n=== USERS / ADMIN ===");
@@ -423,7 +487,7 @@ async function main() {
   r = await api("GET", "/audit-log", { token: A.tm });
   check("audit: TM -> 403", r.status === 403, `got ${r.status}`);
   // #2 investor-contact-viewed dedup: view a fresh project's contact twice -> logged once
-  r = await api("POST", "/projects", { token: A.pm, body: { name: "Audit Dedup "+ts, sector: "s", agreementNumber: "AUD-"+ts, investorId: 4 } });
+  r = await api("POST", "/projects", { token: A.pm, body: { name: "Audit Dedup "+ts, cityId: CITY.JUB, categoryId: CAT.PETRO, agreementNumber: "AUD-"+ts, investorId: 4 } });
   const auditProj = r.data?.id;
   if (auditProj) {
     const countCV = async () => {
