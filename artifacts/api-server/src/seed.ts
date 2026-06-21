@@ -286,6 +286,26 @@ async function seed() {
       investorEmail: "investor2@gulfpetro.com",
       currentStageIndex: 2,
     },
+    {
+      name: "Ras Al-Khair Phosphate Processing Plant",
+      cityId: cityIdByCode["RAS"],
+      categoryId: categoryIdByCode["MINING"],
+      agreementNumber: "RCJY-2024-003",
+      plotNumber: "P-3001-R",
+      constructionPct: 60,
+      investorEmail: "investor1@acmecorp.com",
+      currentStageIndex: 2,
+    },
+    {
+      name: "Jazan Waterfront Commercial District",
+      cityId: cityIdByCode["JZN"],
+      categoryId: categoryIdByCode["COMMERCIAL"],
+      agreementNumber: "RCJY-2024-004",
+      plotNumber: "P-4001-Z",
+      constructionPct: 10,
+      investorEmail: "investor2@gulfpetro.com",
+      currentStageIndex: 1,
+    },
   ];
 
   for (const p of sampleProjects) {
