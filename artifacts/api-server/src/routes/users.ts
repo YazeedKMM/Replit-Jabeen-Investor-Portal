@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, and, ilike, or } from "drizzle-orm";
 import { db } from "@workspace/db";
-import { usersTable, projectsTable, refreshTokensTable } from "@workspace/db";
+import { usersTable, projectsTable, refreshTokensTable, userCitiesTable, citiesTable } from "@workspace/db";
 import { requireAuth, invalidateAccountStatusCache, type AuthenticatedRequest, MANAGER_ROLES, ADMIN_ROLE, PRIVILEGED_ROLES } from "../middlewares/requireAuth";
 import { hashPassword, generateOtpPassword } from "../lib/auth";
 import { logAudit } from "../lib/audit";
@@ -157,6 +157,41 @@ router.post("/users/:userId/mfa/reset", requireAuth, async (req: AuthenticatedRe
   });
 
   res.sendStatus(204);
+});
+
+// GET /users/:userId/cities — Admin: list cities assigned to a user (project manager)
+router.get("/users/:userId/cities", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
+  if (!(ADMIN_ROLE as readonly string[]).includes(req.user!.role)) {
+    res.status(403).json({ error: "Forbidden" }); return;
+  }
+  const userId = parseId(req.params.userId);
+  const rows = await db.select({ cityId: userCitiesTable.cityId }).from(userCitiesTable).where(eq(userCitiesTable.userId, userId));
+  res.json(rows.map((r) => r.cityId));
+});
+
+// PUT /users/:userId/cities — Admin: replace assigned cities for a project manager
+router.put("/users/:userId/cities", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
+  if (!(ADMIN_ROLE as readonly string[]).includes(req.user!.role)) {
+    res.status(403).json({ error: "Forbidden" }); return;
+  }
+  const userId = parseId(req.params.userId);
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
+  if (!user) { res.status(404).json({ error: "User not found" }); return; }
+  if (user.role !== "project-manager") { res.status(400).json({ error: "City assignment applies to project managers only" }); return; }
+
+  const cityIds: unknown = req.body?.cityIds;
+  if (!Array.isArray(cityIds) || cityIds.some((id) => typeof id !== "number")) {
+    res.status(400).json({ error: "cityIds must be an array of numbers" }); return;
+  }
+  // Validate all city ids exist.
+  for (const id of cityIds) {
+    const [c] = await db.select({ id: citiesTable.id }).from(citiesTable).where(eq(citiesTable.id, id));
+    if (!c) { res.status(400).json({ error: `Unknown city id ${id}` }); return; }
+  }
+  await db.delete(userCitiesTable).where(eq(userCitiesTable.userId, userId));
+  if (cityIds.length) await db.insert(userCitiesTable).values(cityIds.map((cityId) => ({ userId, cityId })));
+  await logAudit({ action: "user.cities-updated", actorId: req.user!.userId, targetType: "user", targetId: userId });
+  res.json(cityIds);
 });
 
 // POST /users/:userId/activate
