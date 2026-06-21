@@ -91,7 +91,7 @@ export default function ProjectWorkspacePage() {
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Building2 className="h-4 w-4" />
-                  {project.sector}
+                  {project.city?.shortName} · {project.category?.name}
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Calendar className="h-4 w-4" />

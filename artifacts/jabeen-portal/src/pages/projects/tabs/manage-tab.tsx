@@ -1,4 +1,4 @@
-import { Project, useUpdateProject, useDeleteProject, useListUsers, useListTemplates } from "@workspace/api-client-react";
+import { Project, useUpdateProject, useDeleteProject, useListUsers, useListTemplates, useGetCities, useGetProjectCategories, getGetCitiesQueryKey, getGetProjectCategoriesQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,8 @@ interface Props {
 
 const updateProjectSchema = z.object({
   name: z.string().min(1, "Name required"),
-  sector: z.string().min(1, "Sector required"),
+  cityId: z.coerce.number().min(1, "City required"),
+  categoryId: z.coerce.number().min(1, "Project category required"),
   plotNumber: z.string().optional(),
   notes: z.string().optional(),
   attentionFlag: z.boolean(),
@@ -39,12 +40,15 @@ export default function ProjectManageTab({ project, isAdmin }: Props) {
 
   const { data: investors } = useListUsers({ role: "investor" });
   const { data: templates } = useListTemplates();
+  const { data: allCities } = useGetCities({ query: { queryKey: getGetCitiesQueryKey() } });
+  const { data: allCategories } = useGetProjectCategories({ query: { queryKey: getGetProjectCategoriesQueryKey() } });
 
   const form = useForm<z.infer<typeof updateProjectSchema>>({
     resolver: zodResolver(updateProjectSchema),
     defaultValues: {
       name: project.name,
-      sector: project.sector,
+      cityId: project.cityId,
+      categoryId: project.categoryId,
       plotNumber: project.plotNumber || "",
       notes: project.notes || "",
       attentionFlag: project.attentionFlag || false,
@@ -110,8 +114,29 @@ export default function ProjectManageTab({ project, isAdmin }: Props) {
                 <FormField control={form.control} name="name" render={({ field }) => (
                   <FormItem><FormLabel>Project Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
-                <FormField control={form.control} name="sector" render={({ field }) => (
-                  <FormItem><FormLabel>Sector</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                <FormField control={form.control} name="cityId" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>City</FormLabel>
+                    <Select onValueChange={v => field.onChange(Number(v))} value={field.value?.toString() || ""}>
+                      <FormControl><SelectTrigger><SelectValue placeholder="Select city..." /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        {allCities?.filter(c => c.enabled).map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="categoryId" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Project Category</FormLabel>
+                    <Select onValueChange={v => field.onChange(Number(v))} value={field.value?.toString() || ""}>
+                      <FormControl><SelectTrigger><SelectValue placeholder="Select category..." /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        {allCategories?.filter(c => c.enabled).map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
                 )} />
                 <FormField control={form.control} name="plotNumber" render={({ field }) => (
                   <FormItem><FormLabel>Plot Number (Optional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>

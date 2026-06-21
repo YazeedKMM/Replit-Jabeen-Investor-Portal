@@ -116,7 +116,7 @@ export default function UsersPage() {
   // Fetch existing city assignments when the manage-cities dialog is open for a PM
   const { data: manageCityData } = useGetUserCities(
     manageCitiesTarget?.id ?? 0,
-    { query: { enabled: !!manageCitiesTarget && manageCitiesTarget.role === "project-manager" } }
+    { query: { queryKey: getGetUserCitiesQueryKey(manageCitiesTarget?.id ?? 0), enabled: !!manageCitiesTarget && manageCitiesTarget.role === "project-manager" } }
   );
 
   // Prefill manageCityIds when data loads

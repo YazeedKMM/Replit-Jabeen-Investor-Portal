@@ -4,6 +4,7 @@ import {
   useGetDashboard, useListProjects, useCreateProject,
   useListTemplates, useListUsers, useGetCities, useGetProjectCategories,
   getListProjectsQueryKey, getGetDashboardQueryKey, getListUsersQueryKey, getListTemplatesQueryKey,
+  getGetCitiesQueryKey, getGetProjectCategoriesQueryKey,
 } from "@workspace/api-client-react";
 import { useCityFilter } from "@/hooks/use-city-filter";
 import { useQueryClient } from "@tanstack/react-query";
@@ -75,8 +76,8 @@ function NewProjectDialog({
     investorParams,
     { query: { queryKey: getListUsersQueryKey(investorParams), enabled: open } },
   );
-  const { data: allCities } = useGetCities({ query: { enabled: open } });
-  const { data: allCategories } = useGetProjectCategories({ query: { enabled: open } });
+  const { data: allCities } = useGetCities({ query: { queryKey: getGetCitiesQueryKey(), enabled: open } });
+  const { data: allCategories } = useGetProjectCategories({ query: { queryKey: getGetProjectCategoriesQueryKey(), enabled: open } });
   const enabledCities = allCities?.filter((c) => c.enabled) ?? [];
   const enabledCategories = allCategories?.filter((c) => c.enabled) ?? [];
 
