@@ -1,8 +1,8 @@
 import { Router, type IRouter } from "express";
-import { eq, and, or, isNull, desc, sql } from "drizzle-orm";
+import { eq, and, or, isNull, desc, sql, inArray } from "drizzle-orm";
 import { db } from "@workspace/db";
-import { projectsTable, usersTable, stageTemplatesTable, stagesTable, stageFieldsTable } from "@workspace/db";
-import { requireAuth, type AuthenticatedRequest, MANAGER_ROLES, PRIVILEGED_ROLES, ADMIN_ROLE } from "../middlewares/requireAuth";
+import { projectsTable, usersTable, stageTemplatesTable, stagesTable, stageFieldsTable, citiesTable, projectCategoriesTable } from "@workspace/db";
+import { requireAuth, type AuthenticatedRequest, MANAGER_ROLES, PRIVILEGED_ROLES, ADMIN_ROLE, CITY_SCOPED_ROLES, getAssignedCityIds } from "../middlewares/requireAuth";
 import { deriveProjectStatus } from "../lib/status";
 import { getStatusThresholds } from "../lib/settings-cache";
 import { logAudit, logAuditDeduped } from "../lib/audit";
@@ -91,12 +91,22 @@ async function enrichProject(project: typeof projectsTable.$inferSelect, forRole
     pipelineName = t?.name ?? null;
   }
 
+  let city = null;
+  const [c] = await db.select().from(citiesTable).where(eq(citiesTable.id, project.cityId));
+  city = c ?? null;
+
+  let category = null;
+  const [cat] = await db.select().from(projectCategoriesTable).where(eq(projectCategoriesTable.id, project.categoryId));
+  category = cat ?? null;
+
   return {
     ...project,
     derivedStatus,
     currentStage,
     investor,
     pipelineName,
+    city,
+    category,
   };
 }
 
@@ -116,7 +126,7 @@ function sanitizeCsvCell(value: string): string {
 }
 
 router.get("/projects", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
-  const { search, status, stage, sector } = req.query as Record<string, string>;
+  const { search, status, stage, cityId: cityIdParam } = req.query as Record<string, string>;
   const userId = req.user!.userId;
   const role = req.user!.role;
   const isPrivileged = (PRIVILEGED_ROLES as readonly string[]).includes(role);
@@ -131,8 +141,16 @@ router.get("/projects", requireAuth, async (req: AuthenticatedRequest, res): Pro
     return;
   }
 
-  const conditions: ReturnType<typeof eq>[] = [];
-  if (sector) conditions.push(eq(projectsTable.sector, sector));
+  const conditions: (ReturnType<typeof eq> | ReturnType<typeof inArray>)[] = [];
+  const isCityScoped = (CITY_SCOPED_ROLES as readonly string[]).includes(role);
+  if (isCityScoped) {
+    const assigned = await getAssignedCityIds(userId);
+    if (assigned.length === 0) { res.json([]); return; }
+    conditions.push(inArray(projectsTable.cityId, assigned));
+  }
+  if (cityIdParam) {
+    conditions.push(eq(projectsTable.cityId, Number(cityIdParam)));
+  }
   const rows = conditions.length
     ? await db.select().from(projectsTable).where(and(...conditions))
     : await db.select().from(projectsTable);
@@ -144,7 +162,7 @@ router.get("/projects", requireAuth, async (req: AuthenticatedRequest, res): Pro
     enriched = enriched.filter((p) =>
       p.name.toLowerCase().includes(s) ||
       p.agreementNumber.toLowerCase().includes(s) ||
-      p.sector.toLowerCase().includes(s) ||
+      (p.category?.name ?? "").toLowerCase().includes(s) ||
       (p.investor && (
         (p.investor as { fullName: string }).fullName.toLowerCase().includes(s) ||
         (p.investor as { companyName: string }).companyName.toLowerCase().includes(s)
@@ -161,11 +179,20 @@ router.post("/projects", requireAuth, async (req: AuthenticatedRequest, res): Pr
   if (!(MANAGER_ROLES as readonly string[]).includes(req.user!.role)) {
     res.status(403).json({ error: "Forbidden" }); return;
   }
-  const { name, sector, agreementNumber, plotNumber, pipelineId: rawPipelineId, constructionPct, investorId, notes } = req.body;
-  if (!name || !sector || !agreementNumber) {
-    res.status(400).json({ error: "name, sector, agreementNumber are required" }); return;
+  const { name, cityId, categoryId, agreementNumber, plotNumber, pipelineId: rawPipelineId, constructionPct, investorId, notes } = req.body;
+  if (!name || !cityId || !categoryId || !agreementNumber) {
+    res.status(400).json({ error: "name, cityId, categoryId, agreementNumber are required" }); return;
   }
   validateConstructionPct(constructionPct);
+
+  const [cityRow] = await db.select().from(citiesTable).where(eq(citiesTable.id, cityId));
+  if (!cityRow) { res.status(400).json({ error: "Unknown city" }); return; }
+  const [catRow] = await db.select().from(projectCategoriesTable).where(eq(projectCategoriesTable.id, categoryId));
+  if (!catRow) { res.status(400).json({ error: "Unknown category" }); return; }
+  if ((CITY_SCOPED_ROLES as readonly string[]).includes(req.user!.role)) {
+    const assigned = await getAssignedCityIds(req.user!.userId);
+    if (!assigned.includes(cityId)) { res.status(403).json({ error: "Forbidden: city not assigned to you" }); return; }
+  }
 
   if (investorId) {
     const [inv] = await db.select().from(usersTable).where(and(eq(usersTable.id, investorId), eq(usersTable.role, "investor")));
@@ -192,7 +219,8 @@ router.post("/projects", requireAuth, async (req: AuthenticatedRequest, res): Pr
 
   const [project] = await db.insert(projectsTable).values({
     name,
-    sector,
+    cityId,
+    categoryId,
     agreementNumber,
     plotNumber: plotNumber ?? null,
     notes: notes ?? null,
@@ -218,17 +246,24 @@ router.get("/projects/export", requireAuth, async (req: AuthenticatedRequest, re
     res.status(403).json({ error: "Forbidden" }); return;
   }
   const { stalledDays, delayedDays } = await getStatusThresholds();
-  const rows = await db.select().from(projectsTable);
+  let rows;
+  if ((CITY_SCOPED_ROLES as readonly string[]).includes(req.user!.role)) {
+    const assigned = await getAssignedCityIds(req.user!.userId);
+    rows = assigned.length ? await db.select().from(projectsTable).where(inArray(projectsTable.cityId, assigned)) : [];
+  } else {
+    rows = await db.select().from(projectsTable);
+  }
   const enriched = await Promise.all(rows.map((p) => enrichProject(p, req.user!.role, stalledDays, delayedDays)));
 
   // Audit: record the portfolio export
   await logAudit({ action: "portfolio-exported", actorId: req.user!.userId, targetType: "portfolio", detail: `exported ${enriched.length} projects` });
 
-  const header = ["Agreement Number", "Name", "Sector", "Plot Number", "Pipeline", "Current Stage", "Construction %", "Derived Status", "Investor Company", "Investor Email", "Last Update", "Attention Flag"];
+  const header = ["Agreement Number", "Name", "City", "Category", "Plot Number", "Pipeline", "Current Stage", "Construction %", "Derived Status", "Investor Company", "Investor Email", "Last Update", "Attention Flag"];
   const csvRows = enriched.map((p) => [
     p.agreementNumber,
     p.name,
-    p.sector,
+    (p.city as { shortName?: string } | null)?.shortName ?? "",
+    (p.category as { name?: string } | null)?.name ?? "",
     p.plotNumber ?? "",
     p.pipelineName ?? "",
     (p.currentStage as { name?: string } | null)?.name ?? "",
@@ -258,6 +293,11 @@ router.get("/projects/:projectId", requireAuth, async (req: AuthenticatedRequest
   const isPrivileged = (PRIVILEGED_ROLES as readonly string[]).includes(role);
   if (!isPrivileged && project.investorId !== req.user!.userId) {
     res.status(404).json({ error: "Project not found" }); return;
+  }
+
+  if ((CITY_SCOPED_ROLES as readonly string[]).includes(role)) {
+    const assigned = await getAssignedCityIds(req.user!.userId);
+    if (!assigned.includes(project.cityId)) { res.status(403).json({ error: "Forbidden" }); return; }
   }
 
   // Fetch the specific pinned template version — stages from that version
@@ -321,8 +361,13 @@ router.patch("/projects/:projectId", requireAuth, async (req: AuthenticatedReque
   const [project] = await db.select().from(projectsTable).where(eq(projectsTable.id, projectId));
   if (!project) { res.status(404).json({ error: "Not found" }); return; }
 
+  if ((CITY_SCOPED_ROLES as readonly string[]).includes(req.user!.role)) {
+    const assigned = await getAssignedCityIds(req.user!.userId);
+    if (!assigned.includes(project.cityId)) { res.status(403).json({ error: "Forbidden" }); return; }
+  }
+
   // Optimistic concurrency: version is mandatory — reject if missing or stale
-  const { name, sector, plotNumber, notes, attentionFlag, constructionPct, investorId, pipelineId: rawPipelineId, version } = req.body;
+  const { name, cityId, categoryId, plotNumber, notes, attentionFlag, constructionPct, investorId, pipelineId: rawPipelineId, version } = req.body;
   validateConstructionPct(constructionPct);
   if (version === undefined || version === null) {
     res.status(400).json({ error: "version is required for project updates. Fetch the project first and include its current version.", code: "VERSION_REQUIRED" });
@@ -340,12 +385,26 @@ router.patch("/projects/:projectId", requireAuth, async (req: AuthenticatedReque
 
   const updates: Record<string, unknown> = {};
   if (name !== undefined) updates.name = name;
-  if (sector !== undefined) updates.sector = sector;
   if (plotNumber !== undefined) updates.plotNumber = plotNumber;
   if (notes !== undefined) updates.notes = notes;
   if (attentionFlag !== undefined) updates.attentionFlag = attentionFlag;
   if (constructionPct !== undefined) updates.constructionPct = constructionPct;
   if (investorId !== undefined) updates.investorId = investorId;
+
+  if (cityId !== undefined) {
+    const [cr] = await db.select().from(citiesTable).where(eq(citiesTable.id, cityId));
+    if (!cr) { res.status(400).json({ error: "Unknown city" }); return; }
+    if ((CITY_SCOPED_ROLES as readonly string[]).includes(req.user!.role)) {
+      const assigned = await getAssignedCityIds(req.user!.userId);
+      if (!assigned.includes(cityId)) { res.status(403).json({ error: "Forbidden: city not assigned to you" }); return; }
+    }
+    updates.cityId = cityId;
+  }
+  if (categoryId !== undefined) {
+    const [cr] = await db.select().from(projectCategoriesTable).where(eq(projectCategoriesTable.id, categoryId));
+    if (!cr) { res.status(400).json({ error: "Unknown category" }); return; }
+    updates.categoryId = categoryId;
+  }
 
   // Pipeline change: only resolve/validate when the pipeline is actually changing.
   if (rawPipelineId !== undefined && rawPipelineId !== project.pipelineId) {
