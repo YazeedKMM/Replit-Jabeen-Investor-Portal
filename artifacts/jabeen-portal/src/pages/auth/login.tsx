@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -50,18 +50,6 @@ export default function LoginPage() {
   const searchParams = new URLSearchParams(window.location.search);
   const redirect = searchParams.get("redirect");
 
-  // Redirect if already logged in
-  if (user && !isLoading) {
-    if (redirect) {
-      setLocation(redirect);
-    } else if (user.role === "investor") {
-      setLocation("/my-projects");
-    } else {
-      setLocation("/dashboard");
-    }
-    return null;
-  }
-
   const loginForm = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
@@ -78,6 +66,23 @@ export default function LoginPage() {
       phone: "",
     },
   });
+
+  // Redirect if already logged in — runs in an effect, never during render
+  // (calling setLocation during render triggers a setState-in-render warning).
+  useEffect(() => {
+    if (!user || isLoading) return;
+    if (redirect) {
+      setLocation(redirect);
+    } else if (user.role === "investor") {
+      setLocation("/my-projects");
+    } else {
+      setLocation("/dashboard");
+    }
+  }, [user, isLoading, redirect, setLocation]);
+
+  if (user && !isLoading) {
+    return null;
+  }
 
   const navigateAfterLogin = (role: string) => {
     if (redirect) {
