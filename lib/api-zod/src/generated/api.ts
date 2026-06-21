@@ -218,14 +218,34 @@ export const GetDashboardResponse = zod.object({
   "status": zod.string(),
   "count": zod.number()
 })),
-  "bySector": zod.array(zod.object({
-  "sector": zod.string(),
+  "byCategory": zod.array(zod.object({
+  "category": zod.string(),
+  "count": zod.number()
+})),
+  "byCity": zod.array(zod.object({
+  "city": zod.string(),
   "count": zod.number()
 })),
   "recentUpdates": zod.array(zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "sector": zod.string(),
+  "cityId": zod.number(),
+  "categoryId": zod.number(),
+  "city": zod.object({
+  "id": zod.number(),
+  "code": zod.string(),
+  "name": zod.string(),
+  "shortName": zod.string(),
+  "enabled": zod.boolean(),
+  "sortOrder": zod.number()
+}).optional(),
+  "category": zod.object({
+  "id": zod.number(),
+  "code": zod.string(),
+  "name": zod.string(),
+  "enabled": zod.boolean(),
+  "sortOrder": zod.number()
+}).optional(),
   "agreementNumber": zod.string(),
   "plotNumber": zod.string().nullish(),
   "derivedStatus": zod.enum(['on-track', 'delayed', 'stalled', 'complete']),
@@ -258,16 +278,32 @@ export const GetDashboardResponse = zod.object({
  * @summary List projects (scoped by role)
  */
 export const ListProjectsQueryParams = zod.object({
-  "search": zod.coerce.string().optional().describe('Search by name, agreement number, sector, investor name\/company'),
+  "search": zod.coerce.string().optional().describe('Search by name, agreement number, category, investor name\/company'),
   "status": zod.enum(['on-track', 'delayed', 'stalled', 'complete']).optional(),
   "stage": zod.coerce.string().optional().describe('Filter by current stage name'),
-  "sector": zod.coerce.string().optional()
+  "cityId": zod.coerce.number().optional().describe('Filter by city (PMs are additionally restricted to assigned cities)')
 })
 
 export const ListProjectsResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "sector": zod.string(),
+  "cityId": zod.number(),
+  "categoryId": zod.number(),
+  "city": zod.object({
+  "id": zod.number(),
+  "code": zod.string(),
+  "name": zod.string(),
+  "shortName": zod.string(),
+  "enabled": zod.boolean(),
+  "sortOrder": zod.number()
+}).optional(),
+  "category": zod.object({
+  "id": zod.number(),
+  "code": zod.string(),
+  "name": zod.string(),
+  "enabled": zod.boolean(),
+  "sortOrder": zod.number()
+}).optional(),
   "agreementNumber": zod.string(),
   "plotNumber": zod.string().nullish(),
   "derivedStatus": zod.enum(['on-track', 'delayed', 'stalled', 'complete']),
@@ -301,8 +337,6 @@ export const ListProjectsResponse = zod.array(ListProjectsResponseItem)
  */
 export const createProjectBodyNameMax = 200;
 
-export const createProjectBodySectorMax = 200;
-
 export const createProjectBodyAgreementNumberMax = 100;
 
 export const createProjectBodyPlotNumberMax = 100;
@@ -314,7 +348,8 @@ export const createProjectBodyConstructionPctMax = 100;
 
 export const CreateProjectBody = zod.object({
   "name": zod.string().min(1).max(createProjectBodyNameMax),
-  "sector": zod.string().min(1).max(createProjectBodySectorMax),
+  "cityId": zod.number(),
+  "categoryId": zod.number(),
   "agreementNumber": zod.string().min(1).max(createProjectBodyAgreementNumberMax),
   "plotNumber": zod.string().max(createProjectBodyPlotNumberMax).optional(),
   "notes": zod.string().optional(),
@@ -339,7 +374,23 @@ export const getProjectResponsePipelineStagesItemProgressBaselineMax = 100;
 export const GetProjectResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "sector": zod.string(),
+  "cityId": zod.number(),
+  "categoryId": zod.number(),
+  "city": zod.object({
+  "id": zod.number(),
+  "code": zod.string(),
+  "name": zod.string(),
+  "shortName": zod.string(),
+  "enabled": zod.boolean(),
+  "sortOrder": zod.number()
+}).optional(),
+  "category": zod.object({
+  "id": zod.number(),
+  "code": zod.string(),
+  "name": zod.string(),
+  "enabled": zod.boolean(),
+  "sortOrder": zod.number()
+}).optional(),
   "agreementNumber": zod.string(),
   "plotNumber": zod.string().nullish(),
   "notes": zod.string().nullish(),
@@ -411,8 +462,6 @@ export const UpdateProjectParams = zod.object({
 
 export const updateProjectBodyNameMax = 200;
 
-export const updateProjectBodySectorMax = 200;
-
 export const updateProjectBodyPlotNumberMax = 100;
 
 export const updateProjectBodyConstructionPctMin = 0;
@@ -422,7 +471,8 @@ export const updateProjectBodyConstructionPctMax = 100;
 
 export const UpdateProjectBody = zod.object({
   "name": zod.string().min(1).max(updateProjectBodyNameMax).optional(),
-  "sector": zod.string().min(1).max(updateProjectBodySectorMax).optional(),
+  "cityId": zod.number().optional(),
+  "categoryId": zod.number().optional(),
   "plotNumber": zod.string().max(updateProjectBodyPlotNumberMax).nullish(),
   "notes": zod.string().nullish(),
   "attentionFlag": zod.boolean().optional(),
@@ -440,7 +490,23 @@ export const updateProjectResponsePipelineStagesItemProgressBaselineMax = 100;
 export const UpdateProjectResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "sector": zod.string(),
+  "cityId": zod.number(),
+  "categoryId": zod.number(),
+  "city": zod.object({
+  "id": zod.number(),
+  "code": zod.string(),
+  "name": zod.string(),
+  "shortName": zod.string(),
+  "enabled": zod.boolean(),
+  "sortOrder": zod.number()
+}).optional(),
+  "category": zod.object({
+  "id": zod.number(),
+  "code": zod.string(),
+  "name": zod.string(),
+  "enabled": zod.boolean(),
+  "sortOrder": zod.number()
+}).optional(),
   "agreementNumber": zod.string(),
   "plotNumber": zod.string().nullish(),
   "notes": zod.string().nullish(),
@@ -509,6 +575,153 @@ export const UpdateProjectResponse = zod.object({
 export const DeleteProjectParams = zod.object({
   "projectId": zod.coerce.number()
 })
+
+
+/**
+ * @summary List cities (any authenticated user)
+ */
+export const GetCitiesResponseItem = zod.object({
+  "id": zod.number(),
+  "code": zod.string(),
+  "name": zod.string(),
+  "shortName": zod.string(),
+  "enabled": zod.boolean(),
+  "sortOrder": zod.number()
+})
+export const GetCitiesResponse = zod.array(GetCitiesResponseItem)
+
+
+/**
+ * @summary Create a city (admin only)
+ */
+export const createCityBodyCodeMax = 20;
+
+
+
+
+
+export const CreateCityBody = zod.object({
+  "code": zod.string().min(1).max(createCityBodyCodeMax),
+  "name": zod.string().min(1),
+  "shortName": zod.string().min(1),
+  "sortOrder": zod.number().optional()
+})
+
+
+/**
+ * @summary Update a city (admin only)
+ */
+export const UpdateCityParams = zod.object({
+  "cityId": zod.coerce.number()
+})
+
+export const UpdateCityBody = zod.object({
+  "name": zod.string().optional(),
+  "shortName": zod.string().optional(),
+  "enabled": zod.boolean().optional(),
+  "sortOrder": zod.number().optional()
+})
+
+export const UpdateCityResponse = zod.object({
+  "id": zod.number(),
+  "code": zod.string(),
+  "name": zod.string(),
+  "shortName": zod.string(),
+  "enabled": zod.boolean(),
+  "sortOrder": zod.number()
+})
+
+
+/**
+ * @summary Delete a city (admin only; fails if in use)
+ */
+export const DeleteCityParams = zod.object({
+  "cityId": zod.coerce.number()
+})
+
+
+/**
+ * @summary List project categories (any authenticated user)
+ */
+export const GetProjectCategoriesResponseItem = zod.object({
+  "id": zod.number(),
+  "code": zod.string(),
+  "name": zod.string(),
+  "enabled": zod.boolean(),
+  "sortOrder": zod.number()
+})
+export const GetProjectCategoriesResponse = zod.array(GetProjectCategoriesResponseItem)
+
+
+/**
+ * @summary Create a project category (admin only)
+ */
+export const createProjectCategoryBodyCodeMax = 40;
+
+
+
+
+export const CreateProjectCategoryBody = zod.object({
+  "code": zod.string().min(1).max(createProjectCategoryBodyCodeMax),
+  "name": zod.string().min(1),
+  "sortOrder": zod.number().optional()
+})
+
+
+/**
+ * @summary Update a project category (admin only)
+ */
+export const UpdateProjectCategoryParams = zod.object({
+  "categoryId": zod.coerce.number()
+})
+
+export const UpdateProjectCategoryBody = zod.object({
+  "name": zod.string().optional(),
+  "enabled": zod.boolean().optional(),
+  "sortOrder": zod.number().optional()
+})
+
+export const UpdateProjectCategoryResponse = zod.object({
+  "id": zod.number(),
+  "code": zod.string(),
+  "name": zod.string(),
+  "enabled": zod.boolean(),
+  "sortOrder": zod.number()
+})
+
+
+/**
+ * @summary Delete a project category (admin only; fails if in use)
+ */
+export const DeleteProjectCategoryParams = zod.object({
+  "categoryId": zod.coerce.number()
+})
+
+
+/**
+ * @summary List a user's assigned city IDs (admin only)
+ */
+export const GetUserCitiesParams = zod.object({
+  "userId": zod.coerce.number()
+})
+
+export const GetUserCitiesResponseItem = zod.number()
+export const GetUserCitiesResponse = zod.array(GetUserCitiesResponseItem)
+
+
+/**
+ * @summary Replace a project manager's assigned cities (admin only)
+ */
+export const SetUserCitiesParams = zod.object({
+  "userId": zod.coerce.number()
+})
+
+export const SetUserCitiesBody = zod.object({
+  "cityIds": zod.array(zod.number())
+})
+
+export const SetUserCitiesResponseItem = zod.number()
+export const SetUserCitiesResponse = zod.array(SetUserCitiesResponseItem)
 
 
 /**

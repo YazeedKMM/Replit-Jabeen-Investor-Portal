@@ -5,8 +5,9 @@
  * JABEEN Investor Portal API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { CategoryCount } from './categoryCount';
+import type { CityCount } from './cityCount';
 import type { ProjectSummary } from './projectSummary';
-import type { SectorCount } from './sectorCount';
 import type { StatusCount } from './statusCount';
 
 export interface DashboardStats {
@@ -15,6 +16,7 @@ export interface DashboardStats {
   inProgress: number;
   needsAttention: number;
   byStatus: StatusCount[];
-  bySector: SectorCount[];
+  byCategory: CategoryCount[];
+  byCity: CityCount[];
   recentUpdates?: ProjectSummary[];
 }

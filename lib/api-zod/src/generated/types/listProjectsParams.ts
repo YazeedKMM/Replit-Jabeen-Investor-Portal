@@ -9,7 +9,7 @@ import type { ListProjectsStatus } from './listProjectsStatus';
 
 export type ListProjectsParams = {
 /**
- * Search by name, agreement number, sector, investor name/company
+ * Search by name, agreement number, category, investor name/company
  */
 search?: string;
 status?: ListProjectsStatus;
@@ -17,5 +17,8 @@ status?: ListProjectsStatus;
  * Filter by current stage name
  */
 stage?: string;
-sector?: string;
+/**
+ * Filter by city (PMs are additionally restricted to assigned cities)
+ */
+cityId?: number;
 };

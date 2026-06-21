@@ -24,6 +24,9 @@ import type {
   ArchiveResult,
   AuditLogPage,
   AuthResult,
+  City,
+  CityInput,
+  CityUpdate,
   DashboardStats,
   Document,
   DocumentUpload,
@@ -46,12 +49,16 @@ import type {
   PasswordReset,
   ProfileUpdate,
   Project,
+  ProjectCategory,
+  ProjectCategoryInput,
+  ProjectCategoryUpdate,
   ProjectInput,
   ProjectSummary,
   ProjectUpdate,
   RegisterInput,
   RejectInput,
   ReplaceTemplateResult,
+  SetUserCitiesInput,
   SettingsUpdate,
   StatusUpdate,
   SystemSettings,
@@ -61,6 +68,7 @@ import type {
   UnreadCount,
   UpdateInput,
   User,
+  UserCityIds,
   UserCreated,
   UserInput,
   UserUpdate
@@ -1394,6 +1402,735 @@ export const useDeleteProject = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteProjectMutationOptions(options));
+    }
+
+export const getGetCitiesUrl = () => {
+
+
+
+
+  return `/api/cities`
+}
+
+/**
+ * @summary List cities (any authenticated user)
+ */
+export const getCities = async ( options?: RequestInit): Promise<City[]> => {
+
+  return customFetch<City[]>(getGetCitiesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCitiesQueryKey = () => {
+    return [
+    `/api/cities`
+    ] as const;
+    }
+
+
+export const getGetCitiesQueryOptions = <TData = Awaited<ReturnType<typeof getCities>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCities>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCitiesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCities>>> = ({ signal }) => getCities({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCities>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCitiesQueryResult = NonNullable<Awaited<ReturnType<typeof getCities>>>
+export type GetCitiesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List cities (any authenticated user)
+ */
+
+export function useGetCities<TData = Awaited<ReturnType<typeof getCities>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCities>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCitiesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateCityUrl = () => {
+
+
+
+
+  return `/api/cities`
+}
+
+/**
+ * @summary Create a city (admin only)
+ */
+export const createCity = async (cityInput: CityInput, options?: RequestInit): Promise<City> => {
+
+  return customFetch<City>(getCreateCityUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      cityInput,)
+  }
+);}
+
+
+
+
+export const getCreateCityMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCity>>, TError,{data: BodyType<CityInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createCity>>, TError,{data: BodyType<CityInput>}, TContext> => {
+
+const mutationKey = ['createCity'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createCity>>, {data: BodyType<CityInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createCity(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateCityMutationResult = NonNullable<Awaited<ReturnType<typeof createCity>>>
+    export type CreateCityMutationBody = BodyType<CityInput>
+    export type CreateCityMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a city (admin only)
+ */
+export const useCreateCity = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCity>>, TError,{data: BodyType<CityInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createCity>>,
+        TError,
+        {data: BodyType<CityInput>},
+        TContext
+      > => {
+      return useMutation(getCreateCityMutationOptions(options));
+    }
+
+export const getUpdateCityUrl = (cityId: number,) => {
+
+
+
+
+  return `/api/cities/${cityId}`
+}
+
+/**
+ * @summary Update a city (admin only)
+ */
+export const updateCity = async (cityId: number,
+    cityUpdate: CityUpdate, options?: RequestInit): Promise<City> => {
+
+  return customFetch<City>(getUpdateCityUrl(cityId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      cityUpdate,)
+  }
+);}
+
+
+
+
+export const getUpdateCityMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCity>>, TError,{cityId: number;data: BodyType<CityUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateCity>>, TError,{cityId: number;data: BodyType<CityUpdate>}, TContext> => {
+
+const mutationKey = ['updateCity'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateCity>>, {cityId: number;data: BodyType<CityUpdate>}> = (props) => {
+          const {cityId,data} = props ?? {};
+
+          return  updateCity(cityId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateCityMutationResult = NonNullable<Awaited<ReturnType<typeof updateCity>>>
+    export type UpdateCityMutationBody = BodyType<CityUpdate>
+    export type UpdateCityMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update a city (admin only)
+ */
+export const useUpdateCity = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCity>>, TError,{cityId: number;data: BodyType<CityUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateCity>>,
+        TError,
+        {cityId: number;data: BodyType<CityUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateCityMutationOptions(options));
+    }
+
+export const getDeleteCityUrl = (cityId: number,) => {
+
+
+
+
+  return `/api/cities/${cityId}`
+}
+
+/**
+ * @summary Delete a city (admin only; fails if in use)
+ */
+export const deleteCity = async (cityId: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteCityUrl(cityId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteCityMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCity>>, TError,{cityId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteCity>>, TError,{cityId: number}, TContext> => {
+
+const mutationKey = ['deleteCity'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteCity>>, {cityId: number}> = (props) => {
+          const {cityId} = props ?? {};
+
+          return  deleteCity(cityId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteCityMutationResult = NonNullable<Awaited<ReturnType<typeof deleteCity>>>
+
+    export type DeleteCityMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a city (admin only; fails if in use)
+ */
+export const useDeleteCity = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCity>>, TError,{cityId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteCity>>,
+        TError,
+        {cityId: number},
+        TContext
+      > => {
+      return useMutation(getDeleteCityMutationOptions(options));
+    }
+
+export const getGetProjectCategoriesUrl = () => {
+
+
+
+
+  return `/api/project-categories`
+}
+
+/**
+ * @summary List project categories (any authenticated user)
+ */
+export const getProjectCategories = async ( options?: RequestInit): Promise<ProjectCategory[]> => {
+
+  return customFetch<ProjectCategory[]>(getGetProjectCategoriesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetProjectCategoriesQueryKey = () => {
+    return [
+    `/api/project-categories`
+    ] as const;
+    }
+
+
+export const getGetProjectCategoriesQueryOptions = <TData = Awaited<ReturnType<typeof getProjectCategories>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProjectCategories>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetProjectCategoriesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProjectCategories>>> = ({ signal }) => getProjectCategories({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProjectCategories>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetProjectCategoriesQueryResult = NonNullable<Awaited<ReturnType<typeof getProjectCategories>>>
+export type GetProjectCategoriesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List project categories (any authenticated user)
+ */
+
+export function useGetProjectCategories<TData = Awaited<ReturnType<typeof getProjectCategories>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProjectCategories>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetProjectCategoriesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateProjectCategoryUrl = () => {
+
+
+
+
+  return `/api/project-categories`
+}
+
+/**
+ * @summary Create a project category (admin only)
+ */
+export const createProjectCategory = async (projectCategoryInput: ProjectCategoryInput, options?: RequestInit): Promise<ProjectCategory> => {
+
+  return customFetch<ProjectCategory>(getCreateProjectCategoryUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      projectCategoryInput,)
+  }
+);}
+
+
+
+
+export const getCreateProjectCategoryMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProjectCategory>>, TError,{data: BodyType<ProjectCategoryInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createProjectCategory>>, TError,{data: BodyType<ProjectCategoryInput>}, TContext> => {
+
+const mutationKey = ['createProjectCategory'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createProjectCategory>>, {data: BodyType<ProjectCategoryInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createProjectCategory(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateProjectCategoryMutationResult = NonNullable<Awaited<ReturnType<typeof createProjectCategory>>>
+    export type CreateProjectCategoryMutationBody = BodyType<ProjectCategoryInput>
+    export type CreateProjectCategoryMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a project category (admin only)
+ */
+export const useCreateProjectCategory = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProjectCategory>>, TError,{data: BodyType<ProjectCategoryInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createProjectCategory>>,
+        TError,
+        {data: BodyType<ProjectCategoryInput>},
+        TContext
+      > => {
+      return useMutation(getCreateProjectCategoryMutationOptions(options));
+    }
+
+export const getUpdateProjectCategoryUrl = (categoryId: number,) => {
+
+
+
+
+  return `/api/project-categories/${categoryId}`
+}
+
+/**
+ * @summary Update a project category (admin only)
+ */
+export const updateProjectCategory = async (categoryId: number,
+    projectCategoryUpdate: ProjectCategoryUpdate, options?: RequestInit): Promise<ProjectCategory> => {
+
+  return customFetch<ProjectCategory>(getUpdateProjectCategoryUrl(categoryId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      projectCategoryUpdate,)
+  }
+);}
+
+
+
+
+export const getUpdateProjectCategoryMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProjectCategory>>, TError,{categoryId: number;data: BodyType<ProjectCategoryUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateProjectCategory>>, TError,{categoryId: number;data: BodyType<ProjectCategoryUpdate>}, TContext> => {
+
+const mutationKey = ['updateProjectCategory'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProjectCategory>>, {categoryId: number;data: BodyType<ProjectCategoryUpdate>}> = (props) => {
+          const {categoryId,data} = props ?? {};
+
+          return  updateProjectCategory(categoryId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateProjectCategoryMutationResult = NonNullable<Awaited<ReturnType<typeof updateProjectCategory>>>
+    export type UpdateProjectCategoryMutationBody = BodyType<ProjectCategoryUpdate>
+    export type UpdateProjectCategoryMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update a project category (admin only)
+ */
+export const useUpdateProjectCategory = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProjectCategory>>, TError,{categoryId: number;data: BodyType<ProjectCategoryUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateProjectCategory>>,
+        TError,
+        {categoryId: number;data: BodyType<ProjectCategoryUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateProjectCategoryMutationOptions(options));
+    }
+
+export const getDeleteProjectCategoryUrl = (categoryId: number,) => {
+
+
+
+
+  return `/api/project-categories/${categoryId}`
+}
+
+/**
+ * @summary Delete a project category (admin only; fails if in use)
+ */
+export const deleteProjectCategory = async (categoryId: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteProjectCategoryUrl(categoryId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteProjectCategoryMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteProjectCategory>>, TError,{categoryId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteProjectCategory>>, TError,{categoryId: number}, TContext> => {
+
+const mutationKey = ['deleteProjectCategory'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteProjectCategory>>, {categoryId: number}> = (props) => {
+          const {categoryId} = props ?? {};
+
+          return  deleteProjectCategory(categoryId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteProjectCategoryMutationResult = NonNullable<Awaited<ReturnType<typeof deleteProjectCategory>>>
+
+    export type DeleteProjectCategoryMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a project category (admin only; fails if in use)
+ */
+export const useDeleteProjectCategory = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteProjectCategory>>, TError,{categoryId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteProjectCategory>>,
+        TError,
+        {categoryId: number},
+        TContext
+      > => {
+      return useMutation(getDeleteProjectCategoryMutationOptions(options));
+    }
+
+export const getGetUserCitiesUrl = (userId: number,) => {
+
+
+
+
+  return `/api/users/${userId}/cities`
+}
+
+/**
+ * @summary List a user's assigned city IDs (admin only)
+ */
+export const getUserCities = async (userId: number, options?: RequestInit): Promise<UserCityIds> => {
+
+  return customFetch<UserCityIds>(getGetUserCitiesUrl(userId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetUserCitiesQueryKey = (userId: number,) => {
+    return [
+    `/api/users/${userId}/cities`
+    ] as const;
+    }
+
+
+export const getGetUserCitiesQueryOptions = <TData = Awaited<ReturnType<typeof getUserCities>>, TError = ErrorType<unknown>>(userId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUserCities>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetUserCitiesQueryKey(userId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUserCities>>> = ({ signal }) => getUserCities(userId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(userId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUserCities>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetUserCitiesQueryResult = NonNullable<Awaited<ReturnType<typeof getUserCities>>>
+export type GetUserCitiesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List a user's assigned city IDs (admin only)
+ */
+
+export function useGetUserCities<TData = Awaited<ReturnType<typeof getUserCities>>, TError = ErrorType<unknown>>(
+ userId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUserCities>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetUserCitiesQueryOptions(userId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getSetUserCitiesUrl = (userId: number,) => {
+
+
+
+
+  return `/api/users/${userId}/cities`
+}
+
+/**
+ * @summary Replace a project manager's assigned cities (admin only)
+ */
+export const setUserCities = async (userId: number,
+    setUserCitiesInput: SetUserCitiesInput, options?: RequestInit): Promise<UserCityIds> => {
+
+  return customFetch<UserCityIds>(getSetUserCitiesUrl(userId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      setUserCitiesInput,)
+  }
+);}
+
+
+
+
+export const getSetUserCitiesMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setUserCities>>, TError,{userId: number;data: BodyType<SetUserCitiesInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setUserCities>>, TError,{userId: number;data: BodyType<SetUserCitiesInput>}, TContext> => {
+
+const mutationKey = ['setUserCities'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setUserCities>>, {userId: number;data: BodyType<SetUserCitiesInput>}> = (props) => {
+          const {userId,data} = props ?? {};
+
+          return  setUserCities(userId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetUserCitiesMutationResult = NonNullable<Awaited<ReturnType<typeof setUserCities>>>
+    export type SetUserCitiesMutationBody = BodyType<SetUserCitiesInput>
+    export type SetUserCitiesMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Replace a project manager's assigned cities (admin only)
+ */
+export const useSetUserCities = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setUserCities>>, TError,{userId: number;data: BodyType<SetUserCitiesInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setUserCities>>,
+        TError,
+        {userId: number;data: BodyType<SetUserCitiesInput>},
+        TContext
+      > => {
+      return useMutation(getSetUserCitiesMutationOptions(options));
     }
 
 export const getListUpdatesUrl = (projectId: number,) => {

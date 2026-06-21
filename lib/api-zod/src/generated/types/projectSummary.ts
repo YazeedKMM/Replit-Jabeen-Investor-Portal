@@ -5,14 +5,19 @@
  * JABEEN Investor Portal API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { City } from './city';
 import type { InvestorContact } from './investorContact';
+import type { ProjectCategory } from './projectCategory';
 import type { ProjectSummaryDerivedStatus } from './projectSummaryDerivedStatus';
 import type { StageSummary } from './stageSummary';
 
 export interface ProjectSummary {
   id: number;
   name: string;
-  sector: string;
+  cityId: number;
+  categoryId: number;
+  city?: City;
+  category?: ProjectCategory;
   agreementNumber: string;
   /** @nullable */
   plotNumber?: string | null;

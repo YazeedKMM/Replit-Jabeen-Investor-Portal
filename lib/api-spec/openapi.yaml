@@ -255,7 +255,7 @@ paths:
           in: query
           schema:
             type: string
-          description: Search by name, agreement number, sector, investor name/company
+          description: Search by name, agreement number, category, investor name/company
         - name: status
           in: query
           schema:
@@ -266,10 +266,11 @@ paths:
           schema:
             type: string
           description: Filter by current stage name
-        - name: sector
+        - name: cityId
           in: query
           schema:
-            type: string
+            type: integer
+          description: Filter by city (PMs are additionally restricted to assigned cities)
       responses:
         "200":
           description: Project list
@@ -341,6 +342,165 @@ paths:
       responses:
         "204":
           description: Deleted
+
+  # --- CITIES ---
+  /cities:
+    get:
+      operationId: getCities
+      tags: [cities]
+      summary: List cities (any authenticated user)
+      responses:
+        "200":
+          description: City list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/City"
+    post:
+      operationId: createCity
+      tags: [cities]
+      summary: Create a city (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CityInput"
+      responses:
+        "201":
+          description: Created city
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/City"
+  /cities/{cityId}:
+    patch:
+      operationId: updateCity
+      tags: [cities]
+      summary: Update a city (admin only)
+      parameters:
+        - $ref: "#/components/parameters/cityId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CityUpdate"
+      responses:
+        "200":
+          description: Updated city
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/City"
+    delete:
+      operationId: deleteCity
+      tags: [cities]
+      summary: Delete a city (admin only; fails if in use)
+      parameters:
+        - $ref: "#/components/parameters/cityId"
+      responses:
+        "204":
+          description: Deleted
+
+  # --- PROJECT CATEGORIES ---
+  /project-categories:
+    get:
+      operationId: getProjectCategories
+      tags: [project-categories]
+      summary: List project categories (any authenticated user)
+      responses:
+        "200":
+          description: Category list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProjectCategory"
+    post:
+      operationId: createProjectCategory
+      tags: [project-categories]
+      summary: Create a project category (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectCategoryInput"
+      responses:
+        "201":
+          description: Created category
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectCategory"
+  /project-categories/{categoryId}:
+    patch:
+      operationId: updateProjectCategory
+      tags: [project-categories]
+      summary: Update a project category (admin only)
+      parameters:
+        - $ref: "#/components/parameters/categoryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectCategoryUpdate"
+      responses:
+        "200":
+          description: Updated category
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectCategory"
+    delete:
+      operationId: deleteProjectCategory
+      tags: [project-categories]
+      summary: Delete a project category (admin only; fails if in use)
+      parameters:
+        - $ref: "#/components/parameters/categoryId"
+      responses:
+        "204":
+          description: Deleted
+
+  # --- USER CITY ASSIGNMENTS ---
+  /users/{userId}/cities:
+    get:
+      operationId: getUserCities
+      tags: [users]
+      summary: List a user's assigned city IDs (admin only)
+      parameters:
+        - $ref: "#/components/parameters/userId"
+      responses:
+        "200":
+          description: Assigned city IDs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserCityIds"
+    put:
+      operationId: setUserCities
+      tags: [users]
+      summary: Replace a project manager's assigned cities (admin only)
+      parameters:
+        - $ref: "#/components/parameters/userId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetUserCitiesInput"
+      responses:
+        "200":
+          description: Updated assigned city IDs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserCityIds"
 
   # --- STATUS UPDATES ---
   /projects/{projectId}/updates:
@@ -975,6 +1135,18 @@ components:
       required: true
       schema:
         type: integer
+    cityId:
+      name: cityId
+      in: path
+      required: true
+      schema:
+        type: integer
+    categoryId:
+      name: categoryId
+      in: path
+      required: true
+      schema:
+        type: integer
 
   schemas:
     HealthStatus:
@@ -1217,14 +1389,20 @@ components:
     # --- PROJECT ---
     ProjectSummary:
       type: object
-      required: [id, name, sector, agreementNumber, derivedStatus, constructionPct, createdAt, version]
+      required: [id, name, cityId, categoryId, agreementNumber, derivedStatus, constructionPct, createdAt, version]
       properties:
         id:
           type: integer
         name:
           type: string
-        sector:
-          type: string
+        cityId:
+          type: integer
+        categoryId:
+          type: integer
+        city:
+          $ref: "#/components/schemas/City"
+        category:
+          $ref: "#/components/schemas/ProjectCategory"
         agreementNumber:
           type: string
         plotNumber:
@@ -1254,14 +1432,20 @@ components:
 
     Project:
       type: object
-      required: [id, name, sector, agreementNumber, derivedStatus, constructionPct, createdAt, version]
+      required: [id, name, cityId, categoryId, agreementNumber, derivedStatus, constructionPct, createdAt, version]
       properties:
         id:
           type: integer
         name:
           type: string
-        sector:
-          type: string
+        cityId:
+          type: integer
+        categoryId:
+          type: integer
+        city:
+          $ref: "#/components/schemas/City"
+        category:
+          $ref: "#/components/schemas/ProjectCategory"
         agreementNumber:
           type: string
         plotNumber:
@@ -1299,16 +1483,16 @@ components:
 
     ProjectInput:
       type: object
-      required: [name, sector, agreementNumber]
+      required: [name, cityId, categoryId, agreementNumber]
       properties:
         name:
           type: string
           minLength: 1
           maxLength: 200
-        sector:
-          type: string
-          minLength: 1
-          maxLength: 200
+        cityId:
+          type: integer
+        categoryId:
+          type: integer
         agreementNumber:
           type: string
           minLength: 1
@@ -1335,10 +1519,10 @@ components:
           type: string
           minLength: 1
           maxLength: 200
-        sector:
-          type: string
-          minLength: 1
-          maxLength: 200
+        cityId:
+          type: integer
+        categoryId:
+          type: integer
         plotNumber:
           type: ["string", "null"]
           maxLength: 100
@@ -1357,6 +1541,105 @@ components:
         version:
           type: integer
           description: Optimistic concurrency version token from the last GET — required, rejected with 409 if stale
+
+    City:
+      type: object
+      required: [id, code, name, shortName, enabled, sortOrder]
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        name:
+          type: string
+        shortName:
+          type: string
+        enabled:
+          type: boolean
+        sortOrder:
+          type: integer
+
+    CityInput:
+      type: object
+      required: [code, name, shortName]
+      properties:
+        code:
+          type: string
+          minLength: 1
+          maxLength: 20
+        name:
+          type: string
+          minLength: 1
+        shortName:
+          type: string
+          minLength: 1
+        sortOrder:
+          type: integer
+
+    CityUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        shortName:
+          type: string
+        enabled:
+          type: boolean
+        sortOrder:
+          type: integer
+
+    ProjectCategory:
+      type: object
+      required: [id, code, name, enabled, sortOrder]
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        name:
+          type: string
+        enabled:
+          type: boolean
+        sortOrder:
+          type: integer
+
+    ProjectCategoryInput:
+      type: object
+      required: [code, name]
+      properties:
+        code:
+          type: string
+          minLength: 1
+          maxLength: 40
+        name:
+          type: string
+          minLength: 1
+        sortOrder:
+          type: integer
+
+    ProjectCategoryUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        enabled:
+          type: boolean
+        sortOrder:
+          type: integer
+
+    UserCityIds:
+      type: array
+      items:
+        type: integer
+
+    SetUserCitiesInput:
+      type: object
+      required: [cityIds]
+      properties:
+        cityIds:
+          type: array
+          items:
+            type: integer
 
     StageSummary:
       type: object
@@ -1636,7 +1919,7 @@ components:
     # --- DASHBOARD ---
     DashboardStats:
       type: object
-      required: [total, complete, inProgress, needsAttention, byStatus, bySector]
+      required: [total, complete, inProgress, needsAttention, byStatus, byCategory, byCity]
       properties:
         total:
           type: integer
@@ -1650,10 +1933,14 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/StatusCount"
-        bySector:
+        byCategory:
           type: array
           items:
-            $ref: "#/components/schemas/SectorCount"
+            $ref: "#/components/schemas/CategoryCount"
+        byCity:
+          type: array
+          items:
+            $ref: "#/components/schemas/CityCount"
         recentUpdates:
           type: array
           items:
@@ -1668,11 +1955,20 @@ components:
         count:
           type: integer
 
-    SectorCount:
+    CategoryCount:
       type: object
-      required: [sector, count]
+      required: [category, count]
       properties:
-        sector:
+        category:
+          type: string
+        count:
+          type: integer
+
+    CityCount:
+      type: object
+      required: [city, count]
+      properties:
+        city:
           type: string
         count:
           type: integer

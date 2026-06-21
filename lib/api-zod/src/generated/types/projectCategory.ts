@@ -6,7 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface SectorCount {
-  sector: string;
-  count: number;
+export interface ProjectCategory {
+  id: number;
+  code: string;
+  name: string;
+  enabled: boolean;
+  sortOrder: number;
 }

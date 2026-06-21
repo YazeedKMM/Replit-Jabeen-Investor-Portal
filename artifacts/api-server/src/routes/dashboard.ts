@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
-import { projectsTable } from "@workspace/db";
+import { projectsTable, citiesTable, projectCategoriesTable } from "@workspace/db";
 import { requireAuth, type AuthenticatedRequest, PRIVILEGED_ROLES } from "../middlewares/requireAuth";
 import { deriveProjectStatus } from "../lib/status";
 import { getStatusThresholds } from "../lib/settings-cache";
@@ -12,10 +12,14 @@ router.get("/dashboard", requireAuth, async (req: AuthenticatedRequest, res): Pr
     res.status(403).json({ error: "Forbidden" }); return;
   }
 
-  const [{ stalledDays, delayedDays }, projects] = await Promise.all([
+  const [{ stalledDays, delayedDays }, projects, cities, categories] = await Promise.all([
     getStatusThresholds(),
     db.select().from(projectsTable),
+    db.select().from(citiesTable),
+    db.select().from(projectCategoriesTable),
   ]);
+  const cityNameById = new Map(cities.map((c) => [c.id, c.shortName]));
+  const categoryNameById = new Map(categories.map((c) => [c.id, c.name]));
 
   const statuses = await Promise.all(projects.map(async (p) => {
     const status = await deriveProjectStatus(p, stalledDays, delayedDays);
@@ -33,11 +37,19 @@ router.get("/dashboard", requireAuth, async (req: AuthenticatedRequest, res): Pr
   }
   const byStatus = Object.entries(byStatusMap).map(([status, count]) => ({ status, count }));
 
-  const bySectorMap: Record<string, number> = {};
+  const byCategoryMap: Record<string, number> = {};
   for (const p of projects) {
-    bySectorMap[p.sector] = (bySectorMap[p.sector] ?? 0) + 1;
+    const name = categoryNameById.get(p.categoryId) ?? "Unknown";
+    byCategoryMap[name] = (byCategoryMap[name] ?? 0) + 1;
   }
-  const bySector = Object.entries(bySectorMap).map(([sector, count]) => ({ sector, count }));
+  const byCategory = Object.entries(byCategoryMap).map(([category, count]) => ({ category, count }));
+
+  const byCityMap: Record<string, number> = {};
+  for (const p of projects) {
+    const name = cityNameById.get(p.cityId) ?? "Unknown";
+    byCityMap[name] = (byCityMap[name] ?? 0) + 1;
+  }
+  const byCity = Object.entries(byCityMap).map(([city, count]) => ({ city, count }));
 
   const recentUpdates = statuses
     .filter((s) => s.project.lastUpdateAt)
@@ -45,7 +57,7 @@ router.get("/dashboard", requireAuth, async (req: AuthenticatedRequest, res): Pr
     .slice(0, 5)
     .map((s) => ({ ...s.project, derivedStatus: s.status }));
 
-  res.json({ total, complete, inProgress, needsAttention, byStatus, bySector, recentUpdates });
+  res.json({ total, complete, inProgress, needsAttention, byStatus, byCategory, byCity, recentUpdates });
 });
 
 export default router;

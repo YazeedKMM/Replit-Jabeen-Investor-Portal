@@ -12,11 +12,8 @@ export interface ProjectInput {
      * @maxLength 200
      */
   name: string;
-  /**
-     * @minLength 1
-     * @maxLength 200
-     */
-  sector: string;
+  cityId: number;
+  categoryId: number;
   /**
      * @minLength 1
      * @maxLength 100

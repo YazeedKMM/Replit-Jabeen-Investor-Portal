@@ -239,6 +239,23 @@ export const ProjectSummaryDerivedStatus = {
   complete: 'complete',
 } as const;
 
+export interface City {
+  id: number;
+  code: string;
+  name: string;
+  shortName: string;
+  enabled: boolean;
+  sortOrder: number;
+}
+
+export interface ProjectCategory {
+  id: number;
+  code: string;
+  name: string;
+  enabled: boolean;
+  sortOrder: number;
+}
+
 export type StageSummaryCategory = typeof StageSummaryCategory[keyof typeof StageSummaryCategory];
 
 
@@ -270,7 +287,10 @@ export interface InvestorContact {
 export interface ProjectSummary {
   id: number;
   name: string;
-  sector: string;
+  cityId: number;
+  categoryId: number;
+  city?: City;
+  category?: ProjectCategory;
   agreementNumber: string;
   /** @nullable */
   plotNumber?: string | null;
@@ -391,7 +411,10 @@ export interface Template {
 export interface Project {
   id: number;
   name: string;
-  sector: string;
+  cityId: number;
+  categoryId: number;
+  city?: City;
+  category?: ProjectCategory;
   agreementNumber: string;
   /** @nullable */
   plotNumber?: string | null;
@@ -422,11 +445,8 @@ export interface ProjectInput {
      * @maxLength 200
      */
   name: string;
-  /**
-     * @minLength 1
-     * @maxLength 200
-     */
-  sector: string;
+  cityId: number;
+  categoryId: number;
   /**
      * @minLength 1
      * @maxLength 100
@@ -450,11 +470,8 @@ export interface ProjectUpdate {
      * @maxLength 200
      */
   name?: string;
-  /**
-     * @minLength 1
-     * @maxLength 200
-     */
-  sector?: string;
+  cityId?: number;
+  categoryId?: number;
   /**
      * @maxLength 100
      * @nullable
@@ -474,6 +491,49 @@ export interface ProjectUpdate {
   pipelineId?: number | null;
   /** Optimistic concurrency version token from the last GET — required, rejected with 409 if stale */
   version: number;
+}
+
+export interface CityInput {
+  /**
+     * @minLength 1
+     * @maxLength 20
+     */
+  code: string;
+  /** @minLength 1 */
+  name: string;
+  /** @minLength 1 */
+  shortName: string;
+  sortOrder?: number;
+}
+
+export interface CityUpdate {
+  name?: string;
+  shortName?: string;
+  enabled?: boolean;
+  sortOrder?: number;
+}
+
+export interface ProjectCategoryInput {
+  /**
+     * @minLength 1
+     * @maxLength 40
+     */
+  code: string;
+  /** @minLength 1 */
+  name: string;
+  sortOrder?: number;
+}
+
+export interface ProjectCategoryUpdate {
+  name?: string;
+  enabled?: boolean;
+  sortOrder?: number;
+}
+
+export type UserCityIds = number[];
+
+export interface SetUserCitiesInput {
+  cityIds: number[];
 }
 
 export type StatusUpdateReviewStatus = typeof StatusUpdateReviewStatus[keyof typeof StatusUpdateReviewStatus];
@@ -649,8 +709,13 @@ export interface StatusCount {
   count: number;
 }
 
-export interface SectorCount {
-  sector: string;
+export interface CategoryCount {
+  category: string;
+  count: number;
+}
+
+export interface CityCount {
+  city: string;
   count: number;
 }
 
@@ -660,7 +725,8 @@ export interface DashboardStats {
   inProgress: number;
   needsAttention: number;
   byStatus: StatusCount[];
-  bySector: SectorCount[];
+  byCategory: CategoryCount[];
+  byCity: CityCount[];
   recentUpdates?: ProjectSummary[];
 }
 
@@ -823,7 +889,7 @@ export interface SettingsUpdate {
 
 export type ListProjectsParams = {
 /**
- * Search by name, agreement number, sector, investor name/company
+ * Search by name, agreement number, category, investor name/company
  */
 search?: string;
 status?: ListProjectsStatus;
@@ -831,7 +897,10 @@ status?: ListProjectsStatus;
  * Filter by current stage name
  */
 stage?: string;
-sector?: string;
+/**
+ * Filter by city (PMs are additionally restricted to assigned cities)
+ */
+cityId?: number;
 };
 
 export type ListProjectsStatus = typeof ListProjectsStatus[keyof typeof ListProjectsStatus];
