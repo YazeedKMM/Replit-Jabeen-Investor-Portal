@@ -12,6 +12,7 @@ import templatesRouter from "./templates";
 import usersRouter from "./users";
 import auditRouter from "./audit";
 import settingsRouter from "./settings";
+import citiesRouter from "./cities";
 import { requireAuth, requireActiveAccount } from "../middlewares/requireAuth";
 
 const router: IRouter = Router();
@@ -33,6 +34,7 @@ protectedRouter.use(templatesRouter);
 protectedRouter.use(usersRouter);
 protectedRouter.use(auditRouter);
 protectedRouter.use(settingsRouter);
+protectedRouter.use(citiesRouter);
 
 router.use(protectedRouter);
 
