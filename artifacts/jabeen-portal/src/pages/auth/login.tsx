@@ -179,19 +179,19 @@ export default function LoginPage() {
             style={{ ['--rise-delay' as any]: '80ms' }}
           >
             <MapPin className="h-3.5 w-3.5" />
-            Jubail Industrial City
+            Royal Commission Industrial Cities
           </span>
           <h1
             className="login-rise text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.08] mt-5 mb-5"
             style={{ ['--rise-delay' as any]: '140ms', textShadow: '0 2px 24px rgba(0,0,0,0.45)' }}
           >
-            Industrial Project<br className="hidden lg:block" /> Lifecycle Tracking
+            JABEEN Project<br className="hidden lg:block" /> Lifecycle Tracking
           </h1>
           <p
             className="login-rise text-white/85 text-lg md:text-xl font-medium max-w-md"
             style={{ ['--rise-delay' as any]: '210ms', textShadow: '0 1px 16px rgba(0,0,0,0.4)' }}
           >
-            The authoritative portal for Jubail Industrial City investors to track construction and operational milestones.
+            The authoritative portal for investors to track all JABEEN projects across the Royal Commission's cities.
           </p>
 
           <div
@@ -214,7 +214,7 @@ export default function LoginPage() {
           style={{ ['--rise-delay' as any]: '340ms' }}
         >
           <p className="text-sm font-medium text-white/55">
-            © {new Date().getFullYear()} Royal Commission for Jubail and Yanbu
+            © {new Date().getFullYear()} Jubail and Yanbu Industrial Cities Services Company (JABEEN)
           </p>
         </div>
       </div>
@@ -294,7 +294,7 @@ export default function LoginPage() {
               <TabsContent value="register" className="space-y-6">
                 <div className="space-y-2">
                   <h2 className="text-2xl font-bold tracking-tight text-foreground">Investor Registration</h2>
-                  <p className="text-muted-foreground text-sm">Create an account to track your industrial project</p>
+                  <p className="text-muted-foreground text-sm">Create an account to track your JABEEN projects</p>
                 </div>
 
                 <Form {...registerForm}>

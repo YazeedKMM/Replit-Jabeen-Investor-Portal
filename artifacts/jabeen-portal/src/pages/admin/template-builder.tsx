@@ -352,7 +352,7 @@ export default function TemplateBuilderPage() {
               <Input
                 value={template.name}
                 onChange={e => setTemplate({ ...template, name: e.target.value })}
-                placeholder="e.g. Standard Industrial Project"
+                placeholder="e.g. Standard Project Pipeline"
                 disabled={isArchived}
               />
             </div>

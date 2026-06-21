@@ -135,7 +135,7 @@ function NewProjectDialog({
             <Building2 className="h-5 w-5 text-primary" /> New Investment Project
           </DialogTitle>
           <DialogDescription>
-            Register a new industrial project in the JABEEN portfolio. Required fields are marked with *.
+            Register a new JABEEN project. Required fields are marked with *.
           </DialogDescription>
         </DialogHeader>
 
