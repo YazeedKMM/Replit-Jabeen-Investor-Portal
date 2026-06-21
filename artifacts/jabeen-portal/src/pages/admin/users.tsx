@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   useListUsers,
   useCreateUser,
@@ -7,8 +7,12 @@ import {
   useResetUserMfa,
   useActivateUser,
   useListProjects,
+  useGetCities,
+  useGetUserCities,
+  useSetUserCities,
   getListUsersQueryKey,
   getListProjectsQueryKey,
+  getGetUserCitiesQueryKey,
   UserRole,
   User,
 } from "@workspace/api-client-react";
@@ -21,7 +25,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Plus, UserX, UserCheck, KeyRound, Loader2, Copy, Check, UserCog, Clock, ShieldOff } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Search, Plus, UserX, UserCheck, KeyRound, Loader2, Copy, Check, UserCog, Clock, ShieldOff, MapPin } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -58,6 +63,9 @@ export default function UsersPage() {
   const [createdUserTempPassword, setCreatedUserTempPassword] = useState<{name: string, pass: string} | null>(null);
   const [copied, setCopied] = useState(false);
   const [activateTarget, setActivateTarget] = useState<User | null>(null);
+  const [selectedCityIds, setSelectedCityIds] = useState<number[]>([]);
+  const [manageCitiesTarget, setManageCitiesTarget] = useState<User | null>(null);
+  const [manageCityIds, setManageCityIds] = useState<number[]>([]);
 
   const activeUsersQuery = useListUsers(
     { search: search || undefined, role: roleFilter !== "all" ? roleFilter as any : undefined, status: "active" as any },
@@ -88,6 +96,8 @@ export default function UsersPage() {
   const resetPassword = useResetUserPassword();
   const resetMfa = useResetUserMfa();
   const activateUser = useActivateUser();
+  const setUserCities = useSetUserCities();
+  const { data: allCities = [] } = useGetCities();
 
   const form = useForm<z.infer<typeof createUserSchema>>({
     resolver: zodResolver(createUserSchema),
@@ -101,6 +111,21 @@ export default function UsersPage() {
     defaultValues: { projectId: "" },
   });
 
+  const watchedRole = form.watch("role");
+
+  // Fetch existing city assignments when the manage-cities dialog is open for a PM
+  const { data: manageCityData } = useGetUserCities(
+    manageCitiesTarget?.id ?? 0,
+    { query: { enabled: !!manageCitiesTarget && manageCitiesTarget.role === "project-manager" } }
+  );
+
+  // Prefill manageCityIds when data loads
+  useEffect(() => {
+    if (manageCityData) {
+      setManageCityIds(manageCityData);
+    }
+  }, [manageCityData]);
+
   const invalidateUsers = () => {
     queryClient.invalidateQueries({ queryKey: ["/api/users"] });
   };
@@ -109,10 +134,32 @@ export default function UsersPage() {
     try {
       const res = await createUser.mutateAsync({ data });
       invalidateUsers();
+      if (data.role === "project-manager") {
+        try {
+          await setUserCities.mutateAsync({ userId: res.user.id, data: { cityIds: selectedCityIds } });
+          queryClient.invalidateQueries({ queryKey: getGetUserCitiesQueryKey(res.user.id) });
+        } catch (cityError: any) {
+          toast({ title: "User created but city assignment failed", description: cityError.data?.message || "Failed to set cities", variant: "destructive" });
+        }
+      }
+      setSelectedCityIds([]);
       setCreatedUserTempPassword({ name: res.user.fullName, pass: res.temporaryPassword });
       form.reset();
     } catch (error: any) {
       toast({ title: "Failed to create user", description: error.data?.message || "An error occurred", variant: "destructive" });
+    }
+  };
+
+  const handleManageCitiesSubmit = async () => {
+    if (!manageCitiesTarget) return;
+    try {
+      await setUserCities.mutateAsync({ userId: manageCitiesTarget.id, data: { cityIds: manageCityIds } });
+      queryClient.invalidateQueries({ queryKey: getGetUserCitiesQueryKey(manageCitiesTarget.id) });
+      toast({ title: "Cities updated", description: `Assigned cities saved for ${manageCitiesTarget.fullName}.` });
+      setManageCitiesTarget(null);
+      setManageCityIds([]);
+    } catch (error: any) {
+      toast({ title: "Failed to set cities", description: error.data?.message || "Failed to set cities", variant: "destructive" });
     }
   };
 
@@ -213,7 +260,7 @@ export default function UsersPage() {
         </div>
 
         {isAdmin && (
-          <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+          <Dialog open={createDialogOpen} onOpenChange={(open) => { setCreateDialogOpen(open); if (!open) { setSelectedCityIds([]); form.reset(); } }}>
             <DialogTrigger asChild>
               <Button><Plus className="mr-2 h-4 w-4" /> Create User</Button>
             </DialogTrigger>
@@ -276,6 +323,30 @@ export default function UsersPage() {
                           <FormItem><FormLabel>Phone (Optional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
                       </div>
+                      {watchedRole === "project-manager" && (
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Assigned Cities</label>
+                          <div className="grid grid-cols-2 gap-2" data-testid="pm-cities">
+                            {allCities.filter((c) => c.enabled).map((c) => {
+                              const checked = selectedCityIds.includes(c.id);
+                              return (
+                                <label key={c.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                                  <Checkbox
+                                    checked={checked}
+                                    onCheckedChange={(v) =>
+                                      setSelectedCityIds((prev) =>
+                                        v ? [...prev, c.id] : prev.filter((id) => id !== c.id)
+                                      )
+                                    }
+                                    data-testid={`city-checkbox-${c.code}`}
+                                  />
+                                  {c.shortName}
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                       <DialogFooter className="pt-4">
                         <Button variant="outline" type="button" onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
                         <Button type="submit" disabled={form.formState.isSubmitting}>
@@ -369,6 +440,17 @@ export default function UsersPage() {
                         <TableCell>{getStatusBadge(u.status)}</TableCell>
                         {isAdmin && (
                           <TableCell className="text-right space-x-2">
+                            {u.role === "project-manager" && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => { setManageCitiesTarget(u); setManageCityIds([]); }}
+                                title="Manage Assigned Cities"
+                                className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                              >
+                                <MapPin className="h-4 w-4" />
+                              </Button>
+                            )}
                             <Button
                               variant="ghost"
                               size="icon"
@@ -506,6 +588,46 @@ export default function UsersPage() {
               </DialogFooter>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── Manage PM Cities Modal ─────────────────────────────── */}
+      <Dialog open={!!manageCitiesTarget} onOpenChange={(open) => { if (!open) { setManageCitiesTarget(null); setManageCityIds([]); } }}>
+        <DialogContent className="sm:max-w-[440px]">
+          <DialogHeader>
+            <DialogTitle>Assigned Cities</DialogTitle>
+            <DialogDescription>
+              Select the cities <strong>{manageCitiesTarget?.fullName}</strong> can manage.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <div className="grid grid-cols-2 gap-2" data-testid="pm-cities-edit">
+              {allCities.filter((c) => c.enabled).map((c) => {
+                const checked = manageCityIds.includes(c.id);
+                return (
+                  <label key={c.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                    <Checkbox
+                      checked={checked}
+                      onCheckedChange={(v) =>
+                        setManageCityIds((prev) =>
+                          v ? [...prev, c.id] : prev.filter((id) => id !== c.id)
+                        )
+                      }
+                      data-testid={`city-checkbox-edit-${c.code}`}
+                    />
+                    {c.shortName}
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setManageCitiesTarget(null); setManageCityIds([]); }}>Cancel</Button>
+            <Button onClick={handleManageCitiesSubmit} disabled={setUserCities.isPending}>
+              {setUserCities.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save Cities
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
