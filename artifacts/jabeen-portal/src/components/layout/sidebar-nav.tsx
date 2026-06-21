@@ -1,14 +1,16 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { 
-  Building2, 
-  LayoutDashboard, 
-  FileSpreadsheet, 
-  Users, 
-  Settings, 
+import {
+  Building2,
+  LayoutDashboard,
+  FileSpreadsheet,
+  Users,
+  Settings,
   History,
   LogOut,
-  User as UserIcon
+  User as UserIcon,
+  MapPin,
+  Tags,
 } from "lucide-react";
 import {
   Sidebar,
@@ -55,6 +57,18 @@ export function SidebarNav() {
       href: "/users",
       icon: Users,
       show: ["project-manager", "top-management", "administrator"].includes(role),
+    },
+    {
+      title: "Cities",
+      href: "/cities",
+      icon: MapPin,
+      show: role === "administrator",
+    },
+    {
+      title: "Project Categories",
+      href: "/categories",
+      icon: Tags,
+      show: role === "administrator",
     },
     {
       title: "Audit Log",

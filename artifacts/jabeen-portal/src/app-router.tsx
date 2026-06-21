@@ -11,6 +11,8 @@ import ProfilePage from "@/pages/profile/profile";
 import SettingsPage from "@/pages/settings/settings";
 import AuditLogPage from "@/pages/audit/audit-log";
 import UsersPage from "@/pages/admin/users";
+import CitiesPage from "@/pages/admin/cities";
+import CategoriesPage from "@/pages/admin/categories";
 import TemplatesPage from "@/pages/admin/templates";
 import TemplateBuilderPage from "@/pages/admin/template-builder";
 import ProjectWorkspacePage from "@/pages/projects/project-workspace";
@@ -66,6 +68,18 @@ export function AppRouter() {
       </Route>
 
       {/* Admin Only Routes */}
+      <Route path="/cities">
+        <ProtectedRoute allowedRoles={["administrator"]}>
+          <AppLayout><CitiesPage /></AppLayout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/categories">
+        <ProtectedRoute allowedRoles={["administrator"]}>
+          <AppLayout><CategoriesPage /></AppLayout>
+        </ProtectedRoute>
+      </Route>
+
       <Route path="/settings">
         <ProtectedRoute allowedRoles={["administrator"]}>
           <AppLayout><SettingsPage /></AppLayout>
