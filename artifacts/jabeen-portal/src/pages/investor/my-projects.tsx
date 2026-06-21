@@ -106,9 +106,16 @@ export default function MyProjectsPage() {
               </CardHeader>
               <CardContent className="flex-1 space-y-5">
                 <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-sm">
-                  <div className="space-y-1">
-                    <span className="text-muted-foreground text-xs font-medium uppercase tracking-wider">Sector</span>
-                    <p className="font-medium truncate" title={project.sector}>{project.sector}</p>
+                  <div className="space-y-1 col-span-2">
+                    <span className="text-muted-foreground text-xs font-medium uppercase tracking-wider">City / Category</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {project.city && (
+                        <Badge variant="secondary" className="text-xs">{project.city.shortName ?? project.city.name}</Badge>
+                      )}
+                      {project.category && (
+                        <Badge variant="outline" className="text-xs">{project.category.name}</Badge>
+                      )}
+                    </div>
                   </div>
                   <div className="space-y-1">
                     <span className="text-muted-foreground text-xs font-medium uppercase tracking-wider">Plot</span>

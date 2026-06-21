@@ -1,5 +1,6 @@
 import { Project } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Building2, User, Mail, Phone, MapPin, CheckCircle2, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -131,7 +132,14 @@ export default function ProjectOverviewTab({ project, isPrivileged }: Props) {
                   )}
                   <div className="flex items-center gap-3">
                     <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
-                    <span>{project.sector}</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {project.city && (
+                        <Badge variant="secondary">{project.city.name ?? project.city.shortName}</Badge>
+                      )}
+                      {project.category && (
+                        <Badge variant="outline">{project.category.name}</Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
               </>
