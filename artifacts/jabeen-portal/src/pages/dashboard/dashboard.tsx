@@ -2,9 +2,10 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import {
   useGetDashboard, useListProjects, useCreateProject,
-  useListTemplates, useListUsers,
+  useListTemplates, useListUsers, useGetCities, useGetProjectCategories,
   getListProjectsQueryKey, getGetDashboardQueryKey, getListUsersQueryKey, getListTemplatesQueryKey,
 } from "@workspace/api-client-react";
+import { useCityFilter } from "@/hooks/use-city-filter";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -41,7 +42,8 @@ import { cn } from "@/lib/utils";
 // ── Schema ─────────────────────────────────────────────────────────────────
 const newProjectSchema = z.object({
   name: z.string().min(1, "Project name is required").max(200),
-  sector: z.string().min(1, "Sector is required").max(200),
+  cityId: z.coerce.number({ required_error: "City is required" }).min(1, "City is required"),
+  categoryId: z.coerce.number({ required_error: "Project category is required" }).min(1, "Project category is required"),
   agreementNumber: z.string().min(1, "Agreement number is required").max(100),
   plotNumber: z.string().max(100).optional(),
   pipelineId: z.coerce.number().optional(),
@@ -73,6 +75,10 @@ function NewProjectDialog({
     investorParams,
     { query: { queryKey: getListUsersQueryKey(investorParams), enabled: open } },
   );
+  const { data: allCities } = useGetCities({ query: { enabled: open } });
+  const { data: allCategories } = useGetProjectCategories({ query: { enabled: open } });
+  const enabledCities = allCities?.filter((c) => c.enabled) ?? [];
+  const enabledCategories = allCategories?.filter((c) => c.enabled) ?? [];
 
   const createMutation = useCreateProject();
 
@@ -80,7 +86,6 @@ function NewProjectDialog({
     resolver: zodResolver(newProjectSchema),
     defaultValues: {
       name: "",
-      sector: "",
       agreementNumber: "",
       plotNumber: "",
       notes: "",
@@ -98,7 +103,8 @@ function NewProjectDialog({
       const project = await createMutation.mutateAsync({
         data: {
           name: data.name,
-          sector: data.sector,
+          cityId: data.cityId,
+          categoryId: data.categoryId,
           agreementNumber: data.agreementNumber,
           ...(data.plotNumber ? { plotNumber: data.plotNumber } : {}),
           ...(data.pipelineId ? { pipelineId: data.pipelineId } : {}),
@@ -150,21 +156,19 @@ function NewProjectDialog({
               )} />
 
               <div className="grid grid-cols-2 gap-4">
-                <FormField control={form.control} name="sector" render={({ field }) => (
+                <FormField control={form.control} name="cityId" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Industrial Sector *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormLabel>City *</FormLabel>
+                    <Select
+                      onValueChange={(v) => field.onChange(Number(v))}
+                      value={field.value ? String(field.value) : ""}
+                    >
                       <FormControl>
-                        <SelectTrigger><SelectValue placeholder="Select sector…" /></SelectTrigger>
+                        <SelectTrigger><SelectValue placeholder="Select city…" /></SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {[
-                          "Petrochemicals", "Plastics & Polymers", "Metals & Steel",
-                          "Food Processing", "Pharmaceuticals", "Building Materials",
-                          "Logistics & Warehousing", "Energy", "Water Treatment",
-                          "Engineering & Fabrication", "Other",
-                        ].map((s) => (
-                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                        {enabledCities.map((c) => (
+                          <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -172,22 +176,42 @@ function NewProjectDialog({
                   </FormItem>
                 )} />
 
-                <FormField control={form.control} name="agreementNumber" render={({ field }) => (
+                <FormField control={form.control} name="categoryId" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Agreement Number *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. RCJY-2026-0042" {...field} />
-                    </FormControl>
+                    <FormLabel>Project Category *</FormLabel>
+                    <Select
+                      onValueChange={(v) => field.onChange(Number(v))}
+                      value={field.value ? String(field.value) : ""}
+                    >
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select category…" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {enabledCategories.map((c) => (
+                          <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )} />
               </div>
 
+              <FormField control={form.control} name="agreementNumber" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Agreement Number *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. RCJY-2026-0042" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
               <FormField control={form.control} name="plotNumber" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Plot Number <span className="text-muted-foreground font-normal text-xs">(Optional)</span></FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g. Jubail-P-4217" {...field} />
+                    <Input placeholder="e.g. P-4217" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -313,15 +337,17 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [newProjectOpen, setNewProjectOpen] = useState(false);
+  const { activeCityId } = useCityFilter();
 
   const canCreate = user?.role === "administrator" || user?.role === "project-manager";
 
   const { data: stats, isLoading: statsLoading } = useGetDashboard({
     query: { queryKey: getGetDashboardQueryKey() },
   });
+  const projectParams = { search, ...(activeCityId != null ? { cityId: activeCityId } : {}) };
   const { data: projects, isLoading: projectsLoading } = useListProjects(
-    { search },
-    { query: { queryKey: getListProjectsQueryKey({ search }) } },
+    projectParams,
+    { query: { queryKey: getListProjectsQueryKey(projectParams) } },
   );
 
   const handleExport = () => {
@@ -346,7 +372,7 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Portfolio Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Overview of all industrial projects in Jubail</p>
+          <p className="text-muted-foreground mt-1">Overview of all JABEEN projects across Royal Commission cities</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <Button onClick={handleExport} variant="outline" size="sm">
@@ -382,6 +408,42 @@ export default function DashboardPage() {
         ))}
       </div>
 
+      {/* ── Breakdown: By Category & By City ── */}
+      {!statsLoading && ((stats?.byCategory?.length ?? 0) > 0 || (stats?.byCity?.length ?? 0) > 0) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {(stats?.byCategory?.length ?? 0) > 0 && (
+            <Card className="shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">By Category</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {stats!.byCategory.map(({ category, count }) => (
+                  <div key={category} className="flex items-center justify-between text-sm">
+                    <span className="truncate text-foreground">{category}</span>
+                    <Badge variant="outline" className="ml-2 shrink-0 tabular-nums">{count}</Badge>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+          {(stats?.byCity?.length ?? 0) > 0 && (
+            <Card className="shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">By City</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {stats!.byCity.map(({ city, count }) => (
+                  <div key={city} className="flex items-center justify-between text-sm">
+                    <span className="truncate text-foreground">{city}</span>
+                    <Badge variant="outline" className="ml-2 shrink-0 tabular-nums">{count}</Badge>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
       {/* ── Projects Table ── */}
       <Card className="shadow-sm border-border/50">
         <CardHeader className="pb-4 border-b bg-muted/10">
@@ -405,7 +467,7 @@ export default function DashboardPage() {
               <TableRow>
                 <TableHead className="w-[300px]">Project Name</TableHead>
                 <TableHead>Investor</TableHead>
-                <TableHead>Sector</TableHead>
+                <TableHead>City / Category</TableHead>
                 <TableHead>Stage</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Progress</TableHead>
@@ -423,7 +485,7 @@ export default function DashboardPage() {
                   <TableCell colSpan={6} className="h-32 text-center">
                     <div className="flex flex-col items-center gap-3 text-muted-foreground">
                       <FolderOpen className="h-10 w-10 opacity-20" />
-                      <p>{search ? "No projects match your search." : "No projects yet."}</p>
+                      <p>{search ? "No JABEEN projects match your search." : "No JABEEN projects yet."}</p>
                       {canCreate && !search && (
                         <Button size="sm" variant="outline" onClick={() => setNewProjectOpen(true)}>
                           <Plus className="mr-1.5 h-3.5 w-3.5" /> Create the first project
@@ -454,7 +516,20 @@ export default function DashboardPage() {
                         {project.investor?.companyName || <span className="text-muted-foreground italic">Unassigned</span>}
                       </span>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{project.sector}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {project.city?.shortName && (
+                          <Badge variant="outline" className="text-[10px] font-medium px-1.5 py-0 bg-blue-500/10 text-blue-700 border-blue-200">
+                            {project.city.shortName}
+                          </Badge>
+                        )}
+                        {project.category?.name && (
+                          <Badge variant="outline" className="text-[10px] font-medium px-1.5 py-0 bg-muted text-muted-foreground">
+                            {project.category.name}
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <span className="text-sm truncate max-w-[150px] inline-block" title={project.currentStage?.name}>
                         {project.currentStage?.name || "Initializing"}
