@@ -1,7 +1,7 @@
 import { type Request, type Response, type NextFunction } from "express";
 import { verifyAccessToken, type JwtPayload } from "../lib/auth";
 import { db } from "@workspace/db";
-import { usersTable } from "@workspace/db";
+import { usersTable, userCitiesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 
 export interface AuthenticatedRequest extends Request {
@@ -133,3 +133,14 @@ export const ADMIN_ROLE = ["administrator"] as const;
 // Top Management has read access to the entire portfolio, so it is treated as a
 // privileged account that must enrol in MFA (same as project-manager / administrator).
 export const MFA_REQUIRED_ROLES = ["top-management", "project-manager", "administrator"] as const;
+
+// Roles whose project visibility is limited to assigned cities.
+export const CITY_SCOPED_ROLES = ["project-manager"] as const;
+
+/** Returns the city IDs a user is assigned to (only meaningful for project-manager). */
+export async function getAssignedCityIds(userId: number): Promise<number[]> {
+  const rows = await db.select({ cityId: userCitiesTable.cityId })
+    .from(userCitiesTable)
+    .where(eq(userCitiesTable.userId, userId));
+  return rows.map((r) => r.cityId);
+}
