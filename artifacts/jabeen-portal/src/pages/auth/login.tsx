@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowRight, ShieldCheck, Activity, MapPin } from "lucide-react";
 import { MfaVerifyStep } from "./mfa-verify";
 import { MfaSetupFlow } from "./mfa-setup";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -226,6 +227,9 @@ export default function LoginPage() {
 
       {/* Form Side */}
       <div className="w-full md:w-1/2 lg:w-[40%] flex items-center justify-center p-8 bg-card relative">
+        <div className="absolute top-4 end-4 z-20">
+          <LanguageSwitcher />
+        </div>
         <div className="w-full max-w-[420px] login-rise" style={{ ['--rise-delay' as any]: '120ms' }}>
 
           {/* MFA Verify Step */}

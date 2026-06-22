@@ -2,6 +2,7 @@ import { Bell } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/use-auth";
 import { CitySwitcher } from "@/components/city-switcher";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { NotificationPanel } from "./notification-panel";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useGetUnreadCount, getGetUnreadCountQueryKey } from "@workspace/api-client-react";
@@ -26,11 +27,12 @@ export function Header() {
       <CitySwitcher />
       <div className="flex-1" />
       <div className="flex items-center gap-4">
+        <LanguageSwitcher />
         <div className="flex flex-col items-end hidden md:flex">
           <span className="text-sm font-medium leading-none">{user?.fullName}</span>
           <span className="text-xs text-muted-foreground">{user?.role}</span>
         </div>
-        
+
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="ghost" size="icon" className="relative" data-testid="button-notifications">
