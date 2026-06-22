@@ -1,0 +1,38 @@
+{
+  "common": {
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "add": "إضافة",
+    "search": "بحث",
+    "loading": "جارٍ التحميل…",
+    "confirm": "تأكيد",
+    "close": "إغلاق",
+    "back": "رجوع",
+    "next": "التالي",
+    "yes": "نعم",
+    "no": "لا",
+    "actions": "إجراءات",
+    "enabled": "مُفعّل",
+    "disabled": "مُعطّل",
+    "allCities": "كل المدن",
+    "required": "مطلوب"
+  },
+  "nav": {
+    "myProjects": "مشاريعي",
+    "dashboard": "لوحة التحكم",
+    "templates": "القوالب",
+    "users": "المستخدمون",
+    "cities": "المدن",
+    "categories": "تصنيفات المشاريع",
+    "auditLog": "سجل التدقيق",
+    "settings": "الإعدادات",
+    "profile": "الملف الشخصي",
+    "signOut": "تسجيل الخروج"
+  },
+  "language": {
+    "switchTo": "EN",
+    "current": "العربية"
+  }
+}

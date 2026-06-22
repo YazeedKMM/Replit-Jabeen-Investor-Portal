@@ -1,0 +1,38 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "loading": "Loading…",
+    "confirm": "Confirm",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "yes": "Yes",
+    "no": "No",
+    "actions": "Actions",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "allCities": "All cities",
+    "required": "Required"
+  },
+  "nav": {
+    "myProjects": "My Projects",
+    "dashboard": "Dashboard",
+    "templates": "Templates",
+    "users": "Users",
+    "cities": "Cities",
+    "categories": "Project Categories",
+    "auditLog": "Audit Log",
+    "settings": "Settings",
+    "profile": "Profile",
+    "signOut": "Sign out"
+  },
+  "language": {
+    "switchTo": "العربية",
+    "current": "EN"
+  }
+}
