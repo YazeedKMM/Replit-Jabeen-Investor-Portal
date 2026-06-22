@@ -21,6 +21,7 @@ import { MfaVerifyStep } from "./mfa-verify";
 import { MfaSetupFlow } from "./mfa-setup";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useLanguage } from "@/hooks/use-language";
+import { useTranslation } from "react-i18next";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -48,6 +49,7 @@ export default function LoginPage() {
   const { login, register, user, isLoading, handleAuthResult } = useAuth();
   const { toast } = useToast();
   const { dir } = useLanguage();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
   const [mfaStep, setMfaStep] = useState<MfaStepState>({ type: "none" });
   const searchParams = new URLSearchParams(window.location.search);
@@ -113,13 +115,13 @@ export default function LoginPage() {
 
       // Full session issued
       if (result.accessToken && result.user) {
-        toast({ title: "Welcome back", description: "Successfully signed in." });
+        toast({ title: t("auth.toast.welcomeBackTitle"), description: t("auth.toast.welcomeBackDesc") });
         navigateAfterLogin(result.user.role);
       }
     } catch (error: any) {
       toast({
-        title: "Sign in failed",
-        description: error.data?.message || "Invalid credentials",
+        title: t("auth.toast.signInFailedTitle"),
+        description: error.data?.message || t("auth.toast.invalidCredentials"),
         variant: "destructive",
       });
     }
@@ -127,25 +129,25 @@ export default function LoginPage() {
 
   const onMfaVerifySuccess = (accessToken: string, user: any) => {
     handleAuthResult({ accessToken, user });
-    toast({ title: "Welcome back", description: "Signed in with MFA." });
+    toast({ title: t("auth.toast.welcomeBackTitle"), description: t("auth.toast.welcomeBackMfaDesc") });
     navigateAfterLogin(user.role);
   };
 
   const onMfaSetupComplete = (accessToken: string, user: any) => {
     handleAuthResult({ accessToken, user });
-    toast({ title: "MFA Enabled", description: "Your account is now protected with two-factor authentication." });
+    toast({ title: t("auth.toast.mfaEnabledTitle"), description: t("auth.toast.mfaEnabledDesc") });
     navigateAfterLogin(user.role);
   };
 
   const onRegisterSubmit = async (data: z.infer<typeof registerSchema>) => {
     try {
       await register(data);
-      toast({ title: "Account created", description: "Welcome to JABEEN." });
+      toast({ title: t("auth.toast.accountCreatedTitle"), description: t("auth.toast.accountCreatedDesc") });
       setLocation("/my-projects");
     } catch (error: any) {
       toast({
-        title: "Registration failed",
-        description: error.data?.message || "Could not create account",
+        title: t("auth.toast.registrationFailedTitle"),
+        description: error.data?.message || t("auth.toast.couldNotCreateAccount"),
         variant: "destructive",
       });
     }
@@ -187,19 +189,19 @@ export default function LoginPage() {
             style={{ ['--rise-delay' as any]: '80ms' }}
           >
             <MapPin className="h-3.5 w-3.5" />
-            Royal Commission Industrial Cities
+            {t("auth.brandChip")}
           </span>
           <h1
             className="login-rise text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.08] mt-5 mb-5"
             style={{ ['--rise-delay' as any]: '140ms', textShadow: '0 2px 24px rgba(0,0,0,0.45)' }}
           >
-            JABEEN Project<br className="hidden lg:block" /> Lifecycle Tracking
+            {t("auth.headline")}
           </h1>
           <p
             className="login-rise text-white/85 text-lg md:text-xl font-medium max-w-md"
             style={{ ['--rise-delay' as any]: '210ms', textShadow: '0 1px 16px rgba(0,0,0,0.4)' }}
           >
-            The authoritative portal for investors to track all JABEEN projects across the Royal Commission's cities.
+            {t("auth.subCopy")}
           </p>
 
           <div
@@ -208,11 +210,11 @@ export default function LoginPage() {
           >
             <span className="inline-flex items-center gap-2">
               <Activity className="h-4 w-4 text-primary-foreground/90" aria-hidden="true" />
-              Real-time milestones
+              {t("auth.featureMilestones")}
             </span>
             <span className="inline-flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-primary-foreground/90" aria-hidden="true" />
-              Secure investor access
+              {t("auth.featureSecure")}
             </span>
           </div>
         </div>
@@ -222,7 +224,7 @@ export default function LoginPage() {
           style={{ ['--rise-delay' as any]: '340ms' }}
         >
           <p className="text-sm font-medium text-white/55">
-            © {new Date().getFullYear()} Jubail and Yanbu Industrial Cities Services Company (JABEEN)
+            © {new Date().getFullYear()} {t("auth.footerCompany")}
           </p>
         </div>
       </div>
@@ -256,16 +258,16 @@ export default function LoginPage() {
           {mfaStep.type === "none" && (
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-8 h-12 p-1 bg-muted">
-                <TabsTrigger value="login" className="text-sm font-semibold rounded-md h-full data-[state=active]:bg-background data-[state=active]:shadow-sm">Sign In</TabsTrigger>
-                <TabsTrigger value="register" className="text-sm font-semibold rounded-md h-full data-[state=active]:bg-background data-[state=active]:shadow-sm">Register</TabsTrigger>
+                <TabsTrigger value="login" className="text-sm font-semibold rounded-md h-full data-[state=active]:bg-background data-[state=active]:shadow-sm">{t("auth.tabSignIn")}</TabsTrigger>
+                <TabsTrigger value="register" className="text-sm font-semibold rounded-md h-full data-[state=active]:bg-background data-[state=active]:shadow-sm">{t("auth.tabRegister")}</TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="login" className="space-y-6">
                 <div className="space-y-2">
-                  <h2 className="text-2xl font-bold tracking-tight text-foreground">Welcome back</h2>
-                  <p className="text-muted-foreground text-sm">Enter your credentials to access the portal</p>
+                  <h2 className="text-2xl font-bold tracking-tight text-foreground">{t("auth.welcomeBack")}</h2>
+                  <p className="text-muted-foreground text-sm">{t("auth.welcomeBackDesc")}</p>
                 </div>
-                
+
                 <Form {...loginForm}>
                   <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-5">
                     <FormField
@@ -273,7 +275,7 @@ export default function LoginPage() {
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Work Email</FormLabel>
+                          <FormLabel>{t("auth.workEmail")}</FormLabel>
                           <FormControl>
                             <Input type="email" inputMode="email" autoComplete="email" autoCapitalize="none" spellCheck={false} placeholder="name@company.com" {...field} className="h-11" data-testid="input-email" />
                           </FormControl>
@@ -286,7 +288,7 @@ export default function LoginPage() {
                       name="password"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Password</FormLabel>
+                          <FormLabel>{t("auth.password")}</FormLabel>
                           <FormControl>
                             <Input type="password" autoComplete="current-password" placeholder="••••••••" {...field} className="h-11" data-testid="input-password" />
                           </FormControl>
@@ -295,7 +297,7 @@ export default function LoginPage() {
                       )}
                     />
                     <Button type="submit" className="login-press w-full h-11 text-base font-semibold mt-2" disabled={loginForm.formState.isSubmitting} data-testid="button-submit-login">
-                      {loginForm.formState.isSubmitting ? "Signing in…" : "Sign in to portal"}
+                      {loginForm.formState.isSubmitting ? t("auth.signingIn") : t("auth.signInButton")}
                       {!loginForm.formState.isSubmitting && <ArrowRight className="ms-2 h-4 w-4 rtl-flip" />}
                     </Button>
                   </form>
@@ -304,8 +306,8 @@ export default function LoginPage() {
 
               <TabsContent value="register" className="space-y-6">
                 <div className="space-y-2">
-                  <h2 className="text-2xl font-bold tracking-tight text-foreground">Investor Registration</h2>
-                  <p className="text-muted-foreground text-sm">Create an account to track your JABEEN projects</p>
+                  <h2 className="text-2xl font-bold tracking-tight text-foreground">{t("auth.investorRegistration")}</h2>
+                  <p className="text-muted-foreground text-sm">{t("auth.investorRegistrationDesc")}</p>
                 </div>
 
                 <Form {...registerForm}>
@@ -316,7 +318,7 @@ export default function LoginPage() {
                         name="fullName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Full Name</FormLabel>
+                            <FormLabel>{t("auth.fullName")}</FormLabel>
                             <FormControl>
                               <Input autoComplete="name" placeholder="John Doe" {...field} className="h-10" />
                             </FormControl>
@@ -329,7 +331,7 @@ export default function LoginPage() {
                         name="companyName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Company</FormLabel>
+                            <FormLabel>{t("auth.company")}</FormLabel>
                             <FormControl>
                               <Input autoComplete="organization" placeholder="Acme Corp" {...field} className="h-10" />
                             </FormControl>
@@ -338,13 +340,13 @@ export default function LoginPage() {
                         )}
                       />
                     </div>
-                    
+
                     <FormField
                       control={registerForm.control}
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Work Email</FormLabel>
+                          <FormLabel>{t("auth.workEmail")}</FormLabel>
                           <FormControl>
                             <Input type="email" inputMode="email" autoComplete="email" autoCapitalize="none" spellCheck={false} placeholder="name@company.com" {...field} className="h-10" />
                           </FormControl>
@@ -352,13 +354,13 @@ export default function LoginPage() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={registerForm.control}
                       name="password"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Password</FormLabel>
+                          <FormLabel>{t("auth.password")}</FormLabel>
                           <FormControl>
                             <Input type="password" autoComplete="new-password" placeholder="••••••••" {...field} className="h-10" />
                           </FormControl>
@@ -373,7 +375,7 @@ export default function LoginPage() {
                         name="title"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Job Title <span className="text-muted-foreground font-normal">(Optional)</span></FormLabel>
+                            <FormLabel>{t("auth.jobTitle")} <span className="text-muted-foreground font-normal">{t("auth.optional")}</span></FormLabel>
                             <FormControl>
                               <Input autoComplete="organization-title" placeholder="Project Manager" {...field} className="h-10" />
                             </FormControl>
@@ -386,7 +388,7 @@ export default function LoginPage() {
                         name="phone"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Phone <span className="text-muted-foreground font-normal">(Optional)</span></FormLabel>
+                            <FormLabel>{t("auth.phone")} <span className="text-muted-foreground font-normal">{t("auth.optional")}</span></FormLabel>
                             <FormControl>
                               <Input type="tel" inputMode="tel" autoComplete="tel" placeholder="+966…" {...field} className="h-10" />
                             </FormControl>
@@ -397,7 +399,7 @@ export default function LoginPage() {
                     </div>
 
                     <Button type="submit" className="login-press w-full h-11 text-base font-semibold mt-4" disabled={registerForm.formState.isSubmitting} data-testid="button-submit-register">
-                      {registerForm.formState.isSubmitting ? "Creating account…" : "Register Account"}
+                      {registerForm.formState.isSubmitting ? t("auth.creatingAccount") : t("auth.registerButton")}
                     </Button>
                   </form>
                 </Form>

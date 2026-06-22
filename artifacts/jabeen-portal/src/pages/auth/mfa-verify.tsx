@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, KeyRound } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -15,6 +16,7 @@ interface MfaVerifyStepProps {
 
 export function MfaVerifyStep({ mfaToken, onSuccess, onBack }: MfaVerifyStepProps) {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [code, setCode] = useState("");
   const [recoveryCode, setRecoveryCode] = useState("");
   const [useRecovery, setUseRecovery] = useState(false);
@@ -31,14 +33,14 @@ export function MfaVerifyStep({ mfaToken, onSuccess, onBack }: MfaVerifyStepProp
         credentials: "include",
       });
       if (!res.ok) {
-        toast({ title: "Invalid code", description: "The code was incorrect. Try again.", variant: "destructive" });
+        toast({ title: t("auth.mfa.invalidCodeTitle"), description: t("auth.mfa.invalidCodeDesc"), variant: "destructive" });
         if (useRecovery) setRecoveryCode(""); else setCode("");
         return;
       }
       const data = await res.json();
       onSuccess(data.accessToken, data.user);
     } catch {
-      toast({ title: "Error", description: "Verification failed", variant: "destructive" });
+      toast({ title: t("auth.mfa.errorTitle"), description: t("auth.mfa.verificationFailed"), variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -47,17 +49,17 @@ export function MfaVerifyStep({ mfaToken, onSuccess, onBack }: MfaVerifyStepProp
   return (
     <div className="space-y-6 w-full">
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold tracking-tight text-foreground">Two-Factor Authentication</h2>
+        <h2 className="text-2xl font-bold tracking-tight text-foreground">{t("auth.mfa.twoFactorTitle")}</h2>
         <p className="text-muted-foreground text-sm">
           {useRecovery
-            ? "Enter one of your recovery codes."
-            : "Enter the 6-digit code from your authenticator app."}
+            ? t("auth.mfa.enterRecoveryCode")
+            : t("auth.mfa.enterCodeAuthApp")}
         </p>
       </div>
 
       {!useRecovery ? (
         <div className="space-y-2">
-          <Label htmlFor="mfa-code">Authenticator Code</Label>
+          <Label htmlFor="mfa-code">{t("auth.mfa.authenticatorCode")}</Label>
           <Input
             id="mfa-code"
             placeholder="000000"
@@ -72,7 +74,7 @@ export function MfaVerifyStep({ mfaToken, onSuccess, onBack }: MfaVerifyStepProp
         </div>
       ) : (
         <div className="space-y-2">
-          <Label htmlFor="recovery-code">Recovery Code</Label>
+          <Label htmlFor="recovery-code">{t("auth.mfa.recoveryCode")}</Label>
           <Input
             id="recovery-code"
             placeholder="xxxx-xxxx-xxxx-xxxx"
@@ -90,7 +92,7 @@ export function MfaVerifyStep({ mfaToken, onSuccess, onBack }: MfaVerifyStepProp
         onClick={verify}
         disabled={isLoading || (useRecovery ? !recoveryCode : code.length !== 6)}
       >
-        {isLoading ? "Verifying..." : "Verify"}
+        {isLoading ? t("auth.mfa.verifying") : t("auth.mfa.verify")}
       </Button>
 
       <div className="flex items-center justify-between text-sm">
@@ -100,7 +102,7 @@ export function MfaVerifyStep({ mfaToken, onSuccess, onBack }: MfaVerifyStepProp
           onClick={onBack}
         >
           <ArrowLeft className="h-3.5 w-3.5 rtl-flip" />
-          Back to Sign In
+          {t("auth.mfa.backToSignIn")}
         </button>
         <button
           type="button"
@@ -108,7 +110,7 @@ export function MfaVerifyStep({ mfaToken, onSuccess, onBack }: MfaVerifyStepProp
           onClick={() => { setUseRecovery(!useRecovery); setCode(""); setRecoveryCode(""); }}
         >
           <KeyRound className="h-3.5 w-3.5" />
-          {useRecovery ? "Use authenticator app" : "Use recovery code"}
+          {useRecovery ? t("auth.mfa.useAuthApp") : t("auth.mfa.useRecoveryCode")}
         </button>
       </div>
     </div>
