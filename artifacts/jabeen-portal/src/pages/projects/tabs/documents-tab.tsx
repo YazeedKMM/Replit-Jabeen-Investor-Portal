@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Project, useListProjectDocuments, useUploadDocument, useDeleteDocument } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function ProjectDocumentsTab({ project }: Props) {
+  const { t } = useTranslation();
   const { data: documents, isLoading } = useListProjectDocuments(project.id);
   const uploadMutation = useUploadDocument();
   const deleteMutation = useDeleteDocument();
@@ -28,9 +30,9 @@ export default function ProjectDocumentsTab({ project }: Props) {
     try {
       await uploadMutation.mutateAsync({ projectId: project.id, data: { file } });
       queryClient.invalidateQueries({ queryKey: ["/api/projects", project.id, "documents"] });
-      toast({ title: "Document uploaded successfully" });
+      toast({ title: t("projects.documents.toastUploaded") });
     } catch (error) {
-      toast({ title: "Upload failed", variant: "destructive" });
+      toast({ title: t("projects.documents.toastUploadFailed"), variant: "destructive" });
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -38,13 +40,13 @@ export default function ProjectDocumentsTab({ project }: Props) {
   };
 
   const handleDelete = async (docId: number) => {
-    if (!confirm("Are you sure you want to delete this document?")) return;
+    if (!confirm(t("projects.documents.deleteConfirm"))) return;
     try {
       await deleteMutation.mutateAsync({ documentId: docId });
       queryClient.invalidateQueries({ queryKey: ["/api/projects", project.id, "documents"] });
-      toast({ title: "Document deleted" });
+      toast({ title: t("projects.documents.toastDeleted") });
     } catch (error) {
-      toast({ title: "Deletion failed", variant: "destructive" });
+      toast({ title: t("projects.documents.toastDeleteFailed"), variant: "destructive" });
     }
   };
 
@@ -57,12 +59,12 @@ export default function ProjectDocumentsTab({ project }: Props) {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold">Project Documents</h2>
+        <h2 className="text-xl font-bold">{t("projects.documents.title")}</h2>
         <div>
           <input type="file" className="hidden" ref={fileInputRef} onChange={handleFileSelect} />
           <Button onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
             {isUploading ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <UploadCloud className="me-2 h-4 w-4" />}
-            Upload File
+            {t("projects.documents.uploadButton")}
           </Button>
         </div>
       </div>
@@ -73,7 +75,7 @@ export default function ProjectDocumentsTab({ project }: Props) {
         <Card className="border-dashed">
           <CardContent className="py-12 text-center text-muted-foreground flex flex-col items-center">
             <FileIcon className="h-10 w-10 mb-4 opacity-20" />
-            <p>No documents uploaded yet.</p>
+            <p>{t("projects.documents.emptyDesc")}</p>
           </CardContent>
         </Card>
       ) : (
@@ -87,7 +89,7 @@ export default function ProjectDocumentsTab({ project }: Props) {
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm truncate" title={doc.fileName}>{doc.fileName}</p>
                   <p className="text-xs text-muted-foreground mt-1">{formatSize(doc.size)} • {format(new Date(doc.createdAt), 'MMM d, yyyy')}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">By {doc.uploader?.fullName || "Unknown"}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t("projects.documents.uploadedBy", { name: doc.uploader?.fullName || t("projects.documents.unknownUploader") })}</p>
                 </div>
                 <div className="flex flex-col gap-2 shrink-0">
                   <a href={`/api/projects/${project.id}/documents/${doc.id}/download`} download>

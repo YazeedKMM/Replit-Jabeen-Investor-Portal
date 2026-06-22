@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Project, useListMessages, useCreateMessage } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export default function ProjectMessagesTab({ project }: Props) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { data: messages, isLoading } = useListMessages(project.id);
   const createMutation = useCreateMessage();
@@ -29,7 +31,7 @@ export default function ProjectMessagesTab({ project }: Props) {
       queryClient.invalidateQueries({ queryKey: ["/api/projects", project.id, "messages"] });
       setBody("");
     } catch (error) {
-      toast({ title: "Failed to send message", variant: "destructive" });
+      toast({ title: t("projects.messages.toastSendFailed"), variant: "destructive" });
     }
   };
 
@@ -39,8 +41,8 @@ export default function ProjectMessagesTab({ project }: Props) {
   return (
     <div className="flex flex-col h-[600px] border rounded-lg bg-card overflow-hidden">
       <div className="p-4 border-b bg-muted/20">
-        <h2 className="text-lg font-bold">Project Discussion</h2>
-        <p className="text-sm text-muted-foreground">Messages visible to project managers and assigned investors.</p>
+        <h2 className="text-lg font-bold">{t("projects.messages.title")}</h2>
+        <p className="text-sm text-muted-foreground">{t("projects.messages.subtitle")}</p>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
@@ -49,7 +51,7 @@ export default function ProjectMessagesTab({ project }: Props) {
         ) : !messages?.length ? (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
             <MessageSquare className="h-10 w-10 mb-4 opacity-20" />
-            <p>No messages yet. Start the conversation!</p>
+            <p>{t("projects.messages.emptyDesc")}</p>
           </div>
         ) : (
           messages.map(msg => {
@@ -57,7 +59,7 @@ export default function ProjectMessagesTab({ project }: Props) {
             return (
               <div key={msg.id} className={cn("flex flex-col max-w-[80%]", isMe ? "ms-auto items-end" : "items-start")}>
                 <div className="flex items-baseline gap-2 mb-1">
-                  <span className="text-xs font-semibold">{isMe ? "You" : msg.author?.fullName}</span>
+                  <span className="text-xs font-semibold">{isMe ? t("projects.messages.youLabel") : msg.author?.fullName}</span>
                   <span className="text-[10px] text-muted-foreground uppercase">{msg.authorRole.replace('-', ' ')}</span>
                   <span className="text-[10px] text-muted-foreground ms-2">{format(new Date(msg.createdAt), 'MMM d, h:mm a')}</span>
                 </div>
@@ -73,10 +75,10 @@ export default function ProjectMessagesTab({ project }: Props) {
       {canCompose && (
         <div className="p-4 border-t bg-muted/10">
           <div className="flex gap-2">
-            <Textarea 
-              value={body} 
-              onChange={e => setBody(e.target.value)} 
-              placeholder="Type your message..." 
+            <Textarea
+              value={body}
+              onChange={e => setBody(e.target.value)}
+              placeholder={t("projects.messages.composePlaceholder")}
               className="min-h-[80px] resize-none"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -85,13 +87,13 @@ export default function ProjectMessagesTab({ project }: Props) {
                 }
               }}
             />
-            <Button 
-              className="shrink-0 h-[80px] w-[80px] flex flex-col gap-1" 
+            <Button
+              className="shrink-0 h-[80px] w-[80px] flex flex-col gap-1"
               onClick={handleSend}
               disabled={!body.trim() || createMutation.isPending}
             >
               {createMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
-              <span>Send</span>
+              <span>{t("projects.messages.sendButton")}</span>
             </Button>
           </div>
         </div>
