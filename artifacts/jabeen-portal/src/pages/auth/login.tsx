@@ -20,6 +20,7 @@ import { ArrowRight, ShieldCheck, Activity, MapPin } from "lucide-react";
 import { MfaVerifyStep } from "./mfa-verify";
 import { MfaSetupFlow } from "./mfa-setup";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { useLanguage } from "@/hooks/use-language";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -46,6 +47,7 @@ export default function LoginPage() {
   const [, setLocation] = useLocation();
   const { login, register, user, isLoading, handleAuthResult } = useAuth();
   const { toast } = useToast();
+  const { dir } = useLanguage();
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
   const [mfaStep, setMfaStep] = useState<MfaStepState>({ type: "none" });
   const searchParams = new URLSearchParams(window.location.search);
@@ -166,7 +168,7 @@ export default function LoginPage() {
         {/* Legibility scrim — darken left + bottom where text sits, so it holds AA contrast over the photo */}
         <div
           className="absolute inset-0 pointer-events-none"
-          style={{ background: 'linear-gradient(105deg, rgba(7,5,3,0.86) 0%, rgba(7,5,3,0.62) 34%, rgba(7,5,3,0.18) 64%, rgba(7,5,3,0.08) 100%)' }}
+          style={{ background: `linear-gradient(${dir === "rtl" ? 255 : 105}deg, rgba(7,5,3,0.86) 0%, rgba(7,5,3,0.62) 34%, rgba(7,5,3,0.18) 64%, rgba(7,5,3,0.08) 100%)` }}
         />
         <div
           className="absolute inset-0 pointer-events-none"
@@ -294,7 +296,7 @@ export default function LoginPage() {
                     />
                     <Button type="submit" className="login-press w-full h-11 text-base font-semibold mt-2" disabled={loginForm.formState.isSubmitting} data-testid="button-submit-login">
                       {loginForm.formState.isSubmitting ? "Signing in…" : "Sign in to portal"}
-                      {!loginForm.formState.isSubmitting && <ArrowRight className="ms-2 h-4 w-4" />}
+                      {!loginForm.formState.isSubmitting && <ArrowRight className="ms-2 h-4 w-4 rtl-flip" />}
                     </Button>
                   </form>
                 </Form>

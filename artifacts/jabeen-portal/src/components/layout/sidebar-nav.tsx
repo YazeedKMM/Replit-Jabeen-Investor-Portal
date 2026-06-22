@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { useLanguage } from "@/hooks/use-language";
 import {
   Building2,
   LayoutDashboard,
@@ -28,6 +29,7 @@ import { Separator } from "@/components/ui/separator";
 export function SidebarNav() {
   const { user, logout } = useAuth();
   const [location] = useLocation();
+  const { dir } = useLanguage();
 
   if (!user) return null;
 
@@ -85,7 +87,7 @@ export function SidebarNav() {
   ];
 
   return (
-    <Sidebar variant="sidebar" collapsible="icon" className="bg-sidebar">
+    <Sidebar variant="sidebar" collapsible="icon" side={dir === "rtl" ? "right" : "left"} className="bg-sidebar">
       <SidebarHeader className="p-4 flex items-center justify-center">
         <div className="flex items-center justify-center">
           <img

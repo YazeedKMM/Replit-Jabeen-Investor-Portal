@@ -151,7 +151,7 @@ export default function MyProjectsPage() {
                   <span>Updated {project.lastUpdateAt ? format(new Date(project.lastUpdateAt), 'MMM d, yyyy') : 'Never'}</span>
                 </div>
                 <Link href={`/projects/${project.id}`} className="text-sm font-semibold text-primary flex items-center gap-1 hover:underline">
-                  View details <ArrowRight className="h-4 w-4" />
+                  View details <ArrowRight className="h-4 w-4 rtl-flip" />
                 </Link>
               </CardFooter>
             </Card>

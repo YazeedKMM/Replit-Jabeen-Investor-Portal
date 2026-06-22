@@ -99,7 +99,7 @@ export function MfaVerifyStep({ mfaToken, onSuccess, onBack }: MfaVerifyStepProp
           className="text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
           onClick={onBack}
         >
-          <ArrowLeft className="h-3.5 w-3.5" />
+          <ArrowLeft className="h-3.5 w-3.5 rtl-flip" />
           Back to Sign In
         </button>
         <button

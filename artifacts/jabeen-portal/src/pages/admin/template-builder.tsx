@@ -300,7 +300,7 @@ export default function TemplateBuilderPage() {
     <div className="space-y-6 max-w-5xl mx-auto pb-24">
       <div className="flex items-center gap-4 border-b pb-4">
         <Button variant="ghost" size="icon" onClick={() => setLocation("/templates")}>
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-4 w-4 rtl-flip" />
         </Button>
         <div className="flex-1">
           <h1 className="text-2xl font-bold">
