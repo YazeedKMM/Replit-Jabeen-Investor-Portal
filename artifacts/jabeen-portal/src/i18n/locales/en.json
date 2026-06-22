@@ -86,6 +86,27 @@
       "createFirst": "Create the first project"
     }
   },
+  "investor": {
+    "pageTitle": "My Projects",
+    "pageSubtitle": "Track and manage your industrial investments",
+    "pendingTitle": "Account Pending Activation",
+    "pendingDesc": "Your account has been registered and is awaiting activation by a JABEEN administrator. You will gain access to your project portfolio once your account has been reviewed and activated.",
+    "pendingNextStepsTitle": "What happens next?",
+    "pendingNextStepsDesc": "A project manager will review your registration and link you to your project. Once activated, sign back in to access your portfolio.",
+    "pendingActivateButton": "I've been activated — sign in again",
+    "emptyTitle": "No projects yet",
+    "emptyDesc": "You haven't been assigned to any projects. Projects will appear here once an agreement is signed.",
+    "labelCityCategory": "City / Category",
+    "labelPlot": "Plot",
+    "labelCurrentStage": "Current Stage",
+    "labelProgress": "Project Progress",
+    "plotTbd": "TBD",
+    "stageInitializing": "Initializing",
+    "updatedNever": "Never",
+    "updatedAt": "Updated {{date}}",
+    "viewDetails": "View details",
+    "attentionMessage": "This project requires your attention. Please review recent updates."
+  },
   "projects": {
     "newDialog": {
       "title": "New Investment Project",

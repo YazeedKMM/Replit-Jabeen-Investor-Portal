@@ -33,8 +33,8 @@ export default function MyProjectsPage() {
     return (
       <div className="space-y-8 animate-in fade-in duration-500">
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">My Projects</h1>
-          <p className="text-muted-foreground text-lg">Track and manage your industrial investments</p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">{t("investor.pageTitle")}</h1>
+          <p className="text-muted-foreground text-lg">{t("investor.pageSubtitle")}</p>
         </div>
         <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900/50">
           <CardContent className="flex flex-col items-center justify-center py-16 text-center gap-6">
@@ -42,14 +42,14 @@ export default function MyProjectsPage() {
               <Clock className="h-10 w-10 text-amber-600 dark:text-amber-400" />
             </div>
             <div className="space-y-2 max-w-md">
-              <h3 className="text-2xl font-bold text-amber-900 dark:text-amber-200">Account Pending Activation</h3>
+              <h3 className="text-2xl font-bold text-amber-900 dark:text-amber-200">{t("investor.pendingTitle")}</h3>
               <p className="text-amber-800 dark:text-amber-300 text-base leading-relaxed">
-                Your account has been registered and is awaiting activation by a JABEEN administrator. You will gain access to your project portfolio once your account has been reviewed and activated.
+                {t("investor.pendingDesc")}
               </p>
             </div>
             <div className="bg-amber-100 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-lg px-6 py-4 text-sm text-amber-800 dark:text-amber-300 max-w-sm">
-              <p className="font-medium mb-1">What happens next?</p>
-              <p>A project manager will review your registration and link you to your project. Once activated, sign back in to access your portfolio.</p>
+              <p className="font-medium mb-1">{t("investor.pendingNextStepsTitle")}</p>
+              <p>{t("investor.pendingNextStepsDesc")}</p>
             </div>
             <Button
               variant="outline"
@@ -57,7 +57,7 @@ export default function MyProjectsPage() {
               onClick={checkActivationStatus}
             >
               <RefreshCw className="h-4 w-4 me-2" />
-              I've been activated — sign in again
+              {t("investor.pendingActivateButton")}
             </Button>
           </CardContent>
         </Card>
@@ -68,8 +68,8 @@ export default function MyProjectsPage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">My Projects</h1>
-        <p className="text-muted-foreground text-lg">Track and manage your industrial investments</p>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">{t("investor.pageTitle")}</h1>
+        <p className="text-muted-foreground text-lg">{t("investor.pageSubtitle")}</p>
       </div>
 
       {isLoading ? (
@@ -82,9 +82,9 @@ export default function MyProjectsPage() {
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center h-64 text-center">
             <Building2 className="h-12 w-12 text-muted-foreground/30 mb-4" />
-            <h3 className="text-xl font-semibold text-foreground mb-2">No projects yet</h3>
+            <h3 className="text-xl font-semibold text-foreground mb-2">{t("investor.emptyTitle")}</h3>
             <p className="text-muted-foreground max-w-sm">
-              You haven't been assigned to any projects. Projects will appear here once an agreement is signed.
+              {t("investor.emptyDesc")}
             </p>
           </CardContent>
         </Card>
@@ -106,7 +106,7 @@ export default function MyProjectsPage() {
               <CardContent className="flex-1 space-y-5">
                 <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-sm">
                   <div className="space-y-1 col-span-2">
-                    <span className="text-muted-foreground text-xs font-medium uppercase tracking-wider">City / Category</span>
+                    <span className="text-muted-foreground text-xs font-medium uppercase tracking-wider">{t("investor.labelCityCategory")}</span>
                     <div className="flex flex-wrap gap-1.5">
                       {project.city && (
                         <Badge variant="secondary" className="text-xs">{project.city.shortName ?? project.city.name}</Badge>
@@ -117,40 +117,40 @@ export default function MyProjectsPage() {
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-muted-foreground text-xs font-medium uppercase tracking-wider">Plot</span>
+                    <span className="text-muted-foreground text-xs font-medium uppercase tracking-wider">{t("investor.labelPlot")}</span>
                     <p className="font-medium truncate flex items-center gap-1">
                       <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
-                      {project.plotNumber || "TBD"}
+                      {project.plotNumber || t("investor.plotTbd")}
                     </p>
                   </div>
                   <div className="space-y-1 col-span-2">
-                    <span className="text-muted-foreground text-xs font-medium uppercase tracking-wider">Current Stage</span>
-                    <p className="font-medium truncate">{project.currentStage?.name || "Initializing"}</p>
+                    <span className="text-muted-foreground text-xs font-medium uppercase tracking-wider">{t("investor.labelCurrentStage")}</span>
+                    <p className="font-medium truncate">{project.currentStage?.name || t("investor.stageInitializing")}</p>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm font-medium">
-                    <span>Project Progress</span>
+                    <span>{t("investor.labelProgress")}</span>
                     <span>{project.constructionPct}%</span>
                   </div>
                   <Progress value={project.constructionPct} className="h-2" />
                 </div>
-                
+
                 {project.attentionFlag && (
                   <div className="bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-400 p-3 rounded-md flex items-start gap-2 text-sm border border-amber-200 dark:border-amber-900/50">
                     <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
-                    <p className="leading-tight">This project requires your attention. Please review recent updates.</p>
+                    <p className="leading-tight">{t("investor.attentionMessage")}</p>
                   </div>
                 )}
               </CardContent>
               <CardFooter className="pt-4 border-t bg-muted/20 flex justify-between items-center">
                 <div className="flex items-center text-xs text-muted-foreground gap-1.5">
                   <Calendar className="h-3.5 w-3.5" />
-                  <span>Updated {project.lastUpdateAt ? format(new Date(project.lastUpdateAt), 'MMM d, yyyy') : 'Never'}</span>
+                  <span>{project.lastUpdateAt ? t("investor.updatedAt", { date: format(new Date(project.lastUpdateAt), 'MMM d, yyyy') }) : t("investor.updatedNever")}</span>
                 </div>
                 <Link href={`/projects/${project.id}`} className="text-sm font-semibold text-primary flex items-center gap-1 hover:underline">
-                  View details <ArrowRight className="h-4 w-4 rtl-flip" />
+                  {t("investor.viewDetails")} <ArrowRight className="h-4 w-4 rtl-flip" />
                 </Link>
               </CardFooter>
             </Card>
