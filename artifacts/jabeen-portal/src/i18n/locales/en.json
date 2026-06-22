@@ -664,6 +664,25 @@
     "empty": "No audit records found.",
     "actorFallback": "User {{id}}"
   },
+  "validation": {
+    "required": "This field is required",
+    "invalidEmail": "Invalid email address",
+    "passwordRequired": "Password is required",
+    "passwordMin": "Password must be at least 8 characters",
+    "fullNameMin": "Full name is required",
+    "companyRequired": "Company name is required",
+    "nameRequired": "Name is required",
+    "projectNameRequired": "Project name is required",
+    "cityRequired": "City is required",
+    "categoryRequired": "Project category is required",
+    "agreementRequired": "Agreement number is required",
+    "stageRequired": "Stage is required",
+    "projectRequiredForPM": "Project is required for Project Manager activation",
+    "codeRequired": "Code is required",
+    "codeMax20": "Code max 20 chars",
+    "codeMax40": "Code max 40 chars",
+    "shortNameRequired": "Short name is required"
+  },
   "notFound": {
     "heading": "404 Page Not Found",
     "message": "Did you forget to add the page to the router?",

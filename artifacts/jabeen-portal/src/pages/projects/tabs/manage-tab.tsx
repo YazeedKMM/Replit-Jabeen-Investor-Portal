@@ -1,4 +1,6 @@
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { Project, useUpdateProject, useDeleteProject, useListUsers, useListTemplates, useGetCities, useGetProjectCategories, getGetCitiesQueryKey, getGetProjectCategoriesQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -21,16 +23,17 @@ interface Props {
   isAdmin: boolean;
 }
 
-const updateProjectSchema = z.object({
-  name: z.string().min(1, "Name required"),
-  cityId: z.coerce.number().min(1, "City required"),
-  categoryId: z.coerce.number().min(1, "Project category required"),
+const makeUpdateProjectSchema = (t: TFunction) => z.object({
+  name: z.string().min(1, t("validation.nameRequired")),
+  cityId: z.coerce.number().min(1, t("validation.cityRequired")),
+  categoryId: z.coerce.number().min(1, t("validation.categoryRequired")),
   plotNumber: z.string().optional(),
   notes: z.string().optional(),
   attentionFlag: z.boolean(),
   investorId: z.coerce.number().optional().nullable(),
   pipelineId: z.coerce.number().optional().nullable(),
 });
+type UpdateProjectForm = z.infer<ReturnType<typeof makeUpdateProjectSchema>>;
 
 export default function ProjectManageTab({ project, isAdmin }: Props) {
   const { t } = useTranslation();
@@ -45,7 +48,8 @@ export default function ProjectManageTab({ project, isAdmin }: Props) {
   const { data: allCities } = useGetCities({ query: { queryKey: getGetCitiesQueryKey() } });
   const { data: allCategories } = useGetProjectCategories({ query: { queryKey: getGetProjectCategoriesQueryKey() } });
 
-  const form = useForm<z.infer<typeof updateProjectSchema>>({
+  const updateProjectSchema = useMemo(() => makeUpdateProjectSchema(t), [t]);
+  const form = useForm<UpdateProjectForm>({
     resolver: zodResolver(updateProjectSchema),
     defaultValues: {
       name: project.name,

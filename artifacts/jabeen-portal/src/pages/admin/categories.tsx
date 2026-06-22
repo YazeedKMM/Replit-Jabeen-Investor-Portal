@@ -41,23 +41,27 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
+import { useMemo } from "react";
 
-const createCategorySchema = z.object({
-  code: z.string().min(1, "Code is required").max(40, "Code max 40 chars"),
-  name: z.string().min(1, "Name is required"),
+const makeCreateCategorySchema = (t: TFunction) => z.object({
+  code: z.string().min(1, t("validation.codeRequired")).max(40, t("validation.codeMax40")),
+  name: z.string().min(1, t("validation.nameRequired")),
   sortOrder: z.coerce.number().default(0),
 });
 
-const editCategorySchema = z.object({
-  name: z.string().min(1, "Name is required"),
+const makeEditCategorySchema = (t: TFunction) => z.object({
+  name: z.string().min(1, t("validation.nameRequired")),
   sortOrder: z.coerce.number().default(0),
 });
 
-type CreateCategoryFormValues = z.infer<typeof createCategorySchema>;
-type EditCategoryFormValues = z.infer<typeof editCategorySchema>;
+type CreateCategoryFormValues = z.infer<ReturnType<typeof makeCreateCategorySchema>>;
+type EditCategoryFormValues = z.infer<ReturnType<typeof makeEditCategorySchema>>;
 
 export default function CategoriesPage() {
   const { t } = useTranslation();
+  const createCategorySchema = useMemo(() => makeCreateCategorySchema(t), [t]);
+  const editCategorySchema = useMemo(() => makeEditCategorySchema(t), [t]);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<ProjectCategory | null>(null);
 

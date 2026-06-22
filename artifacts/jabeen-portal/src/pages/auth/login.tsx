@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import type { TFunction } from "i18next";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,19 +26,22 @@ import { useTranslation } from "react-i18next";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(1, "Password is required"),
+const makeLoginSchema = (t: TFunction) => z.object({
+  email: z.string().email(t("validation.invalidEmail")),
+  password: z.string().min(1, t("validation.passwordRequired")),
 });
 
-const registerSchema = z.object({
-  fullName: z.string().min(2, "Full name is required"),
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  companyName: z.string().min(2, "Company name is required"),
+const makeRegisterSchema = (t: TFunction) => z.object({
+  fullName: z.string().min(2, t("validation.fullNameMin")),
+  email: z.string().email(t("validation.invalidEmail")),
+  password: z.string().min(8, t("validation.passwordMin")),
+  companyName: z.string().min(2, t("validation.companyRequired")),
   title: z.string().optional(),
   phone: z.string().optional(),
 });
+
+type LoginForm = z.infer<ReturnType<typeof makeLoginSchema>>;
+type RegisterForm = z.infer<ReturnType<typeof makeRegisterSchema>>;
 
 type MfaStepState =
   | { type: "none" }
@@ -55,12 +59,15 @@ export default function LoginPage() {
   const searchParams = new URLSearchParams(window.location.search);
   const redirect = searchParams.get("redirect");
 
-  const loginForm = useForm<z.infer<typeof loginSchema>>({
+  const loginSchema = useMemo(() => makeLoginSchema(t), [t]);
+  const registerSchema = useMemo(() => makeRegisterSchema(t), [t]);
+
+  const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
   });
 
-  const registerForm = useForm<z.infer<typeof registerSchema>>({
+  const registerForm = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       fullName: "",

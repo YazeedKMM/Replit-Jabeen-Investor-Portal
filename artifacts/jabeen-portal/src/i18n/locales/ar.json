@@ -664,6 +664,25 @@
     "empty": "لا توجد سجلات تدقيق.",
     "actorFallback": "مستخدم {{id}}"
   },
+  "validation": {
+    "required": "هذا الحقل مطلوب",
+    "invalidEmail": "بريد إلكتروني غير صالح",
+    "passwordRequired": "كلمة المرور مطلوبة",
+    "passwordMin": "يجب ألا تقل كلمة المرور عن 8 أحرف",
+    "fullNameMin": "الاسم الكامل مطلوب",
+    "companyRequired": "اسم الشركة مطلوب",
+    "nameRequired": "الاسم مطلوب",
+    "projectNameRequired": "اسم المشروع مطلوب",
+    "cityRequired": "المدينة مطلوبة",
+    "categoryRequired": "تصنيف المشروع مطلوب",
+    "agreementRequired": "رقم الاتفاقية مطلوب",
+    "stageRequired": "المرحلة مطلوبة",
+    "projectRequiredForPM": "المشروع مطلوب لتفعيل مدير المشروع",
+    "codeRequired": "الرمز مطلوب",
+    "codeMax20": "الحد الأقصى للرمز 20 حرفاً",
+    "codeMax40": "الحد الأقصى للرمز 40 حرفاً",
+    "shortNameRequired": "الاسم المختصر مطلوب"
+  },
   "notFound": {
     "heading": "404 — الصفحة غير موجودة",
     "message": "هل نسيت إضافة الصفحة إلى الموجّه؟",

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import type { TFunction } from "i18next";
 import { useLocation } from "wouter";
 import {
   useGetDashboard, useListProjects, useCreateProject,
@@ -42,18 +43,18 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
 // ── Schema ─────────────────────────────────────────────────────────────────
-const newProjectSchema = z.object({
-  name: z.string().min(1, "Project name is required").max(200),
-  cityId: z.coerce.number({ required_error: "City is required" }).min(1, "City is required"),
-  categoryId: z.coerce.number({ required_error: "Project category is required" }).min(1, "Project category is required"),
-  agreementNumber: z.string().min(1, "Agreement number is required").max(100),
+const makeNewProjectSchema = (t: TFunction) => z.object({
+  name: z.string().min(1, t("validation.projectNameRequired")).max(200),
+  cityId: z.coerce.number({ required_error: t("validation.cityRequired") }).min(1, t("validation.cityRequired")),
+  categoryId: z.coerce.number({ required_error: t("validation.categoryRequired") }).min(1, t("validation.categoryRequired")),
+  agreementNumber: z.string().min(1, t("validation.agreementRequired")).max(100),
   plotNumber: z.string().max(100).optional(),
   pipelineId: z.coerce.number().optional(),
   investorId: z.coerce.number().optional(),
   constructionPct: z.coerce.number().min(0).max(100).optional(),
   notes: z.string().optional(),
 });
-type NewProjectForm = z.infer<typeof newProjectSchema>;
+type NewProjectForm = z.infer<ReturnType<typeof makeNewProjectSchema>>;
 
 // ── Inline "New Project" Dialog ────────────────────────────────────────────
 function NewProjectDialog({
@@ -85,6 +86,7 @@ function NewProjectDialog({
 
   const createMutation = useCreateProject();
 
+  const newProjectSchema = useMemo(() => makeNewProjectSchema(t), [t]);
   const form = useForm<NewProjectForm>({
     resolver: zodResolver(newProjectSchema),
     defaultValues: {

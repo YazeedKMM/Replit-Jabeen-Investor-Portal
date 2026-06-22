@@ -41,25 +41,29 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
+import { useMemo } from "react";
 
-const createCitySchema = z.object({
-  code: z.string().min(1, "Code is required").max(20, "Code max 20 chars"),
-  name: z.string().min(1, "Name is required"),
-  shortName: z.string().min(1, "Short name is required"),
+const makeCreateCitySchema = (t: TFunction) => z.object({
+  code: z.string().min(1, t("validation.codeRequired")).max(20, t("validation.codeMax20")),
+  name: z.string().min(1, t("validation.nameRequired")),
+  shortName: z.string().min(1, t("validation.shortNameRequired")),
   sortOrder: z.coerce.number().default(0),
 });
 
-const editCitySchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  shortName: z.string().min(1, "Short name is required"),
+const makeEditCitySchema = (t: TFunction) => z.object({
+  name: z.string().min(1, t("validation.nameRequired")),
+  shortName: z.string().min(1, t("validation.shortNameRequired")),
   sortOrder: z.coerce.number().default(0),
 });
 
-type CreateCityFormValues = z.infer<typeof createCitySchema>;
-type EditCityFormValues = z.infer<typeof editCitySchema>;
+type CreateCityFormValues = z.infer<ReturnType<typeof makeCreateCitySchema>>;
+type EditCityFormValues = z.infer<ReturnType<typeof makeEditCitySchema>>;
 
 export default function CitiesPage() {
   const { t } = useTranslation();
+  const createCitySchema = useMemo(() => makeCreateCitySchema(t), [t]);
+  const editCitySchema = useMemo(() => makeEditCitySchema(t), [t]);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<City | null>(null);
 

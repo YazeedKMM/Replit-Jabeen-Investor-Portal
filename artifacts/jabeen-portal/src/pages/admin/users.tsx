@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import type { TFunction } from "i18next";
 import { fmtDate } from "@/lib/format";
 import {
   useListUsers,
@@ -36,21 +37,22 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 
-const createUserSchema = z.object({
-  fullName: z.string().min(2, "Name is required"),
-  email: z.string().email("Invalid email"),
-  companyName: z.string().min(2, "Company is required"),
+const makeCreateUserSchema = (t: TFunction) => z.object({
+  fullName: z.string().min(2, t("validation.nameRequired")),
+  email: z.string().email(t("validation.invalidEmail")),
+  companyName: z.string().min(2, t("validation.companyRequired")),
   title: z.string().optional(),
   phone: z.string().optional(),
   role: z.enum(["investor", "top-management", "project-manager", "administrator"]),
 });
+type CreateUserForm = z.infer<ReturnType<typeof makeCreateUserSchema>>;
 
-const activateSchemaAdmin = z.object({
+const makeActivateSchemaAdmin = () => z.object({
   projectId: z.string().optional(),
 });
 
-const activateSchemaPM = z.object({
-  projectId: z.string().min(1, "Project is required for Project Manager activation"),
+const makeActivateSchemaPM = (t: TFunction) => z.object({
+  projectId: z.string().min(1, t("validation.projectRequiredForPM")),
 });
 
 export default function UsersPage() {
@@ -102,7 +104,10 @@ export default function UsersPage() {
   const setUserCities = useSetUserCities();
   const { data: allCities = [] } = useGetCities();
 
-  const form = useForm<z.infer<typeof createUserSchema>>({
+  const createUserSchema = useMemo(() => makeCreateUserSchema(t), [t]);
+  const activateSchema = useMemo(() => (isPM ? makeActivateSchemaPM(t) : makeActivateSchemaAdmin()), [t, isPM]);
+
+  const form = useForm<CreateUserForm>({
     resolver: zodResolver(createUserSchema),
     defaultValues: {
       fullName: "", email: "", companyName: "", title: "", phone: "", role: "investor",
@@ -110,7 +115,7 @@ export default function UsersPage() {
   });
 
   const activateForm = useForm<{ projectId?: string }>({
-    resolver: zodResolver(isPM ? activateSchemaPM : activateSchemaAdmin),
+    resolver: zodResolver(activateSchema),
     defaultValues: { projectId: "" },
   });
 
