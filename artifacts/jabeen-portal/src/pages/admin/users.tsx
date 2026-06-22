@@ -233,7 +233,7 @@ export default function UsersPage() {
     switch (role) {
       case 'administrator': return 'bg-purple-500/15 text-purple-700 border-purple-200';
       case 'top-management': return 'bg-blue-500/15 text-blue-700 border-blue-200';
-      case 'project-manager': return 'bg-emerald-500/15 text-emerald-700 border-emerald-200';
+      case 'project-manager': return 'bg-blue-500/15 text-blue-700 border-blue-200';
       case 'investor': return 'bg-amber-500/15 text-amber-700 border-amber-200';
       default: return 'bg-muted text-muted-foreground';
     }
@@ -241,7 +241,7 @@ export default function UsersPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'active': return <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">{t("admin.users.statusActive")}</Badge>;
+      case 'active': return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">{t("admin.users.statusActive")}</Badge>;
       case 'inactive': return <Badge variant="outline" className="bg-muted text-muted-foreground">{t("admin.users.statusInactive")}</Badge>;
       case 'pending': return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200"><Clock className="h-3 w-3 me-1" />{t("admin.users.statusPending")}</Badge>;
       default: return null;
@@ -284,7 +284,7 @@ export default function UsersPage() {
                   <div className="bg-muted p-4 rounded-md flex items-center justify-between border">
                     <code className="font-mono text-lg font-medium">{createdUserTempPassword.pass}</code>
                     <Button variant="ghost" size="icon" onClick={() => copyToClipboard(createdUserTempPassword.pass)}>
-                      {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                      {copied ? <Check className="h-4 w-4 text-blue-500" /> : <Copy className="h-4 w-4" />}
                     </Button>
                   </div>
                   <DialogFooter>
@@ -454,7 +454,7 @@ export default function UsersPage() {
                                 size="icon"
                                 onClick={() => { setManageCitiesTarget(u); setManageCityIds([]); }}
                                 title={t("admin.users.tooltipManageCities")}
-                                className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                               >
                                 <MapPin className="h-4 w-4" />
                               </Button>
@@ -472,7 +472,7 @@ export default function UsersPage() {
                               <KeyRound className="h-4 w-4" />
                             </Button>
                             <Button variant="ghost" size="icon" onClick={() => handleToggleStatus(u)} title={u.status === "active" ? t("admin.users.tooltipDeactivate") : t("admin.users.tooltipActivate")}>
-                              {u.status === "active" ? <UserX className="h-4 w-4 text-destructive" /> : <UserCheck className="h-4 w-4 text-emerald-600" />}
+                              {u.status === "active" ? <UserX className="h-4 w-4 text-destructive" /> : <UserCheck className="h-4 w-4 text-blue-600" />}
                             </Button>
                           </TableCell>
                         )}
@@ -505,7 +505,7 @@ export default function UsersPage() {
                     <TableRow>
                       <TableCell colSpan={4} className="h-24 text-center">
                         <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                          <UserCheck className="h-8 w-8 text-emerald-500/50" />
+                          <UserCheck className="h-8 w-8 text-blue-500/50" />
                           <p>{t("admin.users.noPendingAccounts")}</p>
                         </div>
                       </TableCell>
@@ -651,7 +651,7 @@ export default function UsersPage() {
           <div className="bg-muted p-4 rounded-md flex items-center justify-between border">
             <code className="font-mono text-lg font-medium">{createdUserTempPassword?.pass}</code>
             <Button variant="ghost" size="icon" onClick={() => createdUserTempPassword && copyToClipboard(createdUserTempPassword.pass)}>
-              {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+              {copied ? <Check className="h-4 w-4 text-blue-500" /> : <Copy className="h-4 w-4" />}
             </Button>
           </div>
           <DialogFooter>

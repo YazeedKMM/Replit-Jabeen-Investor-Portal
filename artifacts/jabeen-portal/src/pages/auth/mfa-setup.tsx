@@ -116,7 +116,7 @@ export function MfaSetupFlow({ mfaToken, onComplete, isRequired }: MfaSetupProps
     return (
       <div className="space-y-6 max-w-lg w-full">
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 mb-4">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-blue-100 text-blue-600 mb-4">
             <Shield className="h-7 w-7" />
           </div>
           <h2 className="text-2xl font-bold">{t("auth.mfa.mfaEnabledTitle")}</h2>
@@ -135,7 +135,7 @@ export function MfaSetupFlow({ mfaToken, onComplete, isRequired }: MfaSetupProps
         </div>
         <div className="flex gap-3">
           <Button variant="outline" className="flex-1" onClick={() => copyToClipboard(recoveryData.recoveryCodes.join("\n"), "all")}>
-            {copied === "all" ? <Check className="h-4 w-4 me-2 text-emerald-500" /> : <Copy className="h-4 w-4 me-2" />}
+            {copied === "all" ? <Check className="h-4 w-4 me-2 text-blue-500" /> : <Copy className="h-4 w-4 me-2" />}
             {t("auth.mfa.copyAll")}
           </Button>
           <Button variant="outline" className="flex-1" onClick={downloadRecoveryCodes}>
@@ -215,7 +215,7 @@ export function MfaSetupFlow({ mfaToken, onComplete, isRequired }: MfaSetupProps
             <div className="flex items-center gap-2 bg-muted rounded-md px-3 py-2">
               <code className="flex-1 text-xs font-mono tracking-wider break-all">{setupData.secret}</code>
               <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={() => copyToClipboard(setupData.secret, "secret")}>
-                {copied === "secret" ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+                {copied === "secret" ? <Check className="h-3.5 w-3.5 text-blue-500" /> : <Copy className="h-3.5 w-3.5" />}
               </Button>
             </div>
           </div>

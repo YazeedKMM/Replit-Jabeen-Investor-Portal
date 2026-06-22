@@ -84,56 +84,56 @@
 }
 
 :root {
-  --button-outline: rgba(0,0,0, .10);
-  --badge-outline: rgba(0,0,0, .05);
+  --button-outline: rgba(16,25,39, .12);
+  --badge-outline: rgba(16,25,39, .06);
   --opaque-button-border-intensity: -8;
-  --elevate-1: rgba(0,0,0, .03);
-  --elevate-2: rgba(0,0,0, .08);
+  --elevate-1: rgba(16,25,39, .03);
+  --elevate-2: rgba(16,25,39, .07);
 
-  /* JABEEN brand palette — gold primary, dark charcoal sidebar */
-  --background: 40 20% 97%;
-  --foreground: 25 20% 10%;
+  /* DGA Platforms Code neutral gray scale (cool) + JABEEN gold brand accent */
+  --background: 210 20% 98%;       /* neutral-50 */
+  --foreground: 219 39% 11%;       /* neutral-900 */
 
-  --border: 35 15% 88%;
-  --input: 35 15% 88%;
-  --ring: 44 69% 38%;
+  --border: 220 13% 91%;           /* neutral-200 */
+  --input: 213 11% 84%;            /* neutral-300 */
+  --ring: 44 69% 38%;              /* JABEEN gold focus */
 
   --card: 0 0% 100%;
-  --card-foreground: 25 20% 10%;
-  --card-border: 35 15% 88%;
+  --card-foreground: 219 39% 11%;
+  --card-border: 220 13% 91%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 25 20% 10%;
-  --popover-border: 35 15% 88%;
+  --popover-foreground: 219 39% 11%;
+  --popover-border: 220 13% 91%;
 
   /* Primary: JABEEN Gold — rgb(166,130,30) */
   --primary: 44 69% 38%;
   --primary-foreground: 0 0% 100%;
 
-  /* Secondary: Warm dark */
-  --secondary: 25 15% 25%;
-  --secondary-foreground: 40 20% 97%;
+  /* Secondary: cool dark slate (neutral-800) */
+  --secondary: 213 28% 17%;
+  --secondary-foreground: 0 0% 100%;
 
-  /* Muted: Warm off-white */
-  --muted: 40 15% 94%;
-  --muted-foreground: 25 10% 45%;
+  /* Muted: neutral-100 / neutral-500 text */
+  --muted: 220 14% 96%;
+  --muted-foreground: 219 6% 46%;
 
-  /* Accent: Light gold tint */
-  --accent: 44 50% 92%;
-  --accent-foreground: 44 69% 28%;
+  /* Accent: neutral hover surface (neutral-100) */
+  --accent: 220 14% 96%;
+  --accent-foreground: 219 39% 11%;
 
-  /* Destructive */
-  --destructive: 0 84% 60%;
+  /* Destructive: DGA red-600 #d92c20 */
+  --destructive: 4 74% 49%;
   --destructive-foreground: 0 0% 100%;
 
-  /* Chart Colors */
+  /* Chart Colors — no green: gold, slate, info-blue, amber, red */
   --chart-1: 44 69% 38%;
-  --chart-2: 25 15% 25%;
-  --chart-3: 150 45% 38%;
-  --chart-4: 200 60% 40%;
-  --chart-5: 0 84% 60%;
+  --chart-2: 213 17% 26%;
+  --chart-3: 217 87% 51%;
+  --chart-4: 28 96% 44%;
+  --chart-5: 4 74% 49%;
 
-  /* Sidebar: JABEEN near-black — rgb(17,15,13) */
+  /* Sidebar: JABEEN charcoal + gold (brand identity) */
   --sidebar: 30 14% 7%;
   --sidebar-foreground: 40 20% 90%;
   --sidebar-border: 30 10% 14%;
@@ -145,9 +145,9 @@
 
   --app-font-sans: 'IBM Plex Sans Arabic', 'Plus Jakarta Sans', system-ui, sans-serif;
   --app-font-serif: Georgia, serif;
-  --app-font-mono: 'JetBrains Mono', monospace;
+  --app-font-mono: 'IBM Plex Mono', 'JetBrains Mono', monospace;
 
-  --radius: 0.375rem;
+  --radius: 0.5rem;
 
   /* Computed Borders */
   --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);

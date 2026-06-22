@@ -51,7 +51,7 @@ export default function ProjectOverviewTab({ project, isPrivileged }: Props) {
                     {/* Node indicator */}
                     <span className={cn(
                       "absolute -start-[11px] top-1 h-5 w-5 rounded-full flex items-center justify-center ring-4 ring-card",
-                      isPast ? "bg-emerald-500 text-white" :
+                      isPast ? "bg-blue-500 text-white" :
                       isCurrent ? "bg-primary text-white" : "bg-muted text-muted-foreground"
                     )}>
                       {isPast ? <CheckCircle2 className="h-3.5 w-3.5" /> :

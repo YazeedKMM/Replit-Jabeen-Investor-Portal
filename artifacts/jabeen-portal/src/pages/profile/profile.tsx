@@ -194,7 +194,7 @@ export default function ProfilePage() {
         <CardHeader>
           <div className="flex items-center gap-3">
             {user?.mfaEnabled
-              ? <ShieldCheck className="h-5 w-5 text-emerald-600" />
+              ? <ShieldCheck className="h-5 w-5 text-blue-600" />
               : <Shield className="h-5 w-5 text-muted-foreground" />}
             <div>
               <CardTitle>{t("profile.mfaTitle")}</CardTitle>
@@ -202,7 +202,7 @@ export default function ProfilePage() {
             </div>
             <div className="ms-auto">
               {user?.mfaEnabled
-                ? <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">{t("profile.mfaEnabled")}</Badge>
+                ? <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">{t("profile.mfaEnabled")}</Badge>
                 : <Badge variant="outline" className="text-muted-foreground">{t("profile.mfaDisabled")}</Badge>}
             </div>
           </div>

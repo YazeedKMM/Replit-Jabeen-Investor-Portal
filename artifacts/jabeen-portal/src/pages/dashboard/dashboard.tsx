@@ -329,7 +329,7 @@ function NewProjectDialog({
 // ── Status helpers ──────────────────────────────────────────────────────────
 function getStatusColor(status: string) {
   switch (status) {
-    case "on-track": return "bg-emerald-500/15 text-emerald-700 border-emerald-200";
+    case "on-track": return "bg-sky-500/15 text-sky-700 border-sky-200";
     case "delayed": return "bg-amber-500/15 text-amber-700 border-amber-200";
     case "stalled": return "bg-destructive/15 text-destructive border-destructive/30";
     case "complete": return "bg-blue-500/15 text-blue-700 border-blue-200";
@@ -398,7 +398,7 @@ export default function DashboardPage() {
           { label: t("dashboard.kpi.total"), value: stats?.total, icon: Building2, color: "text-muted-foreground" },
           { label: t("dashboard.kpi.inProgress"), value: stats?.inProgress, icon: Activity, color: "text-blue-500" },
           { label: t("dashboard.kpi.needsAttention"), value: stats?.needsAttention, icon: AlertTriangle, color: "text-amber-500" },
-          { label: t("dashboard.kpi.completed"), value: stats?.complete, icon: CheckCircle2, color: "text-emerald-500" },
+          { label: t("dashboard.kpi.completed"), value: stats?.complete, icon: CheckCircle2, color: "text-blue-500" },
         ].map(({ label, value, icon: Icon, color }) => (
           <Card key={label} className="shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">

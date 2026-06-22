@@ -30,7 +30,7 @@ export default function ProjectWorkspacePage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'on-track': return 'bg-emerald-500/15 text-emerald-700 border-emerald-200';
+      case 'on-track': return 'bg-sky-500/15 text-sky-700 border-sky-200';
       case 'delayed': return 'bg-amber-500/15 text-amber-700 border-amber-200';
       case 'stalled': return 'bg-destructive/15 text-destructive border-destructive/30';
       case 'complete': return 'bg-blue-500/15 text-blue-700 border-blue-200';

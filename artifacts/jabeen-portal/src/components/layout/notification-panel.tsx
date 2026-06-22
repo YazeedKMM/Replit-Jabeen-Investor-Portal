@@ -34,7 +34,7 @@ export function NotificationPanel() {
       case 'message': return <MessageSquare className="h-4 w-4 text-blue-500" />;
       case 'internal-note': return <FileText className="h-4 w-4 text-purple-500" />;
       case 'update-submitted': return <Info className="h-4 w-4 text-amber-500" />;
-      case 'update-approved': return <CheckCircle className="h-4 w-4 text-emerald-500" />;
+      case 'update-approved': return <CheckCircle className="h-4 w-4 text-blue-500" />;
       case 'update-rejected': return <XCircle className="h-4 w-4 text-destructive" />;
       default: return <Info className="h-4 w-4 text-muted-foreground" />;
     }
