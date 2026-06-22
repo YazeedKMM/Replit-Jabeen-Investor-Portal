@@ -44,7 +44,7 @@ export function NotificationPanel() {
         <h4 className="font-semibold text-sm">Notifications</h4>
         {notifications?.some(n => !n.read) && (
           <Button variant="ghost" size="sm" className="h-8 text-xs px-2" onClick={handleMarkAllRead}>
-            <Check className="mr-2 h-3 w-3" /> Mark all read
+            <Check className="me-2 h-3 w-3" /> Mark all read
           </Button>
         )}
       </div>

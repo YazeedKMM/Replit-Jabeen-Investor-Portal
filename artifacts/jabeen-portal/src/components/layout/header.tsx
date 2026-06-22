@@ -23,7 +23,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-4 border-b bg-background px-4 md:px-6 shadow-sm">
-      <SidebarTrigger className="-ml-2" />
+      <SidebarTrigger className="-ms-2" />
       <CitySwitcher />
       <div className="flex-1" />
       <div className="flex items-center gap-4">
@@ -38,7 +38,7 @@ export function Header() {
             <Button variant="ghost" size="icon" className="relative" data-testid="button-notifications">
               <Bell className="h-5 w-5" />
               {unreadCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-destructive text-[10px] text-destructive-foreground ring-2 ring-background">
+                <span className="absolute top-1.5 end-1.5 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-destructive text-[10px] text-destructive-foreground ring-2 ring-background">
                   <span className="sr-only">New notifications</span>
                 </span>
               )}
