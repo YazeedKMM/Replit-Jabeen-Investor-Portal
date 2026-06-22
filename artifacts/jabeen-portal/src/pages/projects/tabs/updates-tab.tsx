@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Project, StatusUpdate,
   useListUpdates, useCreateUpdate, useApproveUpdate, useRejectUpdate, useUploadDocument,
@@ -83,6 +84,7 @@ function FieldValueDisplay({
   fieldValue: StatusUpdate["fieldValues"][number];
   onImageClick?: (docId: string) => void;
 }) {
+  const { t } = useTranslation();
   const val = fieldValue.textValue ?? fieldValue.numValue?.toString() ?? fieldValue.dateValue
     ?? (fieldValue.boolValue != null ? String(fieldValue.boolValue) : null)
     ?? fieldValue.choiceValue;
@@ -134,7 +136,7 @@ function FieldValueDisplay({
             });
           }}
         >
-          <FileIcon className="h-3.5 w-3.5" /> Download attached file
+          <FileIcon className="h-3.5 w-3.5" /> {t("projects.updates.downloadAttachedFile")}
         </button>
       ) : isBool ? (
         <p className="text-sm font-medium">{fieldValue.boolValue ? "✓ Yes" : "✗ No"}</p>
@@ -149,6 +151,7 @@ function FieldValueDisplay({
 // UpdateDetail: full read-only view of one update (used in review dialog)
 // ────────────────────────────────────────────────
 function UpdateDetail({ update, projectId }: { update: StatusUpdate; projectId: number }) {
+  const { t } = useTranslation();
   const [lightboxDocId, setLightboxDocId] = useState<string | null>(null);
 
   // Separate image fields from other fields so images render full-width
@@ -167,11 +170,11 @@ function UpdateDetail({ update, projectId }: { update: StatusUpdate; projectId: 
       {/* ── Summary row ── */}
       <div className="grid grid-cols-2 gap-x-6 gap-y-3">
         <div>
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Target Stage</p>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">{t("projects.updates.detailTargetStage")}</p>
           <p className="font-semibold">{update.targetStage?.name ?? "Unknown"}</p>
         </div>
         <div>
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Project Progress</p>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">{t("projects.updates.detailProjectProgress")}</p>
           <div className="flex items-center gap-2 mt-0.5">
             <div className="h-1.5 flex-1 bg-muted rounded-full overflow-hidden">
               <div className="h-full bg-primary" style={{ width: `${update.constructionPct}%` }} />
@@ -180,12 +183,12 @@ function UpdateDetail({ update, projectId }: { update: StatusUpdate; projectId: 
           </div>
         </div>
         <div>
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Submitted by</p>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">{t("projects.updates.detailSubmittedBy")}</p>
           <p className="font-semibold">{update.author?.fullName}</p>
           <p className="text-xs text-muted-foreground">{update.author?.companyName}</p>
         </div>
         <div>
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Submitted on</p>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">{t("projects.updates.detailSubmittedOn")}</p>
           <p className="font-semibold">{format(new Date(update.createdAt), "MMM d, yyyy")}</p>
           <p className="text-xs text-muted-foreground">{format(new Date(update.createdAt), "h:mm a")}</p>
         </div>
@@ -196,7 +199,7 @@ function UpdateDetail({ update, projectId }: { update: StatusUpdate; projectId: 
         <>
           <Separator />
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Notes from submitter</p>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">{t("projects.updates.detailNotesFromSubmitter")}</p>
             <p className="bg-muted/30 p-3 rounded-md text-sm leading-relaxed">{update.note}</p>
           </div>
         </>
@@ -207,7 +210,7 @@ function UpdateDetail({ update, projectId }: { update: StatusUpdate; projectId: 
         <>
           <Separator />
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-3">Field Values</p>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-3">{t("projects.updates.detailFieldValues")}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
               {otherFields.map((fv) => (
                 <FieldValueDisplay key={fv.id} projectId={projectId} fieldValue={fv} />
@@ -222,7 +225,7 @@ function UpdateDetail({ update, projectId }: { update: StatusUpdate; projectId: 
         <>
           <Separator />
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Attached Files</p>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">{t("projects.updates.detailAttachedFiles")}</p>
             <div className="space-y-2">
               {fileFields.map((fv) => (
                 <FieldValueDisplay key={fv.id} projectId={projectId} fieldValue={fv} />
@@ -237,7 +240,7 @@ function UpdateDetail({ update, projectId }: { update: StatusUpdate; projectId: 
         <>
           <Separator />
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Photos</p>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">{t("projects.updates.detailPhotos")}</p>
             <div className="space-y-4">
               {imageFields.map((fv) => (
                 <FieldValueDisplay key={fv.id} projectId={projectId} fieldValue={fv} onImageClick={setLightboxDocId} />
@@ -253,8 +256,8 @@ function UpdateDetail({ update, projectId }: { update: StatusUpdate; projectId: 
           <Separator />
           <div className={`rounded-md border p-3 ${update.reviewStatus === "approved" ? "bg-emerald-50 border-emerald-200" : "bg-destructive/5 border-destructive/20"}`}>
             <p className={`text-[10px] uppercase tracking-wider font-semibold mb-1 ${update.reviewStatus === "approved" ? "text-emerald-700" : "text-destructive"}`}>
-              {update.reviewStatus === "approved" ? "✓ Approved" : "✗ Rejected"} by {update.reviewer.fullName}
-              {update.reviewedAt && <span className="font-normal"> · {format(new Date(update.reviewedAt), "MMM d, yyyy")}</span>}
+              {update.reviewStatus === "approved" ? t("projects.updates.detailApproved") : t("projects.updates.detailRejected")} {t("projects.updates.detailBy", { name: update.reviewer.fullName })}
+              {update.reviewedAt && <span className="font-normal"> {t("projects.updates.detailOn", { date: format(new Date(update.reviewedAt), "MMM d, yyyy") })}</span>}
             </p>
             {update.reviewNote && (
               <p className="text-sm text-muted-foreground mt-1">{update.reviewNote}</p>
@@ -293,6 +296,7 @@ function DynamicFieldInput({
   uploading: boolean;
   onFileUpload: (file: File) => void;
 }) {
+  const { t } = useTranslation();
   const fileRef = useRef<HTMLInputElement>(null);
   const options = field.options ?? [];
   const docIds = value ? value.split(",").filter(Boolean) : [];
@@ -320,7 +324,7 @@ function DynamicFieldInput({
             checked={value === "true"}
             onCheckedChange={(c) => onChange(c ? "true" : "false")}
           />
-          <span className="text-sm text-muted-foreground">{value === "true" ? "Yes" : "No"}</span>
+          <span className="text-sm text-muted-foreground">{value === "true" ? t("common.yes") : t("common.no")}</span>
         </div>
       );
 
@@ -375,9 +379,9 @@ function DynamicFieldInput({
           <input type="file" className="hidden" ref={fileRef} onChange={(e) => { const f = e.target.files?.[0]; if (f) onFileUpload(f); e.target.value = ""; }} />
           <Button type="button" variant="outline" size="sm" className="h-8 text-xs" disabled={uploading} onClick={() => fileRef.current?.click()}>
             {uploading ? <Loader2 className="me-1.5 h-3 w-3 animate-spin" /> : <UploadCloud className="me-1.5 h-3 w-3" />}
-            {docIds.length > 0 ? "Replace file" : "Upload file"}
+            {docIds.length > 0 ? t("projects.updates.replaceFile") : t("projects.updates.uploadFile")}
           </Button>
-          {docIds.length > 0 && <p className="text-xs text-muted-foreground flex items-center gap-1"><FileIcon className="h-3 w-3" /> File uploaded (ID {docIds[0]})</p>}
+          {docIds.length > 0 && <p className="text-xs text-muted-foreground flex items-center gap-1"><FileIcon className="h-3 w-3" /> {t("projects.updates.fileUploaded", { id: docIds[0] })}</p>}
         </div>
       );
 
@@ -387,7 +391,7 @@ function DynamicFieldInput({
           <input type="file" accept="image/*" className="hidden" ref={fileRef} onChange={(e) => { const f = e.target.files?.[0]; if (f) onFileUpload(f); e.target.value = ""; }} />
           <Button type="button" variant="outline" size="sm" className="h-8 text-xs" disabled={uploading} onClick={() => fileRef.current?.click()}>
             {uploading ? <Loader2 className="me-1.5 h-3 w-3 animate-spin" /> : <ImageIcon className="me-1.5 h-3 w-3" />}
-            {docIds.length > 0 ? "Replace photo" : "Upload photo"}
+            {docIds.length > 0 ? t("projects.updates.replacePhoto") : t("projects.updates.uploadPhoto")}
           </Button>
           {docIds.length > 0 && (
             <div className="w-32 h-24 relative">
@@ -409,7 +413,7 @@ function DynamicFieldInput({
           />
           <Button type="button" variant="outline" size="sm" className="h-8 text-xs" disabled={uploading} onClick={() => fileRef.current?.click()}>
             {uploading ? <Loader2 className="me-1.5 h-3 w-3 animate-spin" /> : <ImageIcon className="me-1.5 h-3 w-3" />}
-            Add photos
+            {t("projects.updates.addPhotos")}
           </Button>
           {docIds.length > 0 && (
             <div className="grid grid-cols-4 gap-1.5">
@@ -439,6 +443,7 @@ function DynamicFieldInput({
 // Main tab component
 // ────────────────────────────────────────────────
 export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const isAdmin = user?.role === "administrator";
 
@@ -501,7 +506,7 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
         return { ...prev, [fieldId]: String(doc.id) };
       });
     } catch {
-      toast({ title: "File upload failed", variant: "destructive" });
+      toast({ title: t("projects.updates.toastFileUploadFailed"), variant: "destructive" });
     } finally {
       setUploadingFields((prev) => { const s = new Set(prev); s.delete(fieldId); return s; });
     }
@@ -521,7 +526,7 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
     );
     if (missingIds.size > 0) {
       setFieldErrors(missingIds);
-      toast({ title: "Required fields missing", description: "Please fill in all required fields before submitting.", variant: "destructive" });
+      toast({ title: t("projects.updates.toastRequiredFieldsTitle"), description: t("projects.updates.toastRequiredFieldsDesc"), variant: "destructive" });
       return;
     }
 
@@ -543,12 +548,12 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
     try {
       await createMutation.mutateAsync({ projectId: project.id, data: { ...data, fieldValues: fvPayload } });
       invalidate();
-      toast({ title: "Update submitted", description: "Your progress update is pending review." });
+      toast({ title: t("projects.updates.toastSubmittedTitle"), description: t("projects.updates.toastSubmittedDesc") });
       setIsSubmitOpen(false);
       form.reset();
       setFieldValues({});
     } catch (error: any) {
-      toast({ title: "Submission failed", description: error.data?.message ?? "An error occurred", variant: "destructive" });
+      toast({ title: t("projects.updates.toastSubmitFailedTitle"), description: error.data?.message ?? "An error occurred", variant: "destructive" });
     }
   };
 
@@ -557,10 +562,10 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
     try {
       await approveMutation.mutateAsync({ projectId: project.id, updateId: reviewUpdate.id });
       invalidate();
-      toast({ title: "Update approved", description: "Project baseline has been updated." });
+      toast({ title: t("projects.updates.toastApprovedTitle"), description: t("projects.updates.toastApprovedDesc") });
       setReviewUpdate(null);
     } catch {
-      toast({ title: "Approval failed", variant: "destructive" });
+      toast({ title: t("projects.updates.toastApprovalFailed"), variant: "destructive" });
     }
   };
 
@@ -569,12 +574,12 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
     try {
       await rejectMutation.mutateAsync({ projectId: project.id, updateId: reviewUpdate.id, data: { reviewNote: rejectNote } });
       invalidate();
-      toast({ title: "Update rejected" });
+      toast({ title: t("projects.updates.toastRejectedTitle") });
       setReviewUpdate(null);
       setRejectNote("");
       setRejectMode(false);
     } catch {
-      toast({ title: "Rejection failed", variant: "destructive" });
+      toast({ title: t("projects.updates.toastRejectionFailed"), variant: "destructive" });
     }
   };
 
@@ -582,7 +587,7 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
     <div className="space-y-6">
       {/* ── Header ── */}
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold">Progress History</h2>
+        <h2 className="text-xl font-bold">{t("projects.updates.progressHistory")}</h2>
 
         {project.pipeline && (
           <Dialog
@@ -593,18 +598,18 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
             }}
           >
             <DialogTrigger asChild>
-              <Button><Plus className="me-2 h-4 w-4" /> Submit Update</Button>
+              <Button><Plus className="me-2 h-4 w-4" /> {t("projects.updates.submitUpdate")}</Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Submit Progress Update</DialogTitle>
-                <DialogDescription>Record a milestone or completion percentage.</DialogDescription>
+                <DialogTitle>{t("projects.updates.submitDialogTitle")}</DialogTitle>
+                <DialogDescription>{t("projects.updates.submitDialogDesc")}</DialogDescription>
               </DialogHeader>
 
               {!isAdmin && currentStageIndex > 0 && (
                 <div className="flex items-start gap-2 text-sm bg-muted/50 border rounded-md p-3">
                   <Info className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                  <p className="text-muted-foreground">Only current and upcoming stages are available. Admins can revert to a previous stage.</p>
+                  <p className="text-muted-foreground">{t("projects.updates.stageOnlyCurrentNote")}</p>
                 </div>
               )}
 
@@ -613,13 +618,13 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
                   {/* Stage selector */}
                   <FormField control={form.control} name="targetStageId" render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Target Stage</FormLabel>
+                      <FormLabel>{t("projects.updates.targetStage")}</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value.toString()}>
-                        <FormControl><SelectTrigger><SelectValue placeholder="Select a stage" /></SelectTrigger></FormControl>
+                        <FormControl><SelectTrigger><SelectValue placeholder={t("projects.updates.targetStagePlaceholder")} /></SelectTrigger></FormControl>
                         <SelectContent>
                           {selectableStages.map((s) => (
                             <SelectItem key={s.id} value={s.id.toString()}>
-                              {s.name}{s.id === project.currentStageId && <span className="ms-1.5 text-muted-foreground text-xs">(current)</span>}
+                              {s.name}{s.id === project.currentStageId && <span className="ms-1.5 text-muted-foreground text-xs">{t("projects.updates.currentStageSuffix")}</span>}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -631,7 +636,7 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
                   {/* Construction % — locked to stage progressBaseline when pipeline is assigned */}
                   <FormField control={form.control} name="constructionPct" render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Project Progress</FormLabel>
+                      <FormLabel>{t("projects.updates.projectProgress")}</FormLabel>
                       {selectedStage ? (
                         <div className="flex items-center gap-3 h-9 px-3 rounded-md border bg-muted/40 text-sm">
                           <div className="h-1.5 flex-1 bg-muted rounded-full overflow-hidden">
@@ -643,7 +648,7 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
                           <span className="font-semibold tabular-nums w-10 text-end shrink-0">
                             {selectedStage.progressBaseline}%
                           </span>
-                          <span className="text-muted-foreground text-xs shrink-0">set by template</span>
+                          <span className="text-muted-foreground text-xs shrink-0">{t("projects.updates.setByTemplate")}</span>
                         </div>
                       ) : (
                         <FormControl>
@@ -657,7 +662,7 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
                   {/* Dynamic stage fields */}
                   {stageFields.length > 0 && (
                     <div className="space-y-4 border-t pt-4">
-                      <p className="text-sm font-semibold text-foreground">Stage Details</p>
+                      <p className="text-sm font-semibold text-foreground">{t("projects.updates.stageDetails")}</p>
                       {stageFields.map((f) => (
                         <div key={f.id} className="space-y-1.5">
                           <Label className={`text-sm font-medium ${fieldErrors.has(f.id) ? "text-destructive" : ""}`}>
@@ -691,16 +696,16 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
                   {/* Notes */}
                   <FormField control={form.control} name="note" render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Notes <span className="text-muted-foreground font-normal text-xs">(Optional)</span></FormLabel>
-                      <FormControl><Textarea placeholder="Details about this update..." {...field} /></FormControl>
+                      <FormLabel>{t("projects.updates.notes")} <span className="text-muted-foreground font-normal text-xs">{t("projects.updates.notesOptional")}</span></FormLabel>
+                      <FormControl><Textarea placeholder={t("projects.updates.notesPlaceholder")} {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
 
                   <DialogFooter className="pt-4">
-                    <Button variant="outline" type="button" onClick={() => setIsSubmitOpen(false)}>Cancel</Button>
+                    <Button variant="outline" type="button" onClick={() => setIsSubmitOpen(false)}>{t("common.cancel")}</Button>
                     <Button type="submit" disabled={createMutation.isPending || uploadingFields.size > 0}>
-                      {createMutation.isPending && <Loader2 className="me-2 h-4 w-4 animate-spin" />} Submit
+                      {createMutation.isPending && <Loader2 className="me-2 h-4 w-4 animate-spin" />} {t("projects.updates.submitButton")}
                     </Button>
                   </DialogFooter>
                 </form>
@@ -717,7 +722,7 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
         <Card className="border-dashed">
           <CardContent className="py-12 text-center text-muted-foreground flex flex-col items-center">
             <Clock className="h-10 w-10 mb-4 opacity-20" />
-            <p>No progress updates have been submitted yet.</p>
+            <p>{t("projects.updates.emptyDesc")}</p>
           </CardContent>
         </Card>
       ) : (
@@ -745,7 +750,11 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
                       update.reviewStatus === "rejected" ? "bg-destructive/10 text-destructive shrink-0" :
                       "bg-amber-50 text-amber-700 shrink-0"
                     }>
-                      {update.reviewStatus.toUpperCase()}
+                      {update.reviewStatus === "approved"
+                        ? t("projects.updates.reviewStatusApproved")
+                        : update.reviewStatus === "rejected"
+                        ? t("projects.updates.reviewStatusRejected")
+                        : t("projects.updates.reviewStatusPending")}
                     </Badge>
                   </div>
                 </CardHeader>
@@ -771,7 +780,7 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
                   {/* Notes */}
                   {update.note && (
                     <div>
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Notes</p>
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{t("projects.updates.notes")}</p>
                       <p className="text-muted-foreground bg-muted/20 p-2 rounded text-xs">{update.note}</p>
                     </div>
                   )}
@@ -779,7 +788,7 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
                   {/* Rejection reason */}
                   {update.reviewStatus === "rejected" && update.reviewNote && (
                     <div className="bg-destructive/10 p-2 rounded border border-destructive/20">
-                      <p className="text-[10px] uppercase tracking-wider font-semibold text-destructive mb-1">Rejection Reason</p>
+                      <p className="text-[10px] uppercase tracking-wider font-semibold text-destructive mb-1">{t("projects.updates.rejectionReason")}</p>
                       <p className="text-xs text-destructive/80">{update.reviewNote}</p>
                     </div>
                   )}
@@ -793,7 +802,7 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
                         className="w-full text-xs"
                         onClick={() => { setReviewUpdate(update); setRejectMode(false); setRejectNote(""); }}
                       >
-                        Review this update →
+                        {t("projects.updates.reviewButton")}
                       </Button>
                     </div>
                   )}
@@ -808,8 +817,8 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
       <Dialog open={!!reviewUpdate} onOpenChange={(o) => { if (!o) { setReviewUpdate(null); setRejectMode(false); setRejectNote(""); } }}>
         <DialogContent className="sm:max-w-[720px] max-h-[92vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Review Progress Update</DialogTitle>
-            <DialogDescription>Review all submitted data before approving or rejecting.</DialogDescription>
+            <DialogTitle>{t("projects.updates.reviewDialogTitle")}</DialogTitle>
+            <DialogDescription>{t("projects.updates.reviewDialogDesc")}</DialogDescription>
           </DialogHeader>
 
           {reviewUpdate && (
@@ -824,27 +833,27 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
                     disabled={approveMutation.isPending}
                   >
                     {approveMutation.isPending && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-                    <CheckCircle2 className="me-2 h-4 w-4" /> Approve
+                    <CheckCircle2 className="me-2 h-4 w-4" /> {t("projects.updates.approveButton")}
                   </Button>
                   <Button
                     className="flex-1"
                     variant="destructive"
                     onClick={() => setRejectMode(true)}
                   >
-                    <XCircle className="me-2 h-4 w-4" /> Reject
+                    <XCircle className="me-2 h-4 w-4" /> {t("projects.updates.rejectButton")}
                   </Button>
                 </div>
               ) : (
                 <div className="space-y-3 pt-2 border-t">
-                  <Label className="font-semibold">Reason for rejection</Label>
+                  <Label className="font-semibold">{t("projects.updates.rejectReasonLabel")}</Label>
                   <Textarea
                     value={rejectNote}
                     onChange={(e) => setRejectNote(e.target.value)}
-                    placeholder="Please explain why this update is being rejected..."
+                    placeholder={t("projects.updates.rejectPlaceholder")}
                     className="min-h-[80px]"
                   />
                   <div className="flex gap-3">
-                    <Button variant="outline" className="flex-1" onClick={() => setRejectMode(false)}>Back</Button>
+                    <Button variant="outline" className="flex-1" onClick={() => setRejectMode(false)}>{t("projects.updates.backButton")}</Button>
                     <Button
                       variant="destructive"
                       className="flex-1"
@@ -852,7 +861,7 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
                       disabled={!rejectNote || rejectMutation.isPending}
                     >
                       {rejectMutation.isPending && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-                      Confirm Rejection
+                      {t("projects.updates.confirmRejectButton")}
                     </Button>
                   </div>
                 </div>
