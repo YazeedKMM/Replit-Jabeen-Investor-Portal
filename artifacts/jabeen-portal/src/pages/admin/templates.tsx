@@ -8,8 +8,10 @@ import { Link } from "wouter";
 import { format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 export default function TemplatesPage() {
+  const { t } = useTranslation();
   const { data: templates, isLoading } = useListTemplates(
     { includeArchived: true },
     { query: { queryKey: getListTemplatesQueryKey({ includeArchived: true }) } }
@@ -25,34 +27,34 @@ export default function TemplatesPage() {
 
   const handleDelete = async (id: number, name: string, assignedCount: number) => {
     if (assignedCount > 0) {
-      if (!confirm(`This template has been assigned to ${assignedCount} project(s) and cannot be permanently deleted. Archive it instead? Archived templates are hidden from new assignment pickers but existing projects are unaffected.`)) return;
+      if (!confirm(t("admin.templates.deleteInUseConfirm", { count: assignedCount }))) return;
       try {
         await archiveMutation.mutateAsync({ templateId: id });
         invalidate();
-        toast({ title: "Template archived" });
+        toast({ title: t("admin.templates.toast.archived") });
       } catch {
-        toast({ title: "Error", description: "Could not archive template", variant: "destructive" });
+        toast({ title: t("admin.templates.toast.error"), description: t("admin.templates.toast.archiveFailed"), variant: "destructive" });
       }
     } else {
-      if (!confirm(`Permanently delete template "${name}"? This cannot be undone.`)) return;
+      if (!confirm(t("admin.templates.deleteConfirm", { name }))) return;
       try {
         await deleteMutation.mutateAsync({ templateId: id });
         invalidate();
-        toast({ title: "Template deleted" });
+        toast({ title: t("admin.templates.toast.deleted") });
       } catch {
-        toast({ title: "Error", description: "Could not delete template", variant: "destructive" });
+        toast({ title: t("admin.templates.toast.error"), description: t("admin.templates.toast.deleteFailed"), variant: "destructive" });
       }
     }
   };
 
   const handleArchive = async (id: number) => {
-    if (!confirm("Archive this template? It will be hidden from new assignment pickers but existing projects remain unaffected.")) return;
+    if (!confirm(t("admin.templates.archiveConfirm"))) return;
     try {
       await archiveMutation.mutateAsync({ templateId: id });
       invalidate();
-      toast({ title: "Template archived" });
+      toast({ title: t("admin.templates.toast.archived") });
     } catch {
-      toast({ title: "Error", description: "Could not archive template", variant: "destructive" });
+      toast({ title: t("admin.templates.toast.error"), description: t("admin.templates.toast.archiveFailed"), variant: "destructive" });
     }
   };
 
@@ -63,11 +65,11 @@ export default function TemplatesPage() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex justify-between items-start sm:items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Stage Templates</h1>
-          <p className="text-muted-foreground">Manage project lifecycle pipelines.</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t("admin.templates.title")}</h1>
+          <p className="text-muted-foreground">{t("admin.templates.subtitle")}</p>
         </div>
         <Link href="/templates/new">
-          <Button><Plus className="me-2 h-4 w-4" /> New Template</Button>
+          <Button><Plus className="me-2 h-4 w-4" /> {t("admin.templates.newTemplate")}</Button>
         </Link>
       </div>
 
@@ -79,10 +81,10 @@ export default function TemplatesPage() {
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center h-64 text-center">
             <GitMerge className="h-12 w-12 text-muted-foreground/30 mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No templates found</h3>
-            <p className="text-muted-foreground max-w-sm mb-4">Create a lifecycle pipeline template to assign to new projects.</p>
+            <h3 className="text-xl font-semibold mb-2">{t("admin.templates.noTemplates")}</h3>
+            <p className="text-muted-foreground max-w-sm mb-4">{t("admin.templates.noTemplatesDesc")}</p>
             <Link href="/templates/new">
-              <Button><Plus className="me-2 h-4 w-4" /> Create Template</Button>
+              <Button><Plus className="me-2 h-4 w-4" /> {t("admin.templates.createTemplate")}</Button>
             </Link>
           </CardContent>
         </Card>
@@ -90,7 +92,7 @@ export default function TemplatesPage() {
         <>
           {activeTemplates.length > 0 && (
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold">Active Templates</h2>
+              <h2 className="text-lg font-semibold">{t("admin.templates.activeTemplates")}</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {activeTemplates.map(template => (
                   <TemplateCard
@@ -106,7 +108,7 @@ export default function TemplatesPage() {
 
           {archivedTemplates.length > 0 && (
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-muted-foreground">Archived Templates</h2>
+              <h2 className="text-lg font-semibold text-muted-foreground">{t("admin.templates.archivedTemplates")}</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-60">
                 {archivedTemplates.map(template => (
                   <TemplateCard
@@ -145,6 +147,7 @@ interface TemplateCardProps {
 }
 
 function TemplateCard({ template, onDelete, onArchive, archived = false }: TemplateCardProps) {
+  const { t } = useTranslation();
   const assignedCount = template.assignedProjectCount ?? 0;
   const isAssigned = assignedCount > 0;
 
@@ -156,37 +159,39 @@ function TemplateCard({ template, onDelete, onArchive, archived = false }: Templ
             <CardTitle className="text-xl leading-tight line-clamp-2">{template.name}</CardTitle>
             <div className="flex flex-wrap gap-1">
               {template.isDefault && (
-                <Badge className="bg-primary/10 text-primary hover:bg-primary/20" variant="secondary">Default</Badge>
+                <Badge className="bg-primary/10 text-primary hover:bg-primary/20" variant="secondary">{t("admin.templates.defaultBadge")}</Badge>
               )}
               <Badge variant="outline" className="text-xs font-mono">v{template.versionNumber}</Badge>
               {archived && (
                 <Badge variant="secondary" className="bg-muted text-muted-foreground text-xs">
-                  <Archive className="h-3 w-3 me-1" /> Archived
+                  <Archive className="h-3 w-3 me-1" /> {t("admin.templates.archivedBadge")}
                 </Badge>
               )}
             </div>
           </div>
           <div className="bg-muted p-2 rounded-md flex flex-col items-center justify-center min-w-12">
             <span className="text-lg font-bold">{template.stageCount}</span>
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Stages</span>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("admin.templates.stagesLabel")}</span>
           </div>
         </div>
-        <CardDescription className="line-clamp-2 mt-2">{template.description || "No description provided."}</CardDescription>
+        <CardDescription className="line-clamp-2 mt-2">{template.description || t("admin.templates.noDescription")}</CardDescription>
         {isAssigned && (
           <p className="text-xs text-muted-foreground mt-1">
-            Assigned to {assignedCount} project{assignedCount !== 1 ? "s" : ""}
+            {assignedCount === 1
+              ? t("admin.templates.assignedToProjects", { count: assignedCount })
+              : t("admin.templates.assignedToProjectsPlural", { count: assignedCount })}
           </p>
         )}
       </CardHeader>
       <div className="flex-1" />
       <CardFooter className="pt-4 border-t bg-muted/10 flex justify-between items-center">
         <span className="text-xs text-muted-foreground">
-          Added {format(new Date(template.createdAt), 'MMM d, yyyy')}
+          {t("admin.templates.addedDate", { date: format(new Date(template.createdAt), 'MMM d, yyyy') })}
         </span>
         {!archived && (
           <div className="flex gap-2">
             <Link href={`/templates/${template.id}`}>
-              <Button variant="outline" size="sm" className="h-8"><Edit2 className="h-3.5 w-3.5 me-1.5" /> Edit</Button>
+              <Button variant="outline" size="sm" className="h-8"><Edit2 className="h-3.5 w-3.5 me-1.5" /> {t("admin.templates.editButton")}</Button>
             </Link>
             {isAssigned ? (
               <Button
@@ -194,7 +199,7 @@ function TemplateCard({ template, onDelete, onArchive, archived = false }: Templ
                 size="icon"
                 className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
                 onClick={() => onArchive(template.id)}
-                title="Archive this template"
+                title={t("admin.templates.archiveTitle")}
               >
                 <Archive className="h-3.5 w-3.5" />
               </Button>
@@ -204,7 +209,7 @@ function TemplateCard({ template, onDelete, onArchive, archived = false }: Templ
                 size="icon"
                 className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                 onClick={() => onDelete(template.id, template.name, assignedCount)}
-                title="Delete this template"
+                title={t("common.delete")}
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
