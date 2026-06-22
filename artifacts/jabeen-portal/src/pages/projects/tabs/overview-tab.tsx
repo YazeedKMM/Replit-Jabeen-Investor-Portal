@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Project } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,15 +11,17 @@ interface Props {
 }
 
 export default function ProjectOverviewTab({ project, isPrivileged }: Props) {
+  const { t } = useTranslation();
+
   // If no pipeline is attached, show a fallback message
   if (!project.pipeline) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <Card>
-            <CardHeader><CardTitle>Timeline</CardTitle></CardHeader>
+            <CardHeader><CardTitle>{t("projects.overview.timelineTitle")}</CardTitle></CardHeader>
             <CardContent className="py-8 text-center text-muted-foreground">
-              No template pipeline has been assigned to this project yet.
+              {t("projects.overview.noPipelineDesc")}
             </CardContent>
           </Card>
         </div>
@@ -28,31 +31,31 @@ export default function ProjectOverviewTab({ project, isPrivileged }: Props) {
 
   const stages = project.pipeline.stages || [];
   const currentIndex = stages.findIndex(s => s.id === project.currentStageId);
-  
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2 space-y-6">
         {/* Visual Pipeline Timeline */}
         <Card>
           <CardHeader>
-            <CardTitle>Pipeline: {project.pipeline.name}</CardTitle>
+            <CardTitle>{t("projects.overview.pipelineLabel", { name: project.pipeline.name })}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="relative border-s-2 border-muted ms-3 md:ms-4 space-y-6 py-2">
               {stages.map((stage, idx) => {
                 const isPast = currentIndex !== -1 && idx < currentIndex;
                 const isCurrent = project.currentStageId === stage.id || (currentIndex === -1 && idx === 0 && project.currentStageId == null);
-                
+
                 return (
                   <div key={stage.id} className="relative ps-8 md:ps-10">
                     {/* Node indicator */}
                     <span className={cn(
                       "absolute -start-[11px] top-1 h-5 w-5 rounded-full flex items-center justify-center ring-4 ring-card",
-                      isPast ? "bg-emerald-500 text-white" : 
+                      isPast ? "bg-emerald-500 text-white" :
                       isCurrent ? "bg-primary text-white" : "bg-muted text-muted-foreground"
                     )}>
-                      {isPast ? <CheckCircle2 className="h-3.5 w-3.5" /> : 
-                       isCurrent ? <Circle className="h-2 w-2 fill-current" /> : 
+                      {isPast ? <CheckCircle2 className="h-3.5 w-3.5" /> :
+                       isCurrent ? <Circle className="h-2 w-2 fill-current" /> :
                        <span className="text-[10px] font-bold">{idx + 1}</span>}
                     </span>
 
@@ -63,15 +66,15 @@ export default function ProjectOverviewTab({ project, isPrivileged }: Props) {
                       <h4 className={cn("text-base font-semibold leading-none", isCurrent && "text-primary")}>
                         {stage.name}
                       </h4>
-                      <p className="text-sm text-muted-foreground">{stage.description || "No description."}</p>
-                      
+                      <p className="text-sm text-muted-foreground">{stage.description || t("projects.overview.noDescription")}</p>
+
                       {/* Show current status details if active */}
                       {isCurrent && (
                          <div className="mt-3 p-4 bg-muted/30 rounded-md border border-border/50">
-                           <div className="text-sm font-medium mb-2">Stage Requirements</div>
+                           <div className="text-sm font-medium mb-2">{t("projects.overview.stageRequirements")}</div>
                            <div className="flex flex-wrap gap-2">
                               {stage.fields?.length === 0 ? (
-                                <span className="text-xs text-muted-foreground">No specific data required to complete this stage.</span>
+                                <span className="text-xs text-muted-foreground">{t("projects.overview.noFieldsRequired")}</span>
                               ) : (
                                 stage.fields?.map(f => (
                                   <span key={f.id} className="text-[10px] uppercase tracking-wider bg-background border px-2 py-1 rounded-sm">
@@ -93,7 +96,7 @@ export default function ProjectOverviewTab({ project, isPrivileged }: Props) {
         {/* Project Notes */}
         {project.notes && (
           <Card>
-            <CardHeader><CardTitle>Project Notes</CardTitle></CardHeader>
+            <CardHeader><CardTitle>{t("projects.overview.projectNotes")}</CardTitle></CardHeader>
             <CardContent>
               <p className="whitespace-pre-wrap text-sm text-muted-foreground leading-relaxed">{project.notes}</p>
             </CardContent>
@@ -105,7 +108,7 @@ export default function ProjectOverviewTab({ project, isPrivileged }: Props) {
         {/* Investor Card */}
         <Card>
           <CardHeader className="pb-4">
-            <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">Investor Details</CardTitle>
+            <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">{t("projects.overview.investorDetails")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {project.investor ? (
@@ -144,7 +147,7 @@ export default function ProjectOverviewTab({ project, isPrivileged }: Props) {
                 </div>
               </>
             ) : (
-              <div className="text-sm text-muted-foreground italic">No investor assigned.</div>
+              <div className="text-sm text-muted-foreground italic">{t("projects.overview.noInvestor")}</div>
             )}
           </CardContent>
         </Card>

@@ -44,8 +44,8 @@ export default function ProjectWorkspacePage() {
         <div className="bg-destructive/10 p-4 rounded-full mb-4">
           <Building2 className="h-8 w-8 text-destructive" />
         </div>
-        <h2 className="text-xl font-bold mb-2">Project not found</h2>
-        <p className="text-muted-foreground">The project you're looking for doesn't exist or you don't have access to it.</p>
+        <h2 className="text-xl font-bold mb-2">{t("projects.workspace.notFoundTitle")}</h2>
+        <p className="text-muted-foreground">{t("projects.workspace.notFoundDesc")}</p>
       </div>
     );
   }
@@ -77,11 +77,11 @@ export default function ProjectWorkspacePage() {
                 </Badge>
                 {project.attentionFlag && (
                   <Badge variant="destructive" className="uppercase tracking-wider text-xs font-bold px-2.5 py-0.5">
-                    Needs Attention
+                    {t("projects.workspace.needsAttention")}
                   </Badge>
                 )}
               </div>
-              
+
               <div className="flex flex-wrap gap-y-2 gap-x-6 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1.5 font-medium text-foreground">
                   <FileText className="h-4 w-4 text-muted-foreground" />
@@ -89,7 +89,7 @@ export default function ProjectWorkspacePage() {
                 </div>
                 <div className="flex items-center gap-1.5">
                   <MapPin className="h-4 w-4" />
-                  {project.plotNumber || "Plot TBD"}
+                  {project.plotNumber || t("projects.workspace.plotTbd")}
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Building2 className="h-4 w-4" />
@@ -97,18 +97,18 @@ export default function ProjectWorkspacePage() {
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Calendar className="h-4 w-4" />
-                  Added {format(new Date(project.createdAt), 'MMM d, yyyy')}
+                  {t("projects.workspace.added", { date: format(new Date(project.createdAt), 'MMM d, yyyy') })}
                 </div>
               </div>
             </div>
 
             <div className="flex flex-col gap-2 shrink-0 md:items-end min-w-[200px]">
-              <span className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Current Stage</span>
-              <div className="text-lg font-bold">{project.currentStage?.name || "Initializing"}</div>
+              <span className="text-sm font-medium uppercase tracking-wider text-muted-foreground">{t("projects.workspace.currentStage")}</span>
+              <div className="text-lg font-bold">{project.currentStage?.name || t("projects.workspace.stageInitializing")}</div>
               <div className="flex items-center gap-2 w-full mt-1">
                 <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-primary transition-all duration-500 ease-out" 
+                  <div
+                    className="h-full bg-primary transition-all duration-500 ease-out"
                     style={{ width: `${project.constructionPct}%` }}
                   />
                 </div>
@@ -125,27 +125,27 @@ export default function ProjectWorkspacePage() {
           <div className="border-b overflow-x-auto">
             <TabsList className="h-12 w-auto min-w-full justify-start bg-transparent p-0">
               <TabsTrigger value="overview" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-6 py-3">
-                <Activity className="h-4 w-4 me-2" /> Overview
+                <Activity className="h-4 w-4 me-2" /> {t("projects.workspace.tabs.overview")}
               </TabsTrigger>
               <TabsTrigger value="updates" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-6 py-3">
-                <History className="h-4 w-4 me-2" /> Progress Updates
+                <History className="h-4 w-4 me-2" /> {t("projects.workspace.tabs.updates")}
               </TabsTrigger>
               <TabsTrigger value="documents" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-6 py-3">
-                <FileText className="h-4 w-4 me-2" /> Documents
+                <FileText className="h-4 w-4 me-2" /> {t("projects.workspace.tabs.documents")}
               </TabsTrigger>
               <TabsTrigger value="messages" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-6 py-3">
-                <MessageSquare className="h-4 w-4 me-2" /> Messages
+                <MessageSquare className="h-4 w-4 me-2" /> {t("projects.workspace.tabs.messages")}
               </TabsTrigger>
-              
+
               {isPrivileged && (
                 <TabsTrigger value="internal" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-6 py-3 text-purple-700 dark:text-purple-400">
-                  <FileText className="h-4 w-4 me-2" /> Internal Notes
+                  <FileText className="h-4 w-4 me-2" /> {t("projects.workspace.tabs.internal")}
                 </TabsTrigger>
               )}
-              
+
               {isPrivileged && (
                 <TabsTrigger value="manage" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-6 py-3">
-                  <Settings className="h-4 w-4 me-2" /> Manage
+                  <Settings className="h-4 w-4 me-2" /> {t("projects.workspace.tabs.manage")}
                 </TabsTrigger>
               )}
             </TabsList>
@@ -155,7 +155,7 @@ export default function ProjectWorkspacePage() {
             <TabsContent value="overview" className="m-0 focus-visible:outline-none">
               <ProjectOverviewTab project={project} isPrivileged={isPrivileged} />
             </TabsContent>
-            
+
             <TabsContent value="updates" className="m-0 focus-visible:outline-none">
               <ProjectUpdatesTab project={project} isPrivileged={isPrivileged} />
             </TabsContent>
