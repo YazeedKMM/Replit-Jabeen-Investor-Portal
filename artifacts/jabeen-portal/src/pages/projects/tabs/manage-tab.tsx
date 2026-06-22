@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Project, useUpdateProject, useDeleteProject, useListUsers, useListTemplates, useGetCities, useGetProjectCategories, getGetCitiesQueryKey, getGetProjectCategoriesQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,7 @@ const updateProjectSchema = z.object({
 });
 
 export default function ProjectManageTab({ project, isAdmin }: Props) {
+  const { t } = useTranslation();
   const updateMutation = useUpdateProject();
   const deleteMutation = useDeleteProject();
   const queryClient = useQueryClient();
@@ -67,36 +69,36 @@ export default function ProjectManageTab({ project, isAdmin }: Props) {
         },
       });
       queryClient.invalidateQueries({ queryKey: getGetProjectQueryKey(project.id) });
-      toast({ title: "Project updated successfully" });
+      toast({ title: t("projects.manage.toastUpdated") });
     } catch (error: unknown) {
       const apiError = error as { response?: { status?: number; data?: { code?: string } } };
       if (apiError?.response?.status === 409) {
         toast({
-          title: "Edit conflict — please reload",
-          description: "This project was modified by another user while you were editing. Reload the page to get the latest version.",
+          title: t("projects.manage.toastConflictTitle"),
+          description: t("projects.manage.toastConflictDesc"),
           variant: "destructive",
         });
         queryClient.invalidateQueries({ queryKey: getGetProjectQueryKey(project.id) });
       } else {
-        toast({ title: "Update failed", variant: "destructive" });
+        toast({ title: t("projects.manage.toastUpdateFailed"), variant: "destructive" });
       }
     }
   };
 
   const handleDelete = async () => {
-    const confirmName = prompt(`To delete this project, type its name: ${project.name}`);
+    const confirmName = prompt(t("projects.manage.deletePrompt", { name: project.name }));
     if (confirmName !== project.name) {
-      if (confirmName !== null) toast({ title: "Name didn't match. Deletion cancelled.", variant: "destructive" });
+      if (confirmName !== null) toast({ title: t("projects.manage.toastNameMismatch"), variant: "destructive" });
       return;
     }
-    
+
     try {
       await deleteMutation.mutateAsync({ projectId: project.id });
       queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
-      toast({ title: "Project deleted" });
+      toast({ title: t("projects.manage.toastDeleted") });
       setLocation("/dashboard");
     } catch (error) {
-      toast({ title: "Delete failed", variant: "destructive" });
+      toast({ title: t("projects.manage.toastDeleteFailed"), variant: "destructive" });
     }
   };
 
@@ -104,21 +106,21 @@ export default function ProjectManageTab({ project, isAdmin }: Props) {
     <div className="space-y-6 max-w-4xl">
       <Card>
         <CardHeader>
-          <CardTitle>Project Metadata</CardTitle>
-          <CardDescription>Update core details and assignments for this project.</CardDescription>
+          <CardTitle>{t("projects.manage.metadataTitle")}</CardTitle>
+          <CardDescription>{t("projects.manage.metadataDesc")}</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField control={form.control} name="name" render={({ field }) => (
-                  <FormItem><FormLabel>Project Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem><FormLabel>{t("projects.manage.fieldName")}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="cityId" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>City</FormLabel>
+                    <FormLabel>{t("projects.manage.fieldCity")}</FormLabel>
                     <Select onValueChange={v => field.onChange(Number(v))} value={field.value?.toString() || ""}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Select city..." /></SelectTrigger></FormControl>
+                      <FormControl><SelectTrigger><SelectValue placeholder={t("projects.manage.fieldCityPlaceholder")} /></SelectTrigger></FormControl>
                       <SelectContent>
                         {allCities?.filter(c => c.enabled).map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>)}
                       </SelectContent>
@@ -128,9 +130,9 @@ export default function ProjectManageTab({ project, isAdmin }: Props) {
                 )} />
                 <FormField control={form.control} name="categoryId" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Project Category</FormLabel>
+                    <FormLabel>{t("projects.manage.fieldCategory")}</FormLabel>
                     <Select onValueChange={v => field.onChange(Number(v))} value={field.value?.toString() || ""}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Select category..." /></SelectTrigger></FormControl>
+                      <FormControl><SelectTrigger><SelectValue placeholder={t("projects.manage.fieldCategoryPlaceholder")} /></SelectTrigger></FormControl>
                       <SelectContent>
                         {allCategories?.filter(c => c.enabled).map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>)}
                       </SelectContent>
@@ -139,14 +141,14 @@ export default function ProjectManageTab({ project, isAdmin }: Props) {
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="plotNumber" render={({ field }) => (
-                  <FormItem><FormLabel>Plot Number (Optional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem><FormLabel>{t("projects.manage.fieldPlotNumber")}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
-                
+
                 <FormField control={form.control} name="investorId" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Assigned Investor</FormLabel>
+                    <FormLabel>{t("projects.manage.fieldInvestor")}</FormLabel>
                     <Select onValueChange={v => field.onChange(Number(v))} value={field.value?.toString() || ""}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Select investor..." /></SelectTrigger></FormControl>
+                      <FormControl><SelectTrigger><SelectValue placeholder={t("projects.manage.fieldInvestorPlaceholder")} /></SelectTrigger></FormControl>
                       <SelectContent>
                         {investors?.map(i => <SelectItem key={i.id} value={i.id.toString()}>{i.fullName} ({i.companyName})</SelectItem>)}
                       </SelectContent>
@@ -157,35 +159,35 @@ export default function ProjectManageTab({ project, isAdmin }: Props) {
 
                 <FormField control={form.control} name="pipelineId" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Lifecycle Pipeline</FormLabel>
+                    <FormLabel>{t("projects.manage.fieldPipeline")}</FormLabel>
                     <Select onValueChange={v => field.onChange(Number(v))} value={field.value?.toString() || ""}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Select template..." /></SelectTrigger></FormControl>
+                      <FormControl><SelectTrigger><SelectValue placeholder={t("projects.manage.fieldPipelinePlaceholder")} /></SelectTrigger></FormControl>
                       <SelectContent>
-                        {templates?.map(t => <SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>)}
+                        {templates?.map(tmpl => <SelectItem key={tmpl.id} value={tmpl.id.toString()}>{tmpl.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
-                    <FormDescription>Changing the pipeline does not delete historical updates, but may misalign stages.</FormDescription>
+                    <FormDescription>{t("projects.manage.fieldPipelineDesc")}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )} />
               </div>
 
               <FormField control={form.control} name="notes" render={({ field }) => (
-                <FormItem><FormLabel>Public Notes</FormLabel><FormControl><Textarea className="h-32" {...field} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>{t("projects.manage.fieldNotes")}</FormLabel><FormControl><Textarea className="h-32" {...field} /></FormControl><FormMessage /></FormItem>
               )} />
 
               <FormField control={form.control} name="attentionFlag" render={({ field }) => (
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
-                    <FormLabel className="text-base text-amber-600 font-bold flex items-center">Attention Required Flag</FormLabel>
-                    <FormDescription>Manually flag this project to highlight it on dashboards.</FormDescription>
+                    <FormLabel className="text-base text-amber-600 font-bold flex items-center">{t("projects.manage.fieldAttentionFlag")}</FormLabel>
+                    <FormDescription>{t("projects.manage.fieldAttentionFlagDesc")}</FormDescription>
                   </div>
                   <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                 </FormItem>
               )} />
 
               <div className="flex justify-end pt-4">
-                <Button type="submit" disabled={updateMutation.isPending}>Save Changes</Button>
+                <Button type="submit" disabled={updateMutation.isPending}>{t("projects.manage.saveChanges")}</Button>
               </div>
             </form>
           </Form>
@@ -195,11 +197,11 @@ export default function ProjectManageTab({ project, isAdmin }: Props) {
       {isAdmin && (
         <Card className="border-destructive/50 shadow-none bg-destructive/5">
           <CardHeader>
-            <CardTitle className="text-destructive flex items-center"><Trash2 className="me-2 h-5 w-5" /> Danger Zone</CardTitle>
-            <CardDescription>Irreversibly delete this project and all associated updates, messages, and documents.</CardDescription>
+            <CardTitle className="text-destructive flex items-center"><Trash2 className="me-2 h-5 w-5" /> {t("projects.manage.dangerZoneTitle")}</CardTitle>
+            <CardDescription>{t("projects.manage.dangerZoneDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button variant="destructive" onClick={handleDelete} disabled={deleteMutation.isPending}>Delete Project Permanently</Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={deleteMutation.isPending}>{t("projects.manage.deleteButton")}</Button>
           </CardContent>
         </Card>
       )}
