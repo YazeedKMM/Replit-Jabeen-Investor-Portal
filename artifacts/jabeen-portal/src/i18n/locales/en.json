@@ -55,6 +55,75 @@
     "viewProject": "View Project",
     "newNotifications": "New notifications"
   },
+  "dashboard": {
+    "title": "Portfolio Dashboard",
+    "subtitle": "Overview of all JABEEN projects across Royal Commission cities",
+    "exportCsv": "Export CSV",
+    "newProject": "New Project",
+    "kpi": {
+      "total": "Total Projects",
+      "inProgress": "In Progress",
+      "needsAttention": "Needs Attention",
+      "completed": "Completed"
+    },
+    "breakdown": {
+      "byCategory": "By Category",
+      "byCity": "By City"
+    },
+    "table": {
+      "title": "Project Directory",
+      "searchPlaceholder": "Search projects, investors…",
+      "colName": "Project Name",
+      "colInvestor": "Investor",
+      "colCityCategory": "City / Category",
+      "colStage": "Stage",
+      "colStatus": "Status",
+      "colProgress": "Progress",
+      "unassigned": "Unassigned",
+      "initializing": "Initializing",
+      "emptySearch": "No JABEEN projects match your search.",
+      "emptyAll": "No JABEEN projects yet.",
+      "createFirst": "Create the first project"
+    }
+  },
+  "projects": {
+    "newDialog": {
+      "title": "New Investment Project",
+      "description": "Register a new JABEEN project. Required fields are marked with *.",
+      "sectionIdentity": "Project Identity",
+      "sectionAssignment": "Assignment",
+      "sectionInitialState": "Initial State",
+      "fieldName": "Project Name *",
+      "fieldNamePlaceholder": "e.g. Acme Plastics Manufacturing Plant",
+      "fieldCity": "City *",
+      "fieldCityPlaceholder": "Select city…",
+      "fieldCategory": "Project Category *",
+      "fieldCategoryPlaceholder": "Select category…",
+      "fieldAgreementNumber": "Agreement Number *",
+      "fieldAgreementNumberPlaceholder": "e.g. RCJY-2026-0042",
+      "fieldPlotNumber": "Plot Number",
+      "fieldPlotNumberPlaceholder": "e.g. P-4217",
+      "fieldInvestor": "Investor",
+      "fieldInvestorOptional": "(Optional — can be assigned later)",
+      "fieldInvestorNone": "— No investor yet —",
+      "fieldInvestorPlaceholder": "Select investor…",
+      "fieldPipeline": "Lifecycle Pipeline",
+      "fieldPipelineOptional": "(Optional — can be assigned later)",
+      "fieldPipelineNone": "— No pipeline yet —",
+      "fieldPipelinePlaceholder": "Select pipeline template…",
+      "fieldConstructionPct": "Starting Project Progress",
+      "fieldConstructionPctOptional": "(0 for new projects)",
+      "fieldNotes": "Internal Notes",
+      "fieldNotesOptional": "(Optional)",
+      "fieldNotesPlaceholder": "Background information, special conditions, early milestones…",
+      "submitCreating": "Creating…",
+      "submitCreate": "Create Project",
+      "toastCreatedTitle": "Project created",
+      "toastCreatedDesc": "\"{{name}}\" is now in the portfolio.",
+      "toastFailedTitle": "Failed to create project",
+      "toastFailedDesc": "An error occurred."
+    }
+  },
   "auth": {
     "brandChip": "Royal Commission Industrial Cities",
     "headline": "JABEEN Project Lifecycle Tracking",

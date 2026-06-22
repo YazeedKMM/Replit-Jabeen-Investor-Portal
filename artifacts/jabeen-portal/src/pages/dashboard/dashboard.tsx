@@ -64,6 +64,7 @@ function NewProjectDialog({
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const investorParams = { role: "investor" as const, status: "active" as const };
   const templateParams = {};
@@ -117,13 +118,13 @@ function NewProjectDialog({
       });
       queryClient.invalidateQueries({ queryKey: getListProjectsQueryKey() });
       queryClient.invalidateQueries({ queryKey: getGetDashboardQueryKey() });
-      toast({ title: "Project created", description: `"${project.name}" is now in the portfolio.` });
+      toast({ title: t("projects.newDialog.toastCreatedTitle"), description: t("projects.newDialog.toastCreatedDesc", { name: project.name }) });
       handleClose();
       navigate(`/projects/${project.id}`);
     } catch (error: any) {
       toast({
-        title: "Failed to create project",
-        description: error.data?.message ?? "An error occurred.",
+        title: t("projects.newDialog.toastFailedTitle"),
+        description: error.data?.message ?? t("projects.newDialog.toastFailedDesc"),
         variant: "destructive",
       });
     }
@@ -134,10 +135,10 @@ function NewProjectDialog({
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-primary" /> New Investment Project
+            <Building2 className="h-5 w-5 text-primary" /> {t("projects.newDialog.title")}
           </DialogTitle>
           <DialogDescription>
-            Register a new JABEEN project. Required fields are marked with *.
+            {t("projects.newDialog.description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -145,13 +146,13 @@ function NewProjectDialog({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             {/* ── Section: Project Identity ── */}
             <div className="space-y-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Project Identity</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("projects.newDialog.sectionIdentity")}</p>
 
               <FormField control={form.control} name="name" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Project Name *</FormLabel>
+                  <FormLabel>{t("projects.newDialog.fieldName")}</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g. Acme Plastics Manufacturing Plant" {...field} />
+                    <Input placeholder={t("projects.newDialog.fieldNamePlaceholder")} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -160,13 +161,13 @@ function NewProjectDialog({
               <div className="grid grid-cols-2 gap-4">
                 <FormField control={form.control} name="cityId" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>City *</FormLabel>
+                    <FormLabel>{t("projects.newDialog.fieldCity")}</FormLabel>
                     <Select
                       onValueChange={(v) => field.onChange(Number(v))}
                       value={field.value ? String(field.value) : ""}
                     >
                       <FormControl>
-                        <SelectTrigger><SelectValue placeholder="Select city…" /></SelectTrigger>
+                        <SelectTrigger><SelectValue placeholder={t("projects.newDialog.fieldCityPlaceholder")} /></SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {enabledCities.map((c) => (
@@ -180,13 +181,13 @@ function NewProjectDialog({
 
                 <FormField control={form.control} name="categoryId" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Project Category *</FormLabel>
+                    <FormLabel>{t("projects.newDialog.fieldCategory")}</FormLabel>
                     <Select
                       onValueChange={(v) => field.onChange(Number(v))}
                       value={field.value ? String(field.value) : ""}
                     >
                       <FormControl>
-                        <SelectTrigger><SelectValue placeholder="Select category…" /></SelectTrigger>
+                        <SelectTrigger><SelectValue placeholder={t("projects.newDialog.fieldCategoryPlaceholder")} /></SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {enabledCategories.map((c) => (
@@ -201,9 +202,9 @@ function NewProjectDialog({
 
               <FormField control={form.control} name="agreementNumber" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Agreement Number *</FormLabel>
+                  <FormLabel>{t("projects.newDialog.fieldAgreementNumber")}</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g. RCJY-2026-0042" {...field} />
+                    <Input placeholder={t("projects.newDialog.fieldAgreementNumberPlaceholder")} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -211,9 +212,9 @@ function NewProjectDialog({
 
               <FormField control={form.control} name="plotNumber" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Plot Number <span className="text-muted-foreground font-normal text-xs">(Optional)</span></FormLabel>
+                  <FormLabel>{t("projects.newDialog.fieldPlotNumber")} <span className="text-muted-foreground font-normal text-xs">{t("auth.optional")}</span></FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g. P-4217" {...field} />
+                    <Input placeholder={t("projects.newDialog.fieldPlotNumberPlaceholder")} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -224,19 +225,19 @@ function NewProjectDialog({
 
             {/* ── Section: Assignment ── */}
             <div className="space-y-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Assignment</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("projects.newDialog.sectionAssignment")}</p>
 
               <FormField control={form.control} name="investorId" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Investor <span className="text-muted-foreground font-normal text-xs">(Optional — can be assigned later)</span></FormLabel>
+                  <FormLabel>{t("projects.newDialog.fieldInvestor")} <span className="text-muted-foreground font-normal text-xs">{t("projects.newDialog.fieldInvestorOptional")}</span></FormLabel>
                   <Select onValueChange={(v) => field.onChange(v === "none" ? undefined : Number(v))} defaultValue="none">
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select investor…" />
+                        <SelectValue placeholder={t("projects.newDialog.fieldInvestorPlaceholder")} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="none">— No investor yet —</SelectItem>
+                      <SelectItem value="none">{t("projects.newDialog.fieldInvestorNone")}</SelectItem>
                       {investors?.map((u) => (
                         <SelectItem key={u.id} value={u.id.toString()}>
                           {u.fullName}
@@ -251,15 +252,15 @@ function NewProjectDialog({
 
               <FormField control={form.control} name="pipelineId" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Lifecycle Pipeline <span className="text-muted-foreground font-normal text-xs">(Optional — can be assigned later)</span></FormLabel>
+                  <FormLabel>{t("projects.newDialog.fieldPipeline")} <span className="text-muted-foreground font-normal text-xs">{t("projects.newDialog.fieldPipelineOptional")}</span></FormLabel>
                   <Select onValueChange={(v) => field.onChange(v === "none" ? undefined : Number(v))} defaultValue="none">
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select pipeline template…" />
+                        <SelectValue placeholder={t("projects.newDialog.fieldPipelinePlaceholder")} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="none">— No pipeline yet —</SelectItem>
+                      <SelectItem value="none">{t("projects.newDialog.fieldPipelineNone")}</SelectItem>
                       {templates?.map((t) => (
                         <SelectItem key={t.id} value={t.id.toString()}>
                           {t.name}
@@ -279,11 +280,11 @@ function NewProjectDialog({
 
             {/* ── Section: Initial Progress ── */}
             <div className="space-y-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Initial State</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("projects.newDialog.sectionInitialState")}</p>
 
               <FormField control={form.control} name="constructionPct" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Starting Project Progress <span className="text-muted-foreground font-normal text-xs">(0 for new projects)</span></FormLabel>
+                  <FormLabel>{t("projects.newDialog.fieldConstructionPct")} <span className="text-muted-foreground font-normal text-xs">{t("projects.newDialog.fieldConstructionPctOptional")}</span></FormLabel>
                   <FormControl>
                     <Input type="number" min="0" max="100" {...field} />
                   </FormControl>
@@ -293,10 +294,10 @@ function NewProjectDialog({
 
               <FormField control={form.control} name="notes" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Internal Notes <span className="text-muted-foreground font-normal text-xs">(Optional)</span></FormLabel>
+                  <FormLabel>{t("projects.newDialog.fieldNotes")} <span className="text-muted-foreground font-normal text-xs">{t("projects.newDialog.fieldNotesOptional")}</span></FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Background information, special conditions, early milestones…"
+                      placeholder={t("projects.newDialog.fieldNotesPlaceholder")}
                       className="min-h-[80px] resize-none"
                       {...field}
                     />
@@ -308,12 +309,12 @@ function NewProjectDialog({
 
             <DialogFooter className="pt-2">
               <Button type="button" variant="outline" onClick={handleClose}>
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button type="submit" disabled={createMutation.isPending}>
                 {createMutation.isPending
-                  ? <><Loader2 className="me-2 h-4 w-4 animate-spin" /> Creating…</>
-                  : <><Plus className="me-2 h-4 w-4" /> Create Project</>}
+                  ? <><Loader2 className="me-2 h-4 w-4 animate-spin" /> {t("projects.newDialog.submitCreating")}</>
+                  : <><Plus className="me-2 h-4 w-4" /> {t("projects.newDialog.submitCreate")}</>}
               </Button>
             </DialogFooter>
           </form>
@@ -374,16 +375,16 @@ export default function DashboardPage() {
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Portfolio Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Overview of all JABEEN projects across Royal Commission cities</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t("dashboard.title")}</h1>
+          <p className="text-muted-foreground mt-1">{t("dashboard.subtitle")}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <Button onClick={handleExport} variant="outline" size="sm">
-            <Download className="me-2 h-4 w-4" /> Export CSV
+            <Download className="me-2 h-4 w-4" /> {t("dashboard.exportCsv")}
           </Button>
           {canCreate && (
             <Button size="sm" onClick={() => setNewProjectOpen(true)}>
-              <Plus className="me-2 h-4 w-4" /> New Project
+              <Plus className="me-2 h-4 w-4" /> {t("dashboard.newProject")}
             </Button>
           )}
         </div>
@@ -392,10 +393,10 @@ export default function DashboardPage() {
       {/* ── KPI Cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Total Projects", value: stats?.total, icon: Building2, color: "text-muted-foreground" },
-          { label: "In Progress", value: stats?.inProgress, icon: Activity, color: "text-blue-500" },
-          { label: "Needs Attention", value: stats?.needsAttention, icon: AlertTriangle, color: "text-amber-500" },
-          { label: "Completed", value: stats?.complete, icon: CheckCircle2, color: "text-emerald-500" },
+          { label: t("dashboard.kpi.total"), value: stats?.total, icon: Building2, color: "text-muted-foreground" },
+          { label: t("dashboard.kpi.inProgress"), value: stats?.inProgress, icon: Activity, color: "text-blue-500" },
+          { label: t("dashboard.kpi.needsAttention"), value: stats?.needsAttention, icon: AlertTriangle, color: "text-amber-500" },
+          { label: t("dashboard.kpi.completed"), value: stats?.complete, icon: CheckCircle2, color: "text-emerald-500" },
         ].map(({ label, value, icon: Icon, color }) => (
           <Card key={label} className="shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -417,7 +418,7 @@ export default function DashboardPage() {
           {(stats?.byCategory?.length ?? 0) > 0 && (
             <Card className="shadow-sm">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">By Category</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{t("dashboard.breakdown.byCategory")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 {stats!.byCategory.map(({ category, count }) => (
@@ -432,7 +433,7 @@ export default function DashboardPage() {
           {(stats?.byCity?.length ?? 0) > 0 && (
             <Card className="shadow-sm">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">By City</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{t("dashboard.breakdown.byCity")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 {stats!.byCity.map(({ city, count }) => (
@@ -451,12 +452,12 @@ export default function DashboardPage() {
       <Card className="shadow-sm border-border/50">
         <CardHeader className="pb-4 border-b bg-muted/10">
           <div className="flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center">
-            <CardTitle className="text-lg">Project Directory</CardTitle>
+            <CardTitle className="text-lg">{t("dashboard.table.title")}</CardTitle>
             <div className="relative w-full sm:w-72">
               <Search className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Search projects, investors…"
+                placeholder={t("dashboard.table.searchPlaceholder")}
                 className="ps-8 bg-background"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -468,12 +469,12 @@ export default function DashboardPage() {
           <Table>
             <TableHeader className="bg-muted/30">
               <TableRow>
-                <TableHead className="w-[300px]">Project Name</TableHead>
-                <TableHead>Investor</TableHead>
-                <TableHead>City / Category</TableHead>
-                <TableHead>Stage</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-end">Progress</TableHead>
+                <TableHead className="w-[300px]">{t("dashboard.table.colName")}</TableHead>
+                <TableHead>{t("dashboard.table.colInvestor")}</TableHead>
+                <TableHead>{t("dashboard.table.colCityCategory")}</TableHead>
+                <TableHead>{t("dashboard.table.colStage")}</TableHead>
+                <TableHead>{t("dashboard.table.colStatus")}</TableHead>
+                <TableHead className="text-end">{t("dashboard.table.colProgress")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -488,10 +489,10 @@ export default function DashboardPage() {
                   <TableCell colSpan={6} className="h-32 text-center">
                     <div className="flex flex-col items-center gap-3 text-muted-foreground">
                       <FolderOpen className="h-10 w-10 opacity-20" />
-                      <p>{search ? "No JABEEN projects match your search." : "No JABEEN projects yet."}</p>
+                      <p>{search ? t("dashboard.table.emptySearch") : t("dashboard.table.emptyAll")}</p>
                       {canCreate && !search && (
                         <Button size="sm" variant="outline" onClick={() => setNewProjectOpen(true)}>
-                          <Plus className="me-1.5 h-3.5 w-3.5" /> Create the first project
+                          <Plus className="me-1.5 h-3.5 w-3.5" /> {t("dashboard.table.createFirst")}
                         </Button>
                       )}
                     </div>
@@ -516,7 +517,7 @@ export default function DashboardPage() {
                     </TableCell>
                     <TableCell>
                       <span className="truncate max-w-[200px] block" title={project.investor?.companyName}>
-                        {project.investor?.companyName || <span className="text-muted-foreground italic">Unassigned</span>}
+                        {project.investor?.companyName || <span className="text-muted-foreground italic">{t("dashboard.table.unassigned")}</span>}
                       </span>
                     </TableCell>
                     <TableCell>
@@ -535,7 +536,7 @@ export default function DashboardPage() {
                     </TableCell>
                     <TableCell>
                       <span className="text-sm truncate max-w-[150px] inline-block" title={project.currentStage?.name}>
-                        {project.currentStage?.name || "Initializing"}
+                        {project.currentStage?.name || t("dashboard.table.initializing")}
                       </span>
                     </TableCell>
                     <TableCell>

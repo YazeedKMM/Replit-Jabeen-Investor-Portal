@@ -55,6 +55,75 @@
     "viewProject": "عرض المشروع",
     "newNotifications": "إشعارات جديدة"
   },
+  "dashboard": {
+    "title": "لوحة متابعة المحفظة",
+    "subtitle": "نظرة شاملة على جميع مشاريع جابين في مدن الهيئة الملكية",
+    "exportCsv": "تصدير CSV",
+    "newProject": "مشروع جديد",
+    "kpi": {
+      "total": "إجمالي المشاريع",
+      "inProgress": "قيد التنفيذ",
+      "needsAttention": "تستوجب المتابعة",
+      "completed": "مكتملة"
+    },
+    "breakdown": {
+      "byCategory": "حسب التصنيف",
+      "byCity": "حسب المدينة"
+    },
+    "table": {
+      "title": "دليل المشاريع",
+      "searchPlaceholder": "ابحث في المشاريع والمستثمرين…",
+      "colName": "اسم المشروع",
+      "colInvestor": "المستثمر",
+      "colCityCategory": "المدينة / التصنيف",
+      "colStage": "المرحلة",
+      "colStatus": "الحالة",
+      "colProgress": "نسبة الإنجاز",
+      "unassigned": "غير مُعيَّن",
+      "initializing": "جارٍ التهيئة",
+      "emptySearch": "لا توجد مشاريع جابين تطابق بحثك.",
+      "emptyAll": "لا توجد مشاريع جابين بعد.",
+      "createFirst": "أنشئ أول مشروع"
+    }
+  },
+  "projects": {
+    "newDialog": {
+      "title": "مشروع استثماري جديد",
+      "description": "تسجيل مشروع جابين جديد. الحقول المطلوبة مُشار إليها بـ *.",
+      "sectionIdentity": "هوية المشروع",
+      "sectionAssignment": "الإسناد",
+      "sectionInitialState": "الحالة الابتدائية",
+      "fieldName": "اسم المشروع *",
+      "fieldNamePlaceholder": "مثال: مصنع أكمي للبلاستيك",
+      "fieldCity": "المدينة *",
+      "fieldCityPlaceholder": "اختر المدينة…",
+      "fieldCategory": "تصنيف المشروع *",
+      "fieldCategoryPlaceholder": "اختر التصنيف…",
+      "fieldAgreementNumber": "رقم الاتفاقية *",
+      "fieldAgreementNumberPlaceholder": "مثال: RCJY-2026-0042",
+      "fieldPlotNumber": "رقم القطعة",
+      "fieldPlotNumberPlaceholder": "مثال: P-4217",
+      "fieldInvestor": "المستثمر",
+      "fieldInvestorOptional": "(اختياري — يمكن تعيينه لاحقاً)",
+      "fieldInvestorNone": "— لا يوجد مستثمر بعد —",
+      "fieldInvestorPlaceholder": "اختر المستثمر…",
+      "fieldPipeline": "مسار دورة الحياة",
+      "fieldPipelineOptional": "(اختياري — يمكن تعيينه لاحقاً)",
+      "fieldPipelineNone": "— لا يوجد مسار بعد —",
+      "fieldPipelinePlaceholder": "اختر قالب المسار…",
+      "fieldConstructionPct": "نسبة الإنجاز الابتدائية",
+      "fieldConstructionPctOptional": "(0 للمشاريع الجديدة)",
+      "fieldNotes": "ملاحظات داخلية",
+      "fieldNotesOptional": "(اختياري)",
+      "fieldNotesPlaceholder": "معلومات أساسية، شروط خاصة، معالم مبكرة…",
+      "submitCreating": "جارٍ الإنشاء…",
+      "submitCreate": "إنشاء المشروع",
+      "toastCreatedTitle": "تم إنشاء المشروع",
+      "toastCreatedDesc": "\"{{name}}\" أُضيف إلى المحفظة الاستثمارية.",
+      "toastFailedTitle": "فشل إنشاء المشروع",
+      "toastFailedDesc": "حدث خطأ أثناء الإنشاء."
+    }
+  },
   "auth": {
     "brandChip": "الهيئة الملكية للمدن الصناعية",
     "headline": "نظام تتبع دورة حياة مشاريع جابين",
