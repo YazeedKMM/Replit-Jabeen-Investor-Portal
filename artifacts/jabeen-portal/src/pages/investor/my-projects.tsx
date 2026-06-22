@@ -91,7 +91,7 @@ export default function MyProjectsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {projects.map((project) => (
-            <Card key={project.id} className={cn("flex flex-col transition-all hover:shadow-md", project.attentionFlag && "ring-1 ring-amber-500/50")}>
+            <Card key={project.id} className={cn("flex flex-col transition-[box-shadow,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:shadow-md hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:hover:translate-y-0", project.attentionFlag && "ring-1 ring-amber-500/50")}>
               <CardHeader className="pb-4">
                 <div className="flex justify-between items-start gap-4 mb-2">
                   <div className="space-y-1">
