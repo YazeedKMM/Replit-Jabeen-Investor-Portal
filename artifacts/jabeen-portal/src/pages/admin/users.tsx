@@ -27,6 +27,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Search, Plus, UserX, UserCheck, KeyRound, Loader2, Copy, Check, UserCog, Clock, ShieldOff, MapPin } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -53,6 +54,7 @@ const activateSchemaPM = z.object({
 
 export default function UsersPage() {
   const { user: currentUser } = useAuth();
+  const { t } = useTranslation();
   const isAdmin = currentUser?.role === "administrator";
   const isPM = currentUser?.role === "project-manager";
 
@@ -433,8 +435,8 @@ export default function UsersPage() {
                           <div className="text-xs text-muted-foreground">{u.title || "—"}</div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className={`capitalize ${getRoleColor(u.role)}`}>
-                            {u.role.replace(/-/g, ' ')}
+                          <Badge variant="outline" className={getRoleColor(u.role)}>
+                            {t(`roles.${u.role}`)}
                           </Badge>
                         </TableCell>
                         <TableCell>{getStatusBadge(u.status)}</TableCell>

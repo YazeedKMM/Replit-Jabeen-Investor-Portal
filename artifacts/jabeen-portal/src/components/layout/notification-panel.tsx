@@ -1,4 +1,5 @@
 import { useListNotifications, useMarkAllNotificationsRead, useMarkNotificationRead, Notification } from "@workspace/api-client-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatDistanceToNow } from "date-fns";
@@ -12,6 +13,7 @@ export function NotificationPanel() {
   const markAllMutation = useMarkAllNotificationsRead();
   const markReadMutation = useMarkNotificationRead();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const handleMarkAllRead = async () => {
     await markAllMutation.mutateAsync();
@@ -41,21 +43,21 @@ export function NotificationPanel() {
   return (
     <div className="flex flex-col h-[400px]">
       <div className="flex items-center justify-between p-4 border-b">
-        <h4 className="font-semibold text-sm">Notifications</h4>
+        <h4 className="font-semibold text-sm">{t("notifications.title")}</h4>
         {notifications?.some(n => !n.read) && (
           <Button variant="ghost" size="sm" className="h-8 text-xs px-2" onClick={handleMarkAllRead}>
-            <Check className="me-2 h-3 w-3" /> Mark all read
+            <Check className="me-2 h-3 w-3" /> {t("notifications.markAllRead")}
           </Button>
         )}
       </div>
       
       <ScrollArea className="flex-1">
         {isLoading ? (
-          <div className="p-4 text-center text-sm text-muted-foreground">Loading...</div>
+          <div className="p-4 text-center text-sm text-muted-foreground">{t("notifications.loading")}</div>
         ) : !notifications?.length ? (
           <div className="p-8 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
             <Bell className="h-8 w-8 opacity-20" />
-            <p>No notifications yet</p>
+            <p>{t("notifications.empty")}</p>
           </div>
         ) : (
           <div className="flex flex-col">
@@ -86,7 +88,7 @@ export function NotificationPanel() {
                     </span>
                     {notif.projectId && (
                       <Link href={`/projects/${notif.projectId}`} className="text-[10px] font-medium text-primary hover:underline" onClick={() => handleNotificationClick(notif)}>
-                        View Project
+                        {t("notifications.viewProject")}
                       </Link>
                     )}
                   </div>

@@ -36,6 +36,7 @@ import {
   Building2, Search, Download, AlertTriangle, CheckCircle2, Activity,
   Plus, Loader2, FolderOpen,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -336,6 +337,7 @@ function getStatusColor(status: string) {
 // ── Main Dashboard Page ─────────────────────────────────────────────────────
 export default function DashboardPage() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [newProjectOpen, setNewProjectOpen] = useState(false);
   const { activeCityId } = useCityFilter();
@@ -544,7 +546,7 @@ export default function DashboardPage() {
                           getStatusColor(project.derivedStatus),
                         )}
                       >
-                        {project.derivedStatus.replace("-", " ")}
+                        {t(`status.${project.derivedStatus}`)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-end font-medium tabular-nums">

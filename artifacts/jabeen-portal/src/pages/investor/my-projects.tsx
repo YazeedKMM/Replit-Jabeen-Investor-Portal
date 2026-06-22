@@ -1,4 +1,5 @@
 import { useListProjects, getListProjectsQueryKey } from "@workspace/api-client-react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -11,6 +12,7 @@ import { useAuth } from "@/hooks/use-auth";
 
 export default function MyProjectsPage() {
   const { user, checkActivationStatus } = useAuth();
+  const { t } = useTranslation();
   const { data: projects, isLoading } = useListProjects(
     undefined,
     { query: { queryKey: getListProjectsQueryKey(), enabled: user?.status === "active" } }
@@ -26,9 +28,6 @@ export default function MyProjectsPage() {
     }
   };
 
-  const getStatusLabel = (status: string) => {
-    return status.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-  };
 
   if (user?.status === "pending") {
     return (
@@ -100,7 +99,7 @@ export default function MyProjectsPage() {
                     <CardDescription className="font-medium text-primary/80">{project.agreementNumber}</CardDescription>
                   </div>
                   <Badge variant="outline" className={cn("shrink-0 uppercase tracking-wider text-[10px] font-bold px-2 py-0.5", getStatusColor(project.derivedStatus))}>
-                    {getStatusLabel(project.derivedStatus)}
+                    {t(`status.${project.derivedStatus}`)}
                   </Badge>
                 </div>
               </CardHeader>

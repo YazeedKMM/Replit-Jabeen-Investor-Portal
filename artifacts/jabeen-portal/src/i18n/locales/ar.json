@@ -34,5 +34,25 @@
   "language": {
     "switchTo": "EN",
     "current": "العربية"
+  },
+  "status": {
+    "on-track": "على المسار",
+    "delayed": "متأخر",
+    "stalled": "متعثر",
+    "complete": "مكتمل"
+  },
+  "roles": {
+    "investor": "مستثمر",
+    "top-management": "الإدارة العليا",
+    "project-manager": "مدير مشروع",
+    "administrator": "مدير النظام"
+  },
+  "notifications": {
+    "title": "الإشعارات",
+    "markAllRead": "تحديد الكل كمقروء",
+    "empty": "لا توجد إشعارات بعد",
+    "loading": "جارٍ التحميل…",
+    "viewProject": "عرض المشروع",
+    "newNotifications": "إشعارات جديدة"
   }
 }

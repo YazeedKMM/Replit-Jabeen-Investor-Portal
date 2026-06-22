@@ -34,5 +34,25 @@
   "language": {
     "switchTo": "العربية",
     "current": "EN"
+  },
+  "status": {
+    "on-track": "On Track",
+    "delayed": "Delayed",
+    "stalled": "Stalled",
+    "complete": "Complete"
+  },
+  "roles": {
+    "investor": "Investor",
+    "top-management": "Top Management",
+    "project-manager": "Project Manager",
+    "administrator": "Administrator"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all read",
+    "empty": "No notifications yet",
+    "loading": "Loading…",
+    "viewProject": "View Project",
+    "newNotifications": "New notifications"
   }
 }

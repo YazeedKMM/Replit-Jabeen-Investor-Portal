@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation, useParams } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useGetProject, getGetProjectQueryKey } from "@workspace/api-client-react";
@@ -18,6 +19,7 @@ import ProjectManageTab from "./tabs/manage-tab";
 
 export default function ProjectWorkspacePage() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const params = useParams();
   const projectId = parseInt(params.id!);
   const [activeTab, setActiveTab] = useState("overview");
@@ -71,7 +73,7 @@ export default function ProjectWorkspacePage() {
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className="text-3xl font-bold tracking-tight text-foreground">{project.name}</h1>
                 <Badge variant="outline" className={`uppercase tracking-wider text-xs font-bold px-2.5 py-0.5 ${getStatusColor(project.derivedStatus)}`}>
-                  {project.derivedStatus.replace('-', ' ')}
+                  {t(`status.${project.derivedStatus}`)}
                 </Badge>
                 {project.attentionFlag && (
                   <Badge variant="destructive" className="uppercase tracking-wider text-xs font-bold px-2.5 py-0.5">

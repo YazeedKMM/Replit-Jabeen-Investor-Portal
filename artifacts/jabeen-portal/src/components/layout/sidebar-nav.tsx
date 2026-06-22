@@ -1,4 +1,5 @@
 import { Link, useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/hooks/use-language";
 import {
@@ -30,6 +31,7 @@ export function SidebarNav() {
   const { user, logout } = useAuth();
   const [location] = useLocation();
   const { dir } = useLanguage();
+  const { t } = useTranslation();
 
   if (!user) return null;
 
@@ -37,49 +39,49 @@ export function SidebarNav() {
 
   const navItems = [
     {
-      title: "My Projects",
+      title: t("nav.myProjects"),
       href: "/my-projects",
       icon: Building2,
       show: role === "investor",
     },
     {
-      title: "Dashboard",
+      title: t("nav.dashboard"),
       href: "/dashboard",
       icon: LayoutDashboard,
       show: role !== "investor",
     },
     {
-      title: "Templates",
+      title: t("nav.templates"),
       href: "/templates",
       icon: FileSpreadsheet,
       show: ["project-manager", "top-management", "administrator"].includes(role),
     },
     {
-      title: "Users",
+      title: t("nav.users"),
       href: "/users",
       icon: Users,
       show: ["project-manager", "top-management", "administrator"].includes(role),
     },
     {
-      title: "Cities",
+      title: t("nav.cities"),
       href: "/cities",
       icon: MapPin,
       show: role === "administrator",
     },
     {
-      title: "Project Categories",
+      title: t("nav.categories"),
       href: "/categories",
       icon: Tags,
       show: role === "administrator",
     },
     {
-      title: "Audit Log",
+      title: t("nav.auditLog"),
       href: "/audit-log",
       icon: History,
       show: role === "administrator",
     },
     {
-      title: "Settings",
+      title: t("nav.settings"),
       href: "/settings",
       icon: Settings,
       show: role === "administrator",
@@ -129,17 +131,17 @@ export function SidebarNav() {
       <SidebarFooter className="p-4">
         <SidebarMenu>
           <SidebarMenuItem>
-             <SidebarMenuButton asChild isActive={location === "/profile"} tooltip="Profile">
+             <SidebarMenuButton asChild isActive={location === "/profile"} tooltip={t("nav.profile")}>
                 <Link href="/profile" className="flex items-center gap-3">
                   <UserIcon className="h-4 w-4" />
-                  <span>Profile</span>
+                  <span>{t("nav.profile")}</span>
                 </Link>
              </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={() => logout()} tooltip="Sign out" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+            <SidebarMenuButton onClick={() => logout()} tooltip={t("nav.signOut")} className="text-destructive hover:text-destructive hover:bg-destructive/10">
               <LogOut className="h-4 w-4" />
-              <span>Sign out</span>
+              <span>{t("nav.signOut")}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

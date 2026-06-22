@@ -1,4 +1,5 @@
 import { Bell } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/use-auth";
 import { CitySwitcher } from "@/components/city-switcher";
@@ -10,6 +11,7 @@ import { Button } from "@/components/ui/button";
 
 export function Header() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   
   const { data: unreadData } = useGetUnreadCount({
     query: {
@@ -30,7 +32,7 @@ export function Header() {
         <LanguageSwitcher />
         <div className="flex flex-col items-end hidden md:flex">
           <span className="text-sm font-medium leading-none">{user?.fullName}</span>
-          <span className="text-xs text-muted-foreground">{user?.role}</span>
+          <span className="text-xs text-muted-foreground">{user?.role ? t(`roles.${user.role}`) : ""}</span>
         </div>
 
         <Popover>
@@ -39,7 +41,7 @@ export function Header() {
               <Bell className="h-5 w-5" />
               {unreadCount > 0 && (
                 <span className="absolute top-1.5 end-1.5 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-destructive text-[10px] text-destructive-foreground ring-2 ring-background">
-                  <span className="sr-only">New notifications</span>
+                  <span className="sr-only">{t("notifications.newNotifications")}</span>
                 </span>
               )}
             </Button>
