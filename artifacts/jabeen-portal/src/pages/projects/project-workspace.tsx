@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Building2, MapPin, Loader2, Calendar, FileText, Activity, MessageSquare, History, Settings } from "lucide-react";
-import { format } from "date-fns";
+import { fmtDate } from "@/lib/format";
 
 // Mock imports for tab components (to be implemented next)
 import ProjectOverviewTab from "./tabs/overview-tab";
@@ -97,7 +97,7 @@ export default function ProjectWorkspacePage() {
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Calendar className="h-4 w-4" />
-                  {t("projects.workspace.added", { date: format(new Date(project.createdAt), 'MMM d, yyyy') })}
+                  {t("projects.workspace.added", { date: fmtDate(project.createdAt) })}
                 </div>
               </div>
             </div>

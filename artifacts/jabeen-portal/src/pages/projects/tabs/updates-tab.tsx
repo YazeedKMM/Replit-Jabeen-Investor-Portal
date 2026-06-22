@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Plus, CheckCircle2, XCircle, Clock, Info, Download, Image as ImageIcon, FileIcon, X, ZoomIn, UploadCloud } from "lucide-react";
-import { format } from "date-fns";
+import { fmtDate, fmtTime } from "@/lib/format";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -189,8 +189,8 @@ function UpdateDetail({ update, projectId }: { update: StatusUpdate; projectId: 
         </div>
         <div>
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">{t("projects.updates.detailSubmittedOn")}</p>
-          <p className="font-semibold">{format(new Date(update.createdAt), "MMM d, yyyy")}</p>
-          <p className="text-xs text-muted-foreground">{format(new Date(update.createdAt), "h:mm a")}</p>
+          <p className="font-semibold">{fmtDate(update.createdAt)}</p>
+          <p className="text-xs text-muted-foreground">{fmtTime(update.createdAt)}</p>
         </div>
       </div>
 
@@ -257,7 +257,7 @@ function UpdateDetail({ update, projectId }: { update: StatusUpdate; projectId: 
           <div className={`rounded-md border p-3 ${update.reviewStatus === "approved" ? "bg-emerald-50 border-emerald-200" : "bg-destructive/5 border-destructive/20"}`}>
             <p className={`text-[10px] uppercase tracking-wider font-semibold mb-1 ${update.reviewStatus === "approved" ? "text-emerald-700" : "text-destructive"}`}>
               {update.reviewStatus === "approved" ? t("projects.updates.detailApproved") : t("projects.updates.detailRejected")} {t("projects.updates.detailBy", { name: update.reviewer.fullName })}
-              {update.reviewedAt && <span className="font-normal"> {t("projects.updates.detailOn", { date: format(new Date(update.reviewedAt), "MMM d, yyyy") })}</span>}
+              {update.reviewedAt && <span className="font-normal"> {t("projects.updates.detailOn", { date: fmtDate(update.reviewedAt) })}</span>}
             </p>
             {update.reviewNote && (
               <p className="text-sm text-muted-foreground mt-1">{update.reviewNote}</p>
@@ -742,7 +742,7 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
                     <div className="min-w-0">
                       <CardTitle className="text-base truncate">{update.targetStage?.name ?? "Unknown Stage"}</CardTitle>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        By {update.author?.fullName} · {format(new Date(update.createdAt), "MMM d, yyyy")}
+                        By {update.author?.fullName} · {fmtDate(update.createdAt)}
                       </p>
                     </div>
                     <Badge variant="outline" className={

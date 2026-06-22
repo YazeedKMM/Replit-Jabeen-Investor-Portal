@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { fmtDate } from "@/lib/format";
 import {
   useListUsers,
   useCreateUser,
@@ -517,7 +518,7 @@ export default function UsersPage() {
                         </TableCell>
                         <TableCell>
                           <div className="text-sm text-muted-foreground">
-                            {new Date(u.createdAt).toLocaleDateString()}
+                            {fmtDate(u.createdAt)}
                           </div>
                         </TableCell>
                         <TableCell className="text-end">

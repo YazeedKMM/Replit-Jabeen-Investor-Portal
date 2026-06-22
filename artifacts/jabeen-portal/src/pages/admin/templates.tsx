@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit2, Trash2, GitMerge, Archive } from "lucide-react";
 import { Link } from "wouter";
-import { format } from "date-fns";
+import { fmtDate } from "@/lib/format";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
@@ -186,7 +186,7 @@ function TemplateCard({ template, onDelete, onArchive, archived = false }: Templ
       <div className="flex-1" />
       <CardFooter className="pt-4 border-t bg-muted/10 flex justify-between items-center">
         <span className="text-xs text-muted-foreground">
-          {t("admin.templates.addedDate", { date: format(new Date(template.createdAt), 'MMM d, yyyy') })}
+          {t("admin.templates.addedDate", { date: fmtDate(template.createdAt) })}
         </span>
         {!archived && (
           <div className="flex gap-2">

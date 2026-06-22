@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Building2, MapPin, Calendar, ArrowRight, AlertTriangle, Clock, RefreshCw } from "lucide-react";
-import { format } from "date-fns";
+import { fmtDate } from "@/lib/format";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
@@ -147,7 +147,7 @@ export default function MyProjectsPage() {
               <CardFooter className="pt-4 border-t bg-muted/20 flex justify-between items-center">
                 <div className="flex items-center text-xs text-muted-foreground gap-1.5">
                   <Calendar className="h-3.5 w-3.5" />
-                  <span>{project.lastUpdateAt ? t("investor.updatedAt", { date: format(new Date(project.lastUpdateAt), 'MMM d, yyyy') }) : t("investor.updatedNever")}</span>
+                  <span>{project.lastUpdateAt ? t("investor.updatedAt", { date: fmtDate(project.lastUpdateAt) }) : t("investor.updatedNever")}</span>
                 </div>
                 <Link href={`/projects/${project.id}`} className="text-sm font-semibold text-primary flex items-center gap-1 hover:underline">
                   {t("investor.viewDetails")} <ArrowRight className="h-4 w-4 rtl-flip" />

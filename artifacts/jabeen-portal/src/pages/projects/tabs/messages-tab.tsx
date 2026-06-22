@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, MessageSquare, Send } from "lucide-react";
-import { format } from "date-fns";
+import { fmtDateTime } from "@/lib/format";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
@@ -61,7 +61,7 @@ export default function ProjectMessagesTab({ project }: Props) {
                 <div className="flex items-baseline gap-2 mb-1">
                   <span className="text-xs font-semibold">{isMe ? t("projects.messages.youLabel") : msg.author?.fullName}</span>
                   <span className="text-[10px] text-muted-foreground uppercase">{msg.authorRole.replace('-', ' ')}</span>
-                  <span className="text-[10px] text-muted-foreground ms-2">{format(new Date(msg.createdAt), 'MMM d, h:mm a')}</span>
+                  <span className="text-[10px] text-muted-foreground ms-2">{fmtDateTime(msg.createdAt)}</span>
                 </div>
                 <div className={cn("p-3 rounded-lg text-sm", isMe ? "bg-primary text-primary-foreground rounded-se-none" : "bg-muted rounded-ss-none")}>
                   <p className="whitespace-pre-wrap">{msg.body}</p>

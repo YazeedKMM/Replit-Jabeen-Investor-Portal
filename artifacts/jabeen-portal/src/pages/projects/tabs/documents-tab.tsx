@@ -3,7 +3,7 @@ import { Project, useListProjectDocuments, useUploadDocument, useDeleteDocument 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, FileIcon, Download, Trash2, UploadCloud } from "lucide-react";
-import { format } from "date-fns";
+import { fmtDate } from "@/lib/format";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useRef, useState } from "react";
@@ -88,7 +88,7 @@ export default function ProjectDocumentsTab({ project }: Props) {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm truncate" title={doc.fileName}>{doc.fileName}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{formatSize(doc.size)} • {format(new Date(doc.createdAt), 'MMM d, yyyy')}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{formatSize(doc.size)} • {fmtDate(doc.createdAt)}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{t("projects.documents.uploadedBy", { name: doc.uploader?.fullName || t("projects.documents.unknownUploader") })}</p>
                 </div>
                 <div className="flex flex-col gap-2 shrink-0">

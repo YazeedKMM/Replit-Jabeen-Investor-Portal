@@ -3,7 +3,7 @@ import { Project, useListInternalNotes, useCreateInternalNote } from "@workspace
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Send } from "lucide-react";
-import { format } from "date-fns";
+import { fmtDateTime } from "@/lib/format";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
@@ -52,7 +52,7 @@ export default function ProjectInternalNotesTab({ project }: Props) {
               <div key={note.id} className="bg-purple-50/50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-800/30 p-4 rounded-lg">
                 <div className="flex justify-between items-start mb-2">
                   <div className="font-semibold text-sm text-purple-900 dark:text-purple-300">{note.author?.fullName}</div>
-                  <div className="text-xs text-muted-foreground">{format(new Date(note.createdAt), 'MMM d, yyyy h:mm a')}</div>
+                  <div className="text-xs text-muted-foreground">{fmtDateTime(note.createdAt)}</div>
                 </div>
                 <p className="text-sm whitespace-pre-wrap">{note.body}</p>
               </div>

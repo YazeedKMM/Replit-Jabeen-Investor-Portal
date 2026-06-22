@@ -4,8 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
-import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
+import { fmtDateTime } from "@/lib/format";
 
 export default function AuditLogPage() {
   const { t } = useTranslation();
@@ -53,7 +53,7 @@ export default function AuditLogPage() {
                 data.entries.map((entry) => (
                   <TableRow key={entry.id}>
                     <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
-                      {format(new Date(entry.createdAt), "MMM d, yyyy HH:mm:ss")}
+                      {fmtDateTime(entry.createdAt)}
                     </TableCell>
                     <TableCell className="font-medium text-sm">
                       {entry.actorName || t("audit.actorFallback", { id: entry.actorId })}
