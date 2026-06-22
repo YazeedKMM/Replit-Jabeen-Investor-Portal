@@ -73,7 +73,7 @@ export default function ProjectInternalNotesTab({ project }: Props) {
             onClick={handleSend}
             disabled={!body.trim() || createMutation.isPending}
           >
-            {createMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+            {createMutation.isPending ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <Send className="me-2 h-4 w-4" />}
             Save Internal Note
           </Button>
         </div>

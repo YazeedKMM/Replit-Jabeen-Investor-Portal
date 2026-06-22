@@ -57,7 +57,7 @@ export default function MyProjectsPage() {
               className="border-amber-300 text-amber-800 hover:bg-amber-100"
               onClick={checkActivationStatus}
             >
-              <RefreshCw className="h-4 w-4 mr-2" />
+              <RefreshCw className="h-4 w-4 me-2" />
               I've been activated — sign in again
             </Button>
           </CardContent>

@@ -195,7 +195,7 @@ export default function ProjectManageTab({ project, isAdmin }: Props) {
       {isAdmin && (
         <Card className="border-destructive/50 shadow-none bg-destructive/5">
           <CardHeader>
-            <CardTitle className="text-destructive flex items-center"><Trash2 className="mr-2 h-5 w-5" /> Danger Zone</CardTitle>
+            <CardTitle className="text-destructive flex items-center"><Trash2 className="me-2 h-5 w-5" /> Danger Zone</CardTitle>
             <CardDescription>Irreversibly delete this project and all associated updates, messages, and documents.</CardDescription>
           </CardHeader>
           <CardContent>

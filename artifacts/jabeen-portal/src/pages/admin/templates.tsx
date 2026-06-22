@@ -67,7 +67,7 @@ export default function TemplatesPage() {
           <p className="text-muted-foreground">Manage project lifecycle pipelines.</p>
         </div>
         <Link href="/templates/new">
-          <Button><Plus className="mr-2 h-4 w-4" /> New Template</Button>
+          <Button><Plus className="me-2 h-4 w-4" /> New Template</Button>
         </Link>
       </div>
 
@@ -82,7 +82,7 @@ export default function TemplatesPage() {
             <h3 className="text-xl font-semibold mb-2">No templates found</h3>
             <p className="text-muted-foreground max-w-sm mb-4">Create a lifecycle pipeline template to assign to new projects.</p>
             <Link href="/templates/new">
-              <Button><Plus className="mr-2 h-4 w-4" /> Create Template</Button>
+              <Button><Plus className="me-2 h-4 w-4" /> Create Template</Button>
             </Link>
           </CardContent>
         </Card>
@@ -152,7 +152,7 @@ function TemplateCard({ template, onDelete, onArchive, archived = false }: Templ
     <Card className={`flex flex-col hover:shadow-md transition-all ${archived ? "border-dashed" : ""}`}>
       <CardHeader className="pb-4">
         <div className="flex justify-between items-start">
-          <div className="space-y-1 pr-4">
+          <div className="space-y-1 pe-4">
             <CardTitle className="text-xl leading-tight line-clamp-2">{template.name}</CardTitle>
             <div className="flex flex-wrap gap-1">
               {template.isDefault && (
@@ -161,7 +161,7 @@ function TemplateCard({ template, onDelete, onArchive, archived = false }: Templ
               <Badge variant="outline" className="text-xs font-mono">v{template.versionNumber}</Badge>
               {archived && (
                 <Badge variant="secondary" className="bg-muted text-muted-foreground text-xs">
-                  <Archive className="h-3 w-3 mr-1" /> Archived
+                  <Archive className="h-3 w-3 me-1" /> Archived
                 </Badge>
               )}
             </div>
@@ -186,7 +186,7 @@ function TemplateCard({ template, onDelete, onArchive, archived = false }: Templ
         {!archived && (
           <div className="flex gap-2">
             <Link href={`/templates/${template.id}`}>
-              <Button variant="outline" size="sm" className="h-8"><Edit2 className="h-3.5 w-3.5 mr-1.5" /> Edit</Button>
+              <Button variant="outline" size="sm" className="h-8"><Edit2 className="h-3.5 w-3.5 me-1.5" /> Edit</Button>
             </Link>
             {isAssigned ? (
               <Button

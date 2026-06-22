@@ -198,7 +198,7 @@ export default function ProfilePage() {
               <CardTitle>Two-Factor Authentication</CardTitle>
               <CardDescription>Add an extra layer of security to your account.</CardDescription>
             </div>
-            <div className="ml-auto">
+            <div className="ms-auto">
               {user?.mfaEnabled
                 ? <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">Enabled</Badge>
                 : <Badge variant="outline" className="text-muted-foreground">Disabled</Badge>}
@@ -236,7 +236,7 @@ export default function ProfilePage() {
               </p>
               {!isPrivileged && (
                 <Button onClick={() => setEnrollingMfa(true)}>
-                  <Shield className="h-4 w-4 mr-2" />
+                  <Shield className="h-4 w-4 me-2" />
                   Enable Two-Factor Authentication
                 </Button>
               )}

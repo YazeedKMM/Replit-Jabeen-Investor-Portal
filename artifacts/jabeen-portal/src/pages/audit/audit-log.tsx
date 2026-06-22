@@ -84,7 +84,7 @@ export default function AuditLogPage() {
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1 || isLoading}
               >
-                <ChevronLeft className="h-4 w-4 mr-1" /> Previous
+                <ChevronLeft className="h-4 w-4 me-1" /> Previous
               </Button>
               <Button
                 variant="outline"
@@ -92,7 +92,7 @@ export default function AuditLogPage() {
                 onClick={() => setPage(p => p + 1)}
                 disabled={!data || page * limit >= data.total || isLoading}
               >
-                Next <ChevronRight className="h-4 w-4 ml-1" />
+                Next <ChevronRight className="h-4 w-4 ms-1" />
               </Button>
             </div>
           </div>

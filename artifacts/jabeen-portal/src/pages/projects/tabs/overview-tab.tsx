@@ -38,16 +38,16 @@ export default function ProjectOverviewTab({ project, isPrivileged }: Props) {
             <CardTitle>Pipeline: {project.pipeline.name}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="relative border-l-2 border-muted ml-3 md:ml-4 space-y-6 py-2">
+            <div className="relative border-s-2 border-muted ms-3 md:ms-4 space-y-6 py-2">
               {stages.map((stage, idx) => {
                 const isPast = currentIndex !== -1 && idx < currentIndex;
                 const isCurrent = project.currentStageId === stage.id || (currentIndex === -1 && idx === 0 && project.currentStageId == null);
                 
                 return (
-                  <div key={stage.id} className="relative pl-8 md:pl-10">
+                  <div key={stage.id} className="relative ps-8 md:ps-10">
                     {/* Node indicator */}
                     <span className={cn(
-                      "absolute -left-[11px] top-1 h-5 w-5 rounded-full flex items-center justify-center ring-4 ring-card",
+                      "absolute -start-[11px] top-1 h-5 w-5 rounded-full flex items-center justify-center ring-4 ring-card",
                       isPast ? "bg-emerald-500 text-white" : 
                       isCurrent ? "bg-primary text-white" : "bg-muted text-muted-foreground"
                     )}>

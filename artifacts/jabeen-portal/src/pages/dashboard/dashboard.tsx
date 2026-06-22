@@ -239,7 +239,7 @@ function NewProjectDialog({
                       {investors?.map((u) => (
                         <SelectItem key={u.id} value={u.id.toString()}>
                           {u.fullName}
-                          {u.companyName && <span className="text-muted-foreground ml-1.5 text-xs">({u.companyName})</span>}
+                          {u.companyName && <span className="text-muted-foreground ms-1.5 text-xs">({u.companyName})</span>}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -263,7 +263,7 @@ function NewProjectDialog({
                         <SelectItem key={t.id} value={t.id.toString()}>
                           {t.name}
                           {t.versionNumber && t.versionNumber > 1 && (
-                            <span className="text-muted-foreground ml-1.5 text-xs">v{t.versionNumber}</span>
+                            <span className="text-muted-foreground ms-1.5 text-xs">v{t.versionNumber}</span>
                           )}
                         </SelectItem>
                       ))}
@@ -311,8 +311,8 @@ function NewProjectDialog({
               </Button>
               <Button type="submit" disabled={createMutation.isPending}>
                 {createMutation.isPending
-                  ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating…</>
-                  : <><Plus className="mr-2 h-4 w-4" /> Create Project</>}
+                  ? <><Loader2 className="me-2 h-4 w-4 animate-spin" /> Creating…</>
+                  : <><Plus className="me-2 h-4 w-4" /> Create Project</>}
               </Button>
             </DialogFooter>
           </form>
@@ -377,11 +377,11 @@ export default function DashboardPage() {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <Button onClick={handleExport} variant="outline" size="sm">
-            <Download className="mr-2 h-4 w-4" /> Export CSV
+            <Download className="me-2 h-4 w-4" /> Export CSV
           </Button>
           {canCreate && (
             <Button size="sm" onClick={() => setNewProjectOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" /> New Project
+              <Plus className="me-2 h-4 w-4" /> New Project
             </Button>
           )}
         </div>
@@ -421,7 +421,7 @@ export default function DashboardPage() {
                 {stats!.byCategory.map(({ category, count }) => (
                   <div key={category} className="flex items-center justify-between text-sm">
                     <span className="truncate text-foreground">{category}</span>
-                    <Badge variant="outline" className="ml-2 shrink-0 tabular-nums">{count}</Badge>
+                    <Badge variant="outline" className="ms-2 shrink-0 tabular-nums">{count}</Badge>
                   </div>
                 ))}
               </CardContent>
@@ -436,7 +436,7 @@ export default function DashboardPage() {
                 {stats!.byCity.map(({ city, count }) => (
                   <div key={city} className="flex items-center justify-between text-sm">
                     <span className="truncate text-foreground">{city}</span>
-                    <Badge variant="outline" className="ml-2 shrink-0 tabular-nums">{count}</Badge>
+                    <Badge variant="outline" className="ms-2 shrink-0 tabular-nums">{count}</Badge>
                   </div>
                 ))}
               </CardContent>
@@ -451,11 +451,11 @@ export default function DashboardPage() {
           <div className="flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center">
             <CardTitle className="text-lg">Project Directory</CardTitle>
             <div className="relative w-full sm:w-72">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Search projects, investors…"
-                className="pl-8 bg-background"
+                className="ps-8 bg-background"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -471,7 +471,7 @@ export default function DashboardPage() {
                 <TableHead>City / Category</TableHead>
                 <TableHead>Stage</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-right">Progress</TableHead>
+                <TableHead className="text-end">Progress</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -489,7 +489,7 @@ export default function DashboardPage() {
                       <p>{search ? "No JABEEN projects match your search." : "No JABEEN projects yet."}</p>
                       {canCreate && !search && (
                         <Button size="sm" variant="outline" onClick={() => setNewProjectOpen(true)}>
-                          <Plus className="mr-1.5 h-3.5 w-3.5" /> Create the first project
+                          <Plus className="me-1.5 h-3.5 w-3.5" /> Create the first project
                         </Button>
                       )}
                     </div>
@@ -547,7 +547,7 @@ export default function DashboardPage() {
                         {project.derivedStatus.replace("-", " ")}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right font-medium tabular-nums">
+                    <TableCell className="text-end font-medium tabular-nums">
                       {project.constructionPct}%
                     </TableCell>
                   </TableRow>

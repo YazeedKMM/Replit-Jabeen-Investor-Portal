@@ -133,11 +133,11 @@ export function MfaSetupFlow({ mfaToken, onComplete, isRequired }: MfaSetupProps
         </div>
         <div className="flex gap-3">
           <Button variant="outline" className="flex-1" onClick={() => copyToClipboard(recoveryData.recoveryCodes.join("\n"), "all")}>
-            {copied === "all" ? <Check className="h-4 w-4 mr-2 text-emerald-500" /> : <Copy className="h-4 w-4 mr-2" />}
+            {copied === "all" ? <Check className="h-4 w-4 me-2 text-emerald-500" /> : <Copy className="h-4 w-4 me-2" />}
             Copy All
           </Button>
           <Button variant="outline" className="flex-1" onClick={downloadRecoveryCodes}>
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="h-4 w-4 me-2" />
             Download
           </Button>
         </div>
@@ -199,7 +199,7 @@ export function MfaSetupFlow({ mfaToken, onComplete, isRequired }: MfaSetupProps
 
       {!setupInitiated ? (
         <Button className="w-full h-11" onClick={initiateSetup} disabled={isLoading}>
-          <Smartphone className="h-4 w-4 mr-2" />
+          <Smartphone className="h-4 w-4 me-2" />
           {isLoading ? "Generating..." : "Begin Setup"}
         </Button>
       ) : setupData ? (

@@ -176,7 +176,7 @@ function UpdateDetail({ update, projectId }: { update: StatusUpdate; projectId: 
             <div className="h-1.5 flex-1 bg-muted rounded-full overflow-hidden">
               <div className="h-full bg-primary" style={{ width: `${update.constructionPct}%` }} />
             </div>
-            <span className="font-semibold tabular-nums w-9 text-right">{update.constructionPct}%</span>
+            <span className="font-semibold tabular-nums w-9 text-end">{update.constructionPct}%</span>
           </div>
         </div>
         <div>
@@ -374,7 +374,7 @@ function DynamicFieldInput({
         <div className="space-y-2">
           <input type="file" className="hidden" ref={fileRef} onChange={(e) => { const f = e.target.files?.[0]; if (f) onFileUpload(f); e.target.value = ""; }} />
           <Button type="button" variant="outline" size="sm" className="h-8 text-xs" disabled={uploading} onClick={() => fileRef.current?.click()}>
-            {uploading ? <Loader2 className="mr-1.5 h-3 w-3 animate-spin" /> : <UploadCloud className="mr-1.5 h-3 w-3" />}
+            {uploading ? <Loader2 className="me-1.5 h-3 w-3 animate-spin" /> : <UploadCloud className="me-1.5 h-3 w-3" />}
             {docIds.length > 0 ? "Replace file" : "Upload file"}
           </Button>
           {docIds.length > 0 && <p className="text-xs text-muted-foreground flex items-center gap-1"><FileIcon className="h-3 w-3" /> File uploaded (ID {docIds[0]})</p>}
@@ -386,7 +386,7 @@ function DynamicFieldInput({
         <div className="space-y-2">
           <input type="file" accept="image/*" className="hidden" ref={fileRef} onChange={(e) => { const f = e.target.files?.[0]; if (f) onFileUpload(f); e.target.value = ""; }} />
           <Button type="button" variant="outline" size="sm" className="h-8 text-xs" disabled={uploading} onClick={() => fileRef.current?.click()}>
-            {uploading ? <Loader2 className="mr-1.5 h-3 w-3 animate-spin" /> : <ImageIcon className="mr-1.5 h-3 w-3" />}
+            {uploading ? <Loader2 className="me-1.5 h-3 w-3 animate-spin" /> : <ImageIcon className="me-1.5 h-3 w-3" />}
             {docIds.length > 0 ? "Replace photo" : "Upload photo"}
           </Button>
           {docIds.length > 0 && (
@@ -408,7 +408,7 @@ function DynamicFieldInput({
             }}
           />
           <Button type="button" variant="outline" size="sm" className="h-8 text-xs" disabled={uploading} onClick={() => fileRef.current?.click()}>
-            {uploading ? <Loader2 className="mr-1.5 h-3 w-3 animate-spin" /> : <ImageIcon className="mr-1.5 h-3 w-3" />}
+            {uploading ? <Loader2 className="me-1.5 h-3 w-3 animate-spin" /> : <ImageIcon className="me-1.5 h-3 w-3" />}
             Add photos
           </Button>
           {docIds.length > 0 && (
@@ -418,7 +418,7 @@ function DynamicFieldInput({
                   <ProtectedImage projectId={projectId} docId={id} alt="photo" className="w-full h-full object-cover rounded border" />
                   <button
                     type="button"
-                    className="absolute top-0.5 right-0.5 bg-black/70 text-white rounded-full h-4 w-4 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-0.5 end-0.5 bg-black/70 text-white rounded-full h-4 w-4 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                     onClick={() => onChange(docIds.filter((d) => d !== id).join(","))}
                   >
                     <X className="h-2.5 w-2.5" />
@@ -593,7 +593,7 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
             }}
           >
             <DialogTrigger asChild>
-              <Button><Plus className="mr-2 h-4 w-4" /> Submit Update</Button>
+              <Button><Plus className="me-2 h-4 w-4" /> Submit Update</Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
@@ -619,7 +619,7 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
                         <SelectContent>
                           {selectableStages.map((s) => (
                             <SelectItem key={s.id} value={s.id.toString()}>
-                              {s.name}{s.id === project.currentStageId && <span className="ml-1.5 text-muted-foreground text-xs">(current)</span>}
+                              {s.name}{s.id === project.currentStageId && <span className="ms-1.5 text-muted-foreground text-xs">(current)</span>}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -640,7 +640,7 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
                               style={{ width: `${selectedStage.progressBaseline}%` }}
                             />
                           </div>
-                          <span className="font-semibold tabular-nums w-10 text-right shrink-0">
+                          <span className="font-semibold tabular-nums w-10 text-end shrink-0">
                             {selectedStage.progressBaseline}%
                           </span>
                           <span className="text-muted-foreground text-xs shrink-0">set by template</span>
@@ -662,7 +662,7 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
                         <div key={f.id} className="space-y-1.5">
                           <Label className={`text-sm font-medium ${fieldErrors.has(f.id) ? "text-destructive" : ""}`}>
                             {f.name}
-                            {f.required && <span className="text-destructive ml-0.5">*</span>}
+                            {f.required && <span className="text-destructive ms-0.5">*</span>}
                           </Label>
                           <div className={fieldErrors.has(f.id) ? "ring-1 ring-destructive rounded-md" : ""}>
                             <DynamicFieldInput
@@ -700,7 +700,7 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
                   <DialogFooter className="pt-4">
                     <Button variant="outline" type="button" onClick={() => setIsSubmitOpen(false)}>Cancel</Button>
                     <Button type="submit" disabled={createMutation.isPending || uploadingFields.size > 0}>
-                      {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Submit
+                      {createMutation.isPending && <Loader2 className="me-2 h-4 w-4 animate-spin" />} Submit
                     </Button>
                   </DialogFooter>
                 </form>
@@ -721,7 +721,7 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-muted before:to-transparent">
+        <div className="space-y-4 relative before:absolute before:inset-0 before:ms-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-muted before:to-transparent">
           {updates.map((update) => (
             <div key={update.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
               {/* Status dot */}
@@ -731,7 +731,7 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
                  <Clock className="h-5 w-5 text-amber-500" />}
               </div>
 
-              <Card className="w-[calc(100%-3rem)] md:w-[calc(50%-2.5rem)] ml-12 md:ml-0 shadow-sm hover:shadow-md transition-shadow">
+              <Card className="w-[calc(100%-3rem)] md:w-[calc(50%-2.5rem)] ms-12 md:ms-0 shadow-sm hover:shadow-md transition-shadow">
                 <CardHeader className="p-4 pb-2 border-b bg-muted/10">
                   <div className="flex justify-between items-start gap-2">
                     <div className="min-w-0">
@@ -756,7 +756,7 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
                     <div className="h-1.5 flex-1 bg-muted rounded-full overflow-hidden">
                       <div className="h-full bg-primary transition-all" style={{ width: `${update.constructionPct}%` }} />
                     </div>
-                    <span className="font-semibold text-xs w-10 text-right">{update.constructionPct}%</span>
+                    <span className="font-semibold text-xs w-10 text-end">{update.constructionPct}%</span>
                   </div>
 
                   {/* Field values */}
@@ -823,15 +823,15 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
                     onClick={handleApprove}
                     disabled={approveMutation.isPending}
                   >
-                    {approveMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    <CheckCircle2 className="mr-2 h-4 w-4" /> Approve
+                    {approveMutation.isPending && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
+                    <CheckCircle2 className="me-2 h-4 w-4" /> Approve
                   </Button>
                   <Button
                     className="flex-1"
                     variant="destructive"
                     onClick={() => setRejectMode(true)}
                   >
-                    <XCircle className="mr-2 h-4 w-4" /> Reject
+                    <XCircle className="me-2 h-4 w-4" /> Reject
                   </Button>
                 </div>
               ) : (
@@ -851,7 +851,7 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
                       onClick={handleReject}
                       disabled={!rejectNote || rejectMutation.isPending}
                     >
-                      {rejectMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      {rejectMutation.isPending && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
                       Confirm Rejection
                     </Button>
                   </div>

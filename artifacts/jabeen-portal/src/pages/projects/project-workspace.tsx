@@ -110,7 +110,7 @@ export default function ProjectWorkspacePage() {
                     style={{ width: `${project.constructionPct}%` }}
                   />
                 </div>
-                <span className="text-sm font-medium w-9 text-right">{project.constructionPct}%</span>
+                <span className="text-sm font-medium w-9 text-end">{project.constructionPct}%</span>
               </div>
             </div>
           </div>
@@ -123,27 +123,27 @@ export default function ProjectWorkspacePage() {
           <div className="border-b overflow-x-auto">
             <TabsList className="h-12 w-auto min-w-full justify-start bg-transparent p-0">
               <TabsTrigger value="overview" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-6 py-3">
-                <Activity className="h-4 w-4 mr-2" /> Overview
+                <Activity className="h-4 w-4 me-2" /> Overview
               </TabsTrigger>
               <TabsTrigger value="updates" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-6 py-3">
-                <History className="h-4 w-4 mr-2" /> Progress Updates
+                <History className="h-4 w-4 me-2" /> Progress Updates
               </TabsTrigger>
               <TabsTrigger value="documents" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-6 py-3">
-                <FileText className="h-4 w-4 mr-2" /> Documents
+                <FileText className="h-4 w-4 me-2" /> Documents
               </TabsTrigger>
               <TabsTrigger value="messages" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-6 py-3">
-                <MessageSquare className="h-4 w-4 mr-2" /> Messages
+                <MessageSquare className="h-4 w-4 me-2" /> Messages
               </TabsTrigger>
               
               {isPrivileged && (
                 <TabsTrigger value="internal" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-6 py-3 text-purple-700 dark:text-purple-400">
-                  <FileText className="h-4 w-4 mr-2" /> Internal Notes
+                  <FileText className="h-4 w-4 me-2" /> Internal Notes
                 </TabsTrigger>
               )}
               
               {isPrivileged && (
                 <TabsTrigger value="manage" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-6 py-3">
-                  <Settings className="h-4 w-4 mr-2" /> Manage
+                  <Settings className="h-4 w-4 me-2" /> Manage
                 </TabsTrigger>
               )}
             </TabsList>

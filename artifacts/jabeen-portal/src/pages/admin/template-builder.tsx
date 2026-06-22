@@ -64,7 +64,7 @@ function FieldPreview({ field }: { field: LocalField }) {
       </p>
       <div className="space-y-1.5 max-w-xs">
         <Label className="text-xs font-medium">
-          {label}{required && <span className="text-destructive ml-0.5">*</span>}
+          {label}{required && <span className="text-destructive ms-0.5">*</span>}
         </Label>
         {field.widget === "single-line" && (
           <Input className="h-8 text-sm" placeholder={`Enter ${label.toLowerCase()}...`} disabled />
@@ -106,7 +106,7 @@ function FieldPreview({ field }: { field: LocalField }) {
         {field.widget === "radio" && options.length > 0 && (
           <RadioGroup disabled className="space-y-1">
             {options.slice(0, 4).map((opt, i) => (
-              <div key={i} className="flex items-center space-x-2">
+              <div key={i} className="flex items-center gap-2">
                 <RadioGroupItem value={opt} id={`prev-radio-${field.id}-${i}`} />
                 <Label htmlFor={`prev-radio-${field.id}-${i}`} className="text-xs font-normal">{opt}</Label>
               </div>
@@ -119,7 +119,7 @@ function FieldPreview({ field }: { field: LocalField }) {
         {field.widget === "checkbox-list" && options.length > 0 && (
           <div className="space-y-1">
             {options.slice(0, 4).map((opt, i) => (
-              <div key={i} className="flex items-center space-x-2">
+              <div key={i} className="flex items-center gap-2">
                 <Checkbox id={`prev-cb-${field.id}-${i}`} disabled />
                 <Label htmlFor={`prev-cb-${field.id}-${i}`} className="text-xs font-normal">{opt}</Label>
               </div>
@@ -310,13 +310,13 @@ export default function TemplateBuilderPage() {
             <p className="text-sm text-muted-foreground flex items-center gap-1">
               <GitBranch className="h-3.5 w-3.5" />
               Version {serverTemplate.versionNumber}
-              {isArchived && <span className="text-amber-600 ml-1">(archived)</span>}
+              {isArchived && <span className="text-amber-600 ms-1">(archived)</span>}
             </p>
           )}
         </div>
         {!isArchived && (
           <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+            {isSaving ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <Save className="me-2 h-4 w-4" />}
             Save Template
           </Button>
         )}
@@ -356,7 +356,7 @@ export default function TemplateBuilderPage() {
                 disabled={isArchived}
               />
             </div>
-            <div className="flex items-center space-x-2 pt-8">
+            <div className="flex items-center gap-2 pt-8">
               <Switch
                 id="is-default"
                 checked={template.isDefault}
@@ -384,7 +384,7 @@ export default function TemplateBuilderPage() {
             <p className="text-sm text-muted-foreground">Define the steps a project moves through, in order.</p>
           </div>
           {!isArchived && (
-            <Button onClick={addStage} variant="outline" size="sm"><Plus className="mr-2 h-4 w-4" /> Add Stage</Button>
+            <Button onClick={addStage} variant="outline" size="sm"><Plus className="me-2 h-4 w-4" /> Add Stage</Button>
           )}
         </div>
 
@@ -405,7 +405,7 @@ export default function TemplateBuilderPage() {
                     </div>
                   )}
                   <AccordionTrigger className="hover:no-underline py-4 flex-1">
-                    <div className="flex items-center gap-4 text-left">
+                    <div className="flex items-center gap-4 text-start">
                       <span className="font-semibold text-lg flex items-center gap-2">
                         <span className="bg-primary text-primary-foreground h-6 w-6 rounded-full flex items-center justify-center text-xs">{index + 1}</span>
                         {stage.name || "Unnamed Stage"}
@@ -451,12 +451,12 @@ export default function TemplateBuilderPage() {
                     <div className="flex justify-between items-center mb-3">
                       <Label className="text-base font-semibold">Custom Data Fields</Label>
                       {!isArchived && (
-                        <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => addField(stage.id)}><Plus className="mr-1 h-3 w-3" /> Add Field</Button>
+                        <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => addField(stage.id)}><Plus className="me-1 h-3 w-3" /> Add Field</Button>
                       )}
                     </div>
 
                     {stage.fields.length === 0 ? (
-                      <p className="text-sm text-muted-foreground italic pl-2">No custom fields for this stage.</p>
+                      <p className="text-sm text-muted-foreground italic ps-2">No custom fields for this stage.</p>
                     ) : (
                       <div className="space-y-4">
                         {stage.fields.map((field) => {
@@ -503,7 +503,7 @@ export default function TemplateBuilderPage() {
                                     </Select>
                                   </div>
                                   <div className="space-y-1 flex flex-col justify-end pb-1">
-                                    <div className="flex items-center space-x-2">
+                                    <div className="flex items-center gap-2">
                                       <Switch id={`req-${field.id}`} checked={field.required} onCheckedChange={c => updateField(stage.id, field.id, { required: c })} disabled={isArchived} />
                                       <Label htmlFor={`req-${field.id}`} className="text-xs font-normal">Required</Label>
                                     </div>

@@ -235,7 +235,7 @@ export default function UsersPage() {
     switch (status) {
       case 'active': return <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">Active</Badge>;
       case 'inactive': return <Badge variant="outline" className="bg-muted text-muted-foreground">Inactive</Badge>;
-      case 'pending': return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200"><Clock className="h-3 w-3 mr-1" />Pending</Badge>;
+      case 'pending': return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200"><Clock className="h-3 w-3 me-1" />Pending</Badge>;
       default: return null;
     }
   };
@@ -262,7 +262,7 @@ export default function UsersPage() {
         {isAdmin && (
           <Dialog open={createDialogOpen} onOpenChange={(open) => { setCreateDialogOpen(open); if (!open) { setSelectedCityIds([]); form.reset(); } }}>
             <DialogTrigger asChild>
-              <Button><Plus className="mr-2 h-4 w-4" /> Create User</Button>
+              <Button><Plus className="me-2 h-4 w-4" /> Create User</Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px]">
               {createdUserTempPassword ? (
@@ -350,7 +350,7 @@ export default function UsersPage() {
                       <DialogFooter className="pt-4">
                         <Button variant="outline" type="button" onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
                         <Button type="submit" disabled={form.formState.isSubmitting}>
-                          {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          {form.formState.isSubmitting && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
                           Create User
                         </Button>
                       </DialogFooter>
@@ -369,7 +369,7 @@ export default function UsersPage() {
           <TabsTrigger value="pending" className="relative">
             Pending Activation
             {pendingUsers.length > 0 && (
-              <span className="ml-2 inline-flex items-center justify-center rounded-full bg-amber-500 text-white text-xs font-bold h-5 min-w-5 px-1.5">
+              <span className="ms-2 inline-flex items-center justify-center rounded-full bg-amber-500 text-white text-xs font-bold h-5 min-w-5 px-1.5">
                 {pendingUsers.length}
               </span>
             )}
@@ -382,11 +382,11 @@ export default function UsersPage() {
             <CardHeader className="pb-4 border-b bg-muted/10">
               <div className="flex flex-col sm:flex-row justify-between gap-4">
                 <div className="relative w-full sm:max-w-xs">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     type="search"
                     placeholder="Search by name, email, company..."
-                    className="pl-8"
+                    className="ps-8"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                   />
@@ -413,7 +413,7 @@ export default function UsersPage() {
                     <TableHead>Company</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Status</TableHead>
-                    {isAdmin && <TableHead className="text-right">Actions</TableHead>}
+                    {isAdmin && <TableHead className="text-end">Actions</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -439,7 +439,7 @@ export default function UsersPage() {
                         </TableCell>
                         <TableCell>{getStatusBadge(u.status)}</TableCell>
                         {isAdmin && (
-                          <TableCell className="text-right space-x-2">
+                          <TableCell className="text-end flex gap-2 justify-end">
                             {u.role === "project-manager" && (
                               <Button
                                 variant="ghost"
@@ -487,7 +487,7 @@ export default function UsersPage() {
                     <TableHead>Applicant</TableHead>
                     <TableHead>Company</TableHead>
                     <TableHead>Registered</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-end">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -518,12 +518,12 @@ export default function UsersPage() {
                             {new Date(u.createdAt).toLocaleDateString()}
                           </div>
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-end">
                           <Button
                             size="sm"
                             onClick={() => { setActivateTarget(u); activateForm.reset(); }}
                           >
-                            <UserCog className="h-4 w-4 mr-2" /> Activate
+                            <UserCog className="h-4 w-4 me-2" /> Activate
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -568,7 +568,7 @@ export default function UsersPage() {
                         {!isPM && <SelectItem value="none">No project link</SelectItem>}
                         {projects?.map(p => (
                           <SelectItem key={p.id} value={String(p.id)}>
-                            {p.name} <span className="text-muted-foreground ml-1">({p.agreementNumber})</span>
+                            {p.name} <span className="text-muted-foreground ms-1">({p.agreementNumber})</span>
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -582,7 +582,7 @@ export default function UsersPage() {
                   Cancel
                 </Button>
                 <Button type="submit" disabled={activateUser.isPending}>
-                  {activateUser.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {activateUser.isPending && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
                   Activate Account
                 </Button>
               </DialogFooter>
@@ -624,7 +624,7 @@ export default function UsersPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => { setManageCitiesTarget(null); setManageCityIds([]); }}>Cancel</Button>
             <Button onClick={handleManageCitiesSubmit} disabled={setUserCities.isPending}>
-              {setUserCities.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {setUserCities.isPending && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
               Save Cities
             </Button>
           </DialogFooter>

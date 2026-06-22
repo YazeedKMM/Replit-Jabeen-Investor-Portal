@@ -55,13 +55,13 @@ export default function ProjectMessagesTab({ project }: Props) {
           messages.map(msg => {
             const isMe = msg.authorId === user?.id;
             return (
-              <div key={msg.id} className={cn("flex flex-col max-w-[80%]", isMe ? "ml-auto items-end" : "items-start")}>
+              <div key={msg.id} className={cn("flex flex-col max-w-[80%]", isMe ? "ms-auto items-end" : "items-start")}>
                 <div className="flex items-baseline gap-2 mb-1">
                   <span className="text-xs font-semibold">{isMe ? "You" : msg.author?.fullName}</span>
                   <span className="text-[10px] text-muted-foreground uppercase">{msg.authorRole.replace('-', ' ')}</span>
-                  <span className="text-[10px] text-muted-foreground ml-2">{format(new Date(msg.createdAt), 'MMM d, h:mm a')}</span>
+                  <span className="text-[10px] text-muted-foreground ms-2">{format(new Date(msg.createdAt), 'MMM d, h:mm a')}</span>
                 </div>
-                <div className={cn("p-3 rounded-lg text-sm", isMe ? "bg-primary text-primary-foreground rounded-tr-none" : "bg-muted rounded-tl-none")}>
+                <div className={cn("p-3 rounded-lg text-sm", isMe ? "bg-primary text-primary-foreground rounded-se-none" : "bg-muted rounded-ss-none")}>
                   <p className="whitespace-pre-wrap">{msg.body}</p>
                 </div>
               </div>

@@ -164,7 +164,7 @@ export default function CitiesPage() {
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button data-testid="button-add-city">
-              <Plus className="mr-2 h-4 w-4" /> Add City
+              <Plus className="me-2 h-4 w-4" /> Add City
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[480px]">
@@ -217,7 +217,7 @@ export default function CitiesPage() {
                     Cancel
                   </Button>
                   <Button type="submit" disabled={createForm.formState.isSubmitting} data-testid="button-create-city-submit">
-                    {createForm.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {createForm.formState.isSubmitting && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
                     Add City
                   </Button>
                 </DialogFooter>
@@ -237,7 +237,7 @@ export default function CitiesPage() {
                 <TableHead>Short Name</TableHead>
                 <TableHead>Enabled</TableHead>
                 <TableHead>Sort Order</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-end">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -269,7 +269,7 @@ export default function CitiesPage() {
                       />
                     </TableCell>
                     <TableCell className="text-muted-foreground">{city.sortOrder}</TableCell>
-                    <TableCell className="text-right space-x-2">
+                    <TableCell className="text-end flex gap-2 justify-end">
                       <Button
                         variant="ghost"
                         size="icon"
@@ -363,7 +363,7 @@ export default function CitiesPage() {
                   Cancel
                 </Button>
                 <Button type="submit" disabled={editForm.formState.isSubmitting} data-testid="button-edit-city-submit">
-                  {editForm.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {editForm.formState.isSubmitting && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
                   Save Changes
                 </Button>
               </DialogFooter>

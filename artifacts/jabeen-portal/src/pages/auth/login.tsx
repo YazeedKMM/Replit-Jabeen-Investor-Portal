@@ -294,7 +294,7 @@ export default function LoginPage() {
                     />
                     <Button type="submit" className="login-press w-full h-11 text-base font-semibold mt-2" disabled={loginForm.formState.isSubmitting} data-testid="button-submit-login">
                       {loginForm.formState.isSubmitting ? "Signing in…" : "Sign in to portal"}
-                      {!loginForm.formState.isSubmitting && <ArrowRight className="ml-2 h-4 w-4" />}
+                      {!loginForm.formState.isSubmitting && <ArrowRight className="ms-2 h-4 w-4" />}
                     </Button>
                   </form>
                 </Form>

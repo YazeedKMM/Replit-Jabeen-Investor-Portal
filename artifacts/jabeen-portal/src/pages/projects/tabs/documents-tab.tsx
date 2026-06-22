@@ -61,7 +61,7 @@ export default function ProjectDocumentsTab({ project }: Props) {
         <div>
           <input type="file" className="hidden" ref={fileInputRef} onChange={handleFileSelect} />
           <Button onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
-            {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UploadCloud className="mr-2 h-4 w-4" />}
+            {isUploading ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <UploadCloud className="me-2 h-4 w-4" />}
             Upload File
           </Button>
         </div>
