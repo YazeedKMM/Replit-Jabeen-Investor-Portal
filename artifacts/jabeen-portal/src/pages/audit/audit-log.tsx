@@ -5,8 +5,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { format } from "date-fns";
+import { useTranslation } from "react-i18next";
 
 export default function AuditLogPage() {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const limit = 20;
 
@@ -15,23 +17,23 @@ export default function AuditLogPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Audit Log</h1>
-        <p className="text-muted-foreground">System-wide record of sensitive actions.</p>
+        <h1 className="text-3xl font-bold tracking-tight">{t("audit.title")}</h1>
+        <p className="text-muted-foreground">{t("audit.subtitle")}</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Event History</CardTitle>
+          <CardTitle>{t("audit.eventHistory")}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader className="bg-muted/30">
               <TableRow>
-                <TableHead className="w-[180px]">Timestamp</TableHead>
-                <TableHead>Actor</TableHead>
-                <TableHead>Action</TableHead>
-                <TableHead>Target</TableHead>
-                <TableHead>Details</TableHead>
+                <TableHead className="w-[180px]">{t("audit.colTimestamp")}</TableHead>
+                <TableHead>{t("audit.colActor")}</TableHead>
+                <TableHead>{t("audit.colAction")}</TableHead>
+                <TableHead>{t("audit.colTarget")}</TableHead>
+                <TableHead>{t("audit.colDetails")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -44,7 +46,7 @@ export default function AuditLogPage() {
               ) : !data?.entries?.length ? (
                 <TableRow>
                   <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                    No audit records found.
+                    {t("audit.empty")}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -54,7 +56,7 @@ export default function AuditLogPage() {
                       {format(new Date(entry.createdAt), "MMM d, yyyy HH:mm:ss")}
                     </TableCell>
                     <TableCell className="font-medium text-sm">
-                      {entry.actorName || `User ${entry.actorId}`}
+                      {entry.actorName || t("audit.actorFallback", { id: entry.actorId })}
                     </TableCell>
                     <TableCell>
                       <span className="inline-flex items-center rounded-md bg-muted px-2 py-1 text-xs font-medium ring-1 ring-inset ring-border">
@@ -72,10 +74,10 @@ export default function AuditLogPage() {
               )}
             </TableBody>
           </Table>
-          
+
           <div className="p-4 flex items-center justify-between border-t bg-muted/10">
             <div className="text-sm text-muted-foreground">
-              Total records: {data?.total || 0}
+              {t("audit.totalRecords", { count: data?.total || 0 })}
             </div>
             <div className="flex gap-2">
               <Button
@@ -84,7 +86,7 @@ export default function AuditLogPage() {
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1 || isLoading}
               >
-                <ChevronLeft className="h-4 w-4 me-1 rtl-flip" /> Previous
+                <ChevronLeft className="h-4 w-4 me-1 rtl-flip" /> {t("audit.previous")}
               </Button>
               <Button
                 variant="outline"
@@ -92,7 +94,7 @@ export default function AuditLogPage() {
                 onClick={() => setPage(p => p + 1)}
                 disabled={!data || page * limit >= data.total || isLoading}
               >
-                Next <ChevronRight className="h-4 w-4 ms-1 rtl-flip" />
+                {t("audit.next")} <ChevronRight className="h-4 w-4 ms-1 rtl-flip" />
               </Button>
             </div>
           </div>
