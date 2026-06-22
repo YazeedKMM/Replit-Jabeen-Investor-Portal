@@ -40,6 +40,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 const createCitySchema = z.object({
   code: z.string().min(1, "Code is required").max(20, "Code max 20 chars"),
@@ -58,6 +59,7 @@ type CreateCityFormValues = z.infer<typeof createCitySchema>;
 type EditCityFormValues = z.infer<typeof editCitySchema>;
 
 export default function CitiesPage() {
+  const { t } = useTranslation();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<City | null>(null);
 
@@ -87,13 +89,13 @@ export default function CitiesPage() {
     try {
       await createCity.mutateAsync({ data });
       invalidateCities();
-      toast({ title: "City created", description: `${data.name} has been added.` });
+      toast({ title: t("admin.cities.toast.created"), description: t("admin.cities.toast.createdDesc", { name: data.name }) });
       createForm.reset();
       setCreateDialogOpen(false);
     } catch (error: any) {
       toast({
-        title: "Failed to create city",
-        description: error.data?.message || error.data?.error || "An error occurred",
+        title: t("admin.cities.toast.createFailed"),
+        description: error.data?.message || error.data?.error || t("common.loading"),
         variant: "destructive",
       });
     }
@@ -104,13 +106,13 @@ export default function CitiesPage() {
     try {
       await updateCity.mutateAsync({ cityId: editTarget.id, data });
       invalidateCities();
-      toast({ title: "City updated", description: `${data.name} has been updated.` });
+      toast({ title: t("admin.cities.toast.updated"), description: t("admin.cities.toast.updatedDesc", { name: data.name }) });
       setEditTarget(null);
       editForm.reset();
     } catch (error: any) {
       toast({
-        title: "Failed to update city",
-        description: error.data?.message || error.data?.error || "An error occurred",
+        title: t("admin.cities.toast.updateFailed"),
+        description: error.data?.message || error.data?.error || t("common.loading"),
         variant: "destructive",
       });
     }
@@ -122,13 +124,13 @@ export default function CitiesPage() {
       await updateCity.mutateAsync({ cityId: city.id, data: { enabled: nextEnabled } });
       invalidateCities();
       toast({
-        title: "City updated",
-        description: `${city.name} is now ${nextEnabled ? "enabled" : "disabled"}.`,
+        title: t("admin.cities.toast.updated"),
+        description: t("admin.cities.toast.updatedDesc", { name: city.name }),
       });
     } catch (error: any) {
       toast({
-        title: "Failed to update city",
-        description: error.data?.message || error.data?.error || "An error occurred",
+        title: t("admin.cities.toast.updateFailed"),
+        description: error.data?.message || error.data?.error || t("common.loading"),
         variant: "destructive",
       });
     }
@@ -138,11 +140,11 @@ export default function CitiesPage() {
     try {
       await deleteCity.mutateAsync({ cityId: city.id });
       invalidateCities();
-      toast({ title: "City deleted", description: `${city.name} has been removed.` });
+      toast({ title: t("admin.cities.toast.deleted"), description: t("admin.cities.toast.deletedDesc", { name: city.name }) });
     } catch (error: any) {
       toast({
-        title: "Cannot delete city",
-        description: error.data?.message || error.data?.error || "Cannot delete a city with active projects",
+        title: t("admin.cities.toast.cannotDelete"),
+        description: error.data?.message || error.data?.error || t("admin.cities.toast.cannotDeleteDesc"),
         variant: "destructive",
       });
     }
@@ -157,27 +159,27 @@ export default function CitiesPage() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Cities</h1>
-          <p className="text-muted-foreground">Manage portal cities.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">{t("admin.cities.title")}</h1>
+          <p className="text-muted-foreground">{t("admin.cities.subtitle")}</p>
         </div>
 
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button data-testid="button-add-city">
-              <Plus className="me-2 h-4 w-4" /> Add City
+              <Plus className="me-2 h-4 w-4" /> {t("admin.cities.addCity")}
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[480px]">
             <DialogHeader>
-              <DialogTitle>Add City</DialogTitle>
-              <DialogDescription>Create a new city for the portal.</DialogDescription>
+              <DialogTitle>{t("admin.cities.createDialog.title")}</DialogTitle>
+              <DialogDescription>{t("admin.cities.createDialog.description")}</DialogDescription>
             </DialogHeader>
             <Form {...createForm}>
               <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <FormField control={createForm.control} name="code" render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Code</FormLabel>
+                      <FormLabel>{t("admin.cities.createDialog.fieldCode")}</FormLabel>
                       <FormControl>
                         <Input {...field} data-testid="input-city-code" placeholder="e.g. RYD" />
                       </FormControl>
@@ -186,7 +188,7 @@ export default function CitiesPage() {
                   )} />
                   <FormField control={createForm.control} name="name" render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Name</FormLabel>
+                      <FormLabel>{t("admin.cities.createDialog.fieldName")}</FormLabel>
                       <FormControl>
                         <Input {...field} data-testid="input-city-name" placeholder="e.g. Riyadh" />
                       </FormControl>
@@ -195,7 +197,7 @@ export default function CitiesPage() {
                   )} />
                   <FormField control={createForm.control} name="shortName" render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Short Name</FormLabel>
+                      <FormLabel>{t("admin.cities.createDialog.fieldShortName")}</FormLabel>
                       <FormControl>
                         <Input {...field} data-testid="input-city-short-name" placeholder="e.g. RYD" />
                       </FormControl>
@@ -204,7 +206,7 @@ export default function CitiesPage() {
                   )} />
                   <FormField control={createForm.control} name="sortOrder" render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Sort Order</FormLabel>
+                      <FormLabel>{t("admin.cities.createDialog.fieldSortOrder")}</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} data-testid="input-city-sort-order" />
                       </FormControl>
@@ -214,11 +216,11 @@ export default function CitiesPage() {
                 </div>
                 <DialogFooter className="pt-4">
                   <Button variant="outline" type="button" onClick={() => setCreateDialogOpen(false)}>
-                    Cancel
+                    {t("common.cancel")}
                   </Button>
                   <Button type="submit" disabled={createForm.formState.isSubmitting} data-testid="button-create-city-submit">
                     {createForm.formState.isSubmitting && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-                    Add City
+                    {t("admin.cities.createDialog.submitAdd")}
                   </Button>
                 </DialogFooter>
               </form>
@@ -232,12 +234,12 @@ export default function CitiesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Code</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Short Name</TableHead>
-                <TableHead>Enabled</TableHead>
-                <TableHead>Sort Order</TableHead>
-                <TableHead className="text-end">Actions</TableHead>
+                <TableHead>{t("admin.cities.colCode")}</TableHead>
+                <TableHead>{t("admin.cities.colName")}</TableHead>
+                <TableHead>{t("admin.cities.colShortName")}</TableHead>
+                <TableHead>{t("admin.cities.colEnabled")}</TableHead>
+                <TableHead>{t("admin.cities.colSortOrder")}</TableHead>
+                <TableHead className="text-end">{t("admin.cities.colActions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -250,7 +252,7 @@ export default function CitiesPage() {
               ) : !cities?.length ? (
                 <TableRow>
                   <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                    No cities found.
+                    {t("admin.cities.noCities")}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -274,7 +276,7 @@ export default function CitiesPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => openEditDialog(city)}
-                        title="Edit City"
+                        title={t("admin.cities.tooltipEdit")}
                         data-testid={`button-edit-city-${city.id}`}
                       >
                         <Pencil className="h-4 w-4" />
@@ -284,7 +286,7 @@ export default function CitiesPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            title="Delete City"
+                            title={t("admin.cities.tooltipDelete")}
                             data-testid={`button-delete-city-${city.id}`}
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
@@ -292,19 +294,20 @@ export default function CitiesPage() {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Delete City</AlertDialogTitle>
+                            <AlertDialogTitle>{t("admin.cities.deleteDialog.title")}</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Are you sure you want to delete <strong>{city.name}</strong>? This cannot be undone.
-                              The operation will fail if this city has active projects.
+                              {t("admin.cities.deleteDialog.description", { name: city.name })
+                                .replace("<1>", "")
+                                .replace("</1>", "")}
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
                             <AlertDialogAction
                               onClick={() => handleDelete(city)}
                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
-                              Delete
+                              {t("admin.cities.deleteDialog.confirmDelete")}
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
@@ -322,9 +325,11 @@ export default function CitiesPage() {
       <Dialog open={!!editTarget} onOpenChange={(open) => { if (!open) { setEditTarget(null); editForm.reset(); } }}>
         <DialogContent className="sm:max-w-[480px]">
           <DialogHeader>
-            <DialogTitle>Edit City</DialogTitle>
+            <DialogTitle>{t("admin.cities.editDialog.title")}</DialogTitle>
             <DialogDescription>
-              Update details for <strong>{editTarget?.name}</strong>. The code cannot be changed.
+              {t("admin.cities.editDialog.description", { name: editTarget?.name ?? "" })
+                .replace("<1>", "")
+                .replace("</1>", "")}
             </DialogDescription>
           </DialogHeader>
           <Form {...editForm}>
@@ -332,7 +337,7 @@ export default function CitiesPage() {
               <div className="grid grid-cols-2 gap-4">
                 <FormField control={editForm.control} name="name" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel>{t("admin.cities.editDialog.fieldName")}</FormLabel>
                     <FormControl>
                       <Input {...field} data-testid="input-edit-city-name" />
                     </FormControl>
@@ -341,7 +346,7 @@ export default function CitiesPage() {
                 )} />
                 <FormField control={editForm.control} name="shortName" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Short Name</FormLabel>
+                    <FormLabel>{t("admin.cities.editDialog.fieldShortName")}</FormLabel>
                     <FormControl>
                       <Input {...field} data-testid="input-edit-city-short-name" />
                     </FormControl>
@@ -350,7 +355,7 @@ export default function CitiesPage() {
                 )} />
                 <FormField control={editForm.control} name="sortOrder" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Sort Order</FormLabel>
+                    <FormLabel>{t("admin.cities.editDialog.fieldSortOrder")}</FormLabel>
                     <FormControl>
                       <Input type="number" {...field} data-testid="input-edit-city-sort-order" />
                     </FormControl>
@@ -360,11 +365,11 @@ export default function CitiesPage() {
               </div>
               <DialogFooter className="pt-4">
                 <Button variant="outline" type="button" onClick={() => { setEditTarget(null); editForm.reset(); }}>
-                  Cancel
+                  {t("common.cancel")}
                 </Button>
                 <Button type="submit" disabled={editForm.formState.isSubmitting} data-testid="button-edit-city-submit">
                   {editForm.formState.isSubmitting && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-                  Save Changes
+                  {t("admin.cities.editDialog.submitSave")}
                 </Button>
               </DialogFooter>
             </form>
