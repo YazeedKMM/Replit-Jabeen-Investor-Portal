@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Shield, ShieldCheck, AlertTriangle } from "lucide-react";
 import { MfaSetupFlow } from "@/pages/auth/mfa-setup";
+import { useTranslation } from "react-i18next";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -25,6 +26,7 @@ const profileSchema = z.object({
 const MFA_REQUIRED_ROLES = ["administrator", "project-manager"];
 
 export default function ProfilePage() {
+  const { t } = useTranslation();
   const { user, handleAuthResult } = useAuth();
   const { toast } = useToast();
   const updateMe = useUpdateMe();
@@ -49,12 +51,12 @@ export default function ProfilePage() {
   const onSubmit = async (data: z.infer<typeof profileSchema>) => {
     try {
       await updateMe.mutateAsync({ data });
-      toast({ title: "Profile updated", description: "Your profile has been saved successfully." });
+      toast({ title: t("profile.toast.updatedTitle"), description: t("profile.toast.updatedDesc") });
     } catch (error: any) {
-      toast({ 
-        title: "Error", 
-        description: error.data?.message || "Failed to update profile", 
-        variant: "destructive" 
+      toast({
+        title: t("profile.toast.errorTitle"),
+        description: error.data?.message || t("profile.toast.errorDesc"),
+        variant: "destructive"
       });
     }
   };
@@ -62,11 +64,11 @@ export default function ProfilePage() {
   const handleMfaEnrollComplete = (newAccessToken: string, updatedUser: any) => {
     handleAuthResult({ accessToken: newAccessToken, user: updatedUser });
     setEnrollingMfa(false);
-    toast({ title: "MFA Enabled", description: "Two-factor authentication is now active on your account." });
+    toast({ title: t("profile.toast.mfaEnabledTitle"), description: t("profile.toast.mfaEnabledDesc") });
   };
 
   const disableMfa = async () => {
-    if (!confirm("Disable two-factor authentication? Your account will be less secure.")) return;
+    if (!confirm(t("profile.disableMfaConfirm"))) return;
     setIsDisablingMfa(true);
     try {
       const res = await fetch(`${BASE}/api/auth/mfa`, {
@@ -75,13 +77,13 @@ export default function ProfilePage() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        toast({ title: "Cannot disable MFA", description: (data as any).error || "Operation failed", variant: "destructive" });
+        toast({ title: t("profile.toast.cannotDisableMfa"), description: (data as any).error || t("profile.toast.disableMfaErrorDesc"), variant: "destructive" });
         return;
       }
       // Reload to refresh user state
       window.location.reload();
     } catch {
-      toast({ title: "Error", description: "Failed to disable MFA", variant: "destructive" });
+      toast({ title: t("profile.toast.disableMfaError"), description: t("profile.toast.disableMfaErrorDesc"), variant: "destructive" });
     } finally {
       setIsDisablingMfa(false);
     }
@@ -91,8 +93,8 @@ export default function ProfilePage() {
     return (
       <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-500">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Set Up Two-Factor Authentication</h1>
-          <p className="text-muted-foreground">Secure your account with an authenticator app.</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t("profile.setupMfaTitle")}</h1>
+          <p className="text-muted-foreground">{t("profile.setupMfaSubtitle")}</p>
         </div>
         <div className="flex justify-center">
           <MfaSetupFlow
@@ -102,7 +104,7 @@ export default function ProfilePage() {
           />
         </div>
         <div className="text-center">
-          <Button variant="ghost" onClick={() => setEnrollingMfa(false)}>Cancel</Button>
+          <Button variant="ghost" onClick={() => setEnrollingMfa(false)}>{t("common.cancel")}</Button>
         </div>
       </div>
     );
@@ -111,14 +113,14 @@ export default function ProfilePage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-500">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Profile Settings</h1>
-        <p className="text-muted-foreground">Manage your personal information and contact details.</p>
+        <h1 className="text-3xl font-bold tracking-tight">{t("profile.title")}</h1>
+        <p className="text-muted-foreground">{t("profile.subtitle")}</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Personal Information</CardTitle>
-          <CardDescription>Update how you are identified in the portal.</CardDescription>
+          <CardTitle>{t("profile.personalInfoTitle")}</CardTitle>
+          <CardDescription>{t("profile.personalInfoDesc")}</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -129,7 +131,7 @@ export default function ProfilePage() {
                   name="fullName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Full Name</FormLabel>
+                      <FormLabel>{t("profile.fullName")}</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -142,7 +144,7 @@ export default function ProfilePage() {
                   name="companyName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Company Name</FormLabel>
+                      <FormLabel>{t("profile.companyName")}</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -155,7 +157,7 @@ export default function ProfilePage() {
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Job Title</FormLabel>
+                      <FormLabel>{t("profile.jobTitle")}</FormLabel>
                       <FormControl>
                         <Input {...field} value={field.value || ""} />
                       </FormControl>
@@ -168,7 +170,7 @@ export default function ProfilePage() {
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Phone Number</FormLabel>
+                      <FormLabel>{t("profile.phone")}</FormLabel>
                       <FormControl>
                         <Input {...field} value={field.value || ""} />
                       </FormControl>
@@ -179,7 +181,7 @@ export default function ProfilePage() {
               </div>
               <div className="pt-4 flex justify-end">
                 <Button type="submit" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting ? "Saving..." : "Save Changes"}
+                  {form.formState.isSubmitting ? t("profile.saving") : t("profile.saveChanges")}
                 </Button>
               </div>
             </form>
@@ -195,13 +197,13 @@ export default function ProfilePage() {
               ? <ShieldCheck className="h-5 w-5 text-emerald-600" />
               : <Shield className="h-5 w-5 text-muted-foreground" />}
             <div>
-              <CardTitle>Two-Factor Authentication</CardTitle>
-              <CardDescription>Add an extra layer of security to your account.</CardDescription>
+              <CardTitle>{t("profile.mfaTitle")}</CardTitle>
+              <CardDescription>{t("profile.mfaDesc")}</CardDescription>
             </div>
             <div className="ms-auto">
               {user?.mfaEnabled
-                ? <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">Enabled</Badge>
-                : <Badge variant="outline" className="text-muted-foreground">Disabled</Badge>}
+                ? <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">{t("profile.mfaEnabled")}</Badge>
+                : <Badge variant="outline" className="text-muted-foreground">{t("profile.mfaDisabled")}</Badge>}
             </div>
           </div>
         </CardHeader>
@@ -209,12 +211,12 @@ export default function ProfilePage() {
           {user?.mfaEnabled ? (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Your account is protected with two-factor authentication using an authenticator app.
+                {t("profile.mfaActiveDesc")}
               </p>
               {isPrivileged ? (
                 <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-md p-3 text-sm text-amber-700">
                   <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                  <span>MFA is required for your role and cannot be disabled. Contact an administrator if you need to reset your authenticator.</span>
+                  <span>{t("profile.mfaRequiredWarning")}</span>
                 </div>
               ) : (
                 <Button
@@ -223,21 +225,19 @@ export default function ProfilePage() {
                   disabled={isDisablingMfa}
                   className="text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/5"
                 >
-                  {isDisablingMfa ? "Disabling..." : "Disable Two-Factor Authentication"}
+                  {isDisablingMfa ? t("profile.disabling") : t("profile.disableMfa")}
                 </Button>
               )}
             </div>
           ) : (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                {isPrivileged
-                  ? "Your role requires MFA enrollment. You will be prompted to enroll on your next login."
-                  : "Protect your account by enabling two-factor authentication with an authenticator app like Google Authenticator or Authy."}
+                {isPrivileged ? t("profile.mfaPrivilegedDesc") : t("profile.mfaOptionalDesc")}
               </p>
               {!isPrivileged && (
                 <Button onClick={() => setEnrollingMfa(true)}>
                   <Shield className="h-4 w-4 me-2" />
-                  Enable Two-Factor Authentication
+                  {t("profile.enableMfa")}
                 </Button>
               )}
             </div>
