@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
-import { 
+import {
   useGetTemplate,
   getGetTemplateQueryKey,
-  useCreateTemplate, 
-  useReplaceTemplate, 
-  TemplateInput, 
-  StageInput, 
+  useCreateTemplate,
+  useReplaceTemplate,
+  TemplateInput,
+  StageInput,
   StageFieldInput,
   StageInputCategory,
   StageFieldInputBaseType,
@@ -26,6 +26,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ArrowLeft, Plus, Trash2, GripVertical, Save, Loader2, Eye, GitBranch, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 const genId = () => Math.random().toString(36).substr(2, 9);
 
@@ -34,15 +35,15 @@ type LocalStage = Omit<StageInput, "fields"> & { id: string; fields: LocalField[
 type LocalTemplate = Omit<TemplateInput, "stages"> & { stages: LocalStage[] };
 
 /** Widgets available for each base type */
-const WIDGETS_BY_TYPE: Record<string, { value: string; label: string }[]> = {
-  text:           [{ value: "single-line", label: "Single Line Input" }, { value: "multi-line", label: "Multi Line Text Area" }],
-  number:         [{ value: "number", label: "Number Input" }],
-  date:           [{ value: "date", label: "Date Picker" }],
-  boolean:        [{ value: "toggle", label: "Toggle Switch" }],
-  "single-choice":[{ value: "drop-list", label: "Dropdown List" }, { value: "radio", label: "Radio Buttons" }],
-  "multi-choice": [{ value: "checkbox-list", label: "Checkboxes" }],
-  file:           [{ value: "file-upload", label: "File Upload" }],
-  image:          [{ value: "single-photo", label: "Single Photo" }, { value: "photo-gallery", label: "Photo Gallery (multiple)" }],
+const WIDGETS_BY_TYPE: Record<string, { value: string; labelKey: string }[]> = {
+  text:           [{ value: "single-line", labelKey: "admin.templateBuilder.stages.widgetSingleLine" }, { value: "multi-line", labelKey: "admin.templateBuilder.stages.widgetMultiLine" }],
+  number:         [{ value: "number", labelKey: "admin.templateBuilder.stages.widgetNumber" }],
+  date:           [{ value: "date", labelKey: "admin.templateBuilder.stages.widgetDate" }],
+  boolean:        [{ value: "toggle", labelKey: "admin.templateBuilder.stages.widgetToggle" }],
+  "single-choice":[{ value: "drop-list", labelKey: "admin.templateBuilder.stages.widgetDropList" }, { value: "radio", labelKey: "admin.templateBuilder.stages.widgetRadio" }],
+  "multi-choice": [{ value: "checkbox-list", labelKey: "admin.templateBuilder.stages.widgetCheckboxList" }],
+  file:           [{ value: "file-upload", labelKey: "admin.templateBuilder.stages.widgetFileUpload" }],
+  image:          [{ value: "single-photo", labelKey: "admin.templateBuilder.stages.widgetSinglePhoto" }, { value: "photo-gallery", labelKey: "admin.templateBuilder.stages.widgetPhotoGallery" }],
 };
 
 const DEFAULT_WIDGET: Record<string, string> = {
@@ -53,6 +54,7 @@ const DEFAULT_WIDGET: Record<string, string> = {
 
 /** Renders a live preview of the field based on its widget type */
 function FieldPreview({ field }: { field: LocalField }) {
+  const { t } = useTranslation();
   const options = field.optionsStr.split('\n').map(o => o.trim()).filter(Boolean);
   const label = field.name || "Field Label";
   const required = field.required;
@@ -60,7 +62,7 @@ function FieldPreview({ field }: { field: LocalField }) {
   return (
     <div className="p-3 rounded-md bg-muted/10 border border-dashed">
       <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1">
-        <Eye className="h-3 w-3" /> Preview
+        <Eye className="h-3 w-3" /> {t("admin.templateBuilder.stages.previewLabel")}
       </p>
       <div className="space-y-1.5 max-w-xs">
         <Label className="text-xs font-medium">
@@ -81,25 +83,25 @@ function FieldPreview({ field }: { field: LocalField }) {
         {field.widget === "toggle" && (
           <div className="flex items-center gap-2">
             <Switch disabled />
-            <span className="text-xs text-muted-foreground">Yes / No</span>
+            <span className="text-xs text-muted-foreground">{t("admin.templateBuilder.stages.previewYesNo")}</span>
           </div>
         )}
         {field.widget === "file-upload" && (
           <div className="flex items-center gap-2 h-8 px-3 border rounded-md bg-muted/30 text-muted-foreground text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
-            Upload file…
+            {t("admin.templateBuilder.stages.previewUploadFile")}
           </div>
         )}
         {(field.widget === "single-photo" || field.widget === "photo-gallery") && (
           <div className="flex items-center gap-2 h-8 px-3 border rounded-md bg-muted/30 text-muted-foreground text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-            {field.widget === "photo-gallery" ? "Upload photos…" : "Upload photo…"}
+            {field.widget === "photo-gallery" ? t("admin.templateBuilder.stages.previewUploadPhotos") : t("admin.templateBuilder.stages.previewUploadPhoto")}
           </div>
         )}
         {field.widget === "drop-list" && (
           <Select disabled>
             <SelectTrigger className="h-8 text-sm">
-              <SelectValue placeholder={options.length ? options[0] : "Choose an option..."} />
+              <SelectValue placeholder={options.length ? options[0] : t("admin.templateBuilder.stages.previewChooseOption")} />
             </SelectTrigger>
           </Select>
         )}
@@ -114,7 +116,7 @@ function FieldPreview({ field }: { field: LocalField }) {
           </RadioGroup>
         )}
         {field.widget === "radio" && options.length === 0 && (
-          <p className="text-xs text-muted-foreground italic">Add options above to see radio buttons.</p>
+          <p className="text-xs text-muted-foreground italic">{t("admin.templateBuilder.stages.previewAddOptions")}</p>
         )}
         {field.widget === "checkbox-list" && options.length > 0 && (
           <div className="space-y-1">
@@ -127,7 +129,7 @@ function FieldPreview({ field }: { field: LocalField }) {
           </div>
         )}
         {field.widget === "checkbox-list" && options.length === 0 && (
-          <p className="text-xs text-muted-foreground italic">Add options above to see checkboxes.</p>
+          <p className="text-xs text-muted-foreground italic">{t("admin.templateBuilder.stages.previewAddOptionsCheckbox")}</p>
         )}
       </div>
     </div>
@@ -137,12 +139,13 @@ function FieldPreview({ field }: { field: LocalField }) {
 export default function TemplateBuilderPage() {
   const params = useParams();
   const [, setLocation] = useLocation();
+  const { t } = useTranslation();
   const isNew = !params.id || params.id === "new";
   const templateId = isNew ? 0 : parseInt(params.id!);
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   const { data: serverTemplate, isLoading: loadingTemplate } = useGetTemplate(templateId, {
     query: { enabled: !isNew && !!templateId, queryKey: getGetTemplateQueryKey(templateId) }
   });
@@ -242,12 +245,16 @@ export default function TemplateBuilderPage() {
   };
 
   const handleSave = async () => {
-    if (!template.name) { toast({ title: "Name required", variant: "destructive" }); return; }
+    if (!template.name) { toast({ title: t("admin.templateBuilder.nameRequired"), variant: "destructive" }); return; }
 
     // If template is in use by projects, warn the user before creating a new version
     if (!isNew && assignedProjectCount > 0) {
       const confirmed = confirm(
-        `This template is currently assigned to ${assignedProjectCount} project${assignedProjectCount !== 1 ? "s" : ""}.\n\nSaving will create a new version (v${(serverTemplate?.versionNumber ?? 1) + 1}). Existing projects will remain on their current version — your changes apply only to new assignments.`
+        t("admin.templateBuilder.inUseConfirm", {
+          count: assignedProjectCount,
+          plural: assignedProjectCount !== 1 ? "s" : "",
+          newVersion: (serverTemplate?.versionNumber ?? 1) + 1
+        })
       );
       if (!confirmed) return;
     }
@@ -274,19 +281,19 @@ export default function TemplateBuilderPage() {
     try {
       if (isNew) {
         await createMutation.mutateAsync({ data: payload });
-        toast({ title: "Template created" });
+        toast({ title: t("admin.templateBuilder.toast.created") });
       } else {
         const result = await updateMutation.mutateAsync({ templateId, data: payload });
         if (result.versionCreated) {
-          toast({ title: "New version created", description: "The previous version is archived. Existing projects remain pinned to their version." });
+          toast({ title: t("admin.templateBuilder.toast.newVersion"), description: t("admin.templateBuilder.toast.newVersionDesc") });
         } else {
-          toast({ title: "Template updated" });
+          toast({ title: t("admin.templateBuilder.toast.updated") });
         }
       }
       queryClient.invalidateQueries({ queryKey: ["/api/templates"] });
       setLocation("/templates");
     } catch (error: any) {
-      toast({ title: "Save failed", description: error.data?.message || "An error occurred", variant: "destructive" });
+      toast({ title: t("admin.templateBuilder.toast.saveFailed"), description: error.data?.message || t("common.loading"), variant: "destructive" });
     }
   };
 
@@ -304,20 +311,20 @@ export default function TemplateBuilderPage() {
         </Button>
         <div className="flex-1">
           <h1 className="text-2xl font-bold">
-            {isNew ? "New Template" : "Edit Template"}
+            {isNew ? t("admin.templateBuilder.newTitle") : t("admin.templateBuilder.editTitle")}
           </h1>
           {!isNew && serverTemplate && (
             <p className="text-sm text-muted-foreground flex items-center gap-1">
               <GitBranch className="h-3.5 w-3.5" />
-              Version {serverTemplate.versionNumber}
-              {isArchived && <span className="text-amber-600 ms-1">(archived)</span>}
+              {t("admin.templateBuilder.versionLabel", { version: serverTemplate.versionNumber })}
+              {isArchived && <span className="text-amber-600 ms-1">{t("admin.templateBuilder.archivedLabel")}</span>}
             </p>
           )}
         </div>
         {!isArchived && (
           <Button onClick={handleSave} disabled={isSaving}>
             {isSaving ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <Save className="me-2 h-4 w-4" />}
-            Save Template
+            {t("admin.templateBuilder.saveTemplate")}
           </Button>
         )}
       </div>
@@ -326,7 +333,7 @@ export default function TemplateBuilderPage() {
         <Alert>
           <Info className="h-4 w-4" />
           <AlertDescription>
-            This template version is archived and cannot be edited. Projects currently using it remain unaffected. To make changes, create a new template.
+            {t("admin.templateBuilder.archivedAlert")}
           </AlertDescription>
         </Alert>
       )}
@@ -334,25 +341,32 @@ export default function TemplateBuilderPage() {
       {!isNew && !isArchived && assignedProjectCount > 0 && (
         <Alert>
           <GitBranch className="h-4 w-4" />
-          <AlertDescription>
-            This template is currently assigned to <strong>{assignedProjectCount} project{assignedProjectCount !== 1 ? "s" : ""}</strong>. Saving will create a new version — existing projects remain on version {serverTemplate?.versionNumber}.
-          </AlertDescription>
+          <AlertDescription
+            dangerouslySetInnerHTML={{
+              __html: t("admin.templateBuilder.inUseAlert", {
+                count: assignedProjectCount,
+                version: serverTemplate?.versionNumber
+              })
+                .replace("<1>", "<strong>")
+                .replace("</1>", "</strong>")
+            }}
+          />
         </Alert>
       )}
 
       <Card>
         <CardHeader>
-          <CardTitle>Template Details</CardTitle>
-          <CardDescription>Basic information about this pipeline.</CardDescription>
+          <CardTitle>{t("admin.templateBuilder.detailsCard.title")}</CardTitle>
+          <CardDescription>{t("admin.templateBuilder.detailsCard.description")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Template Name</Label>
+              <Label>{t("admin.templateBuilder.detailsCard.fieldName")}</Label>
               <Input
                 value={template.name}
                 onChange={e => setTemplate({ ...template, name: e.target.value })}
-                placeholder="e.g. Standard Project Pipeline"
+                placeholder={t("admin.templateBuilder.detailsCard.fieldNamePlaceholder")}
                 disabled={isArchived}
               />
             </div>
@@ -363,11 +377,11 @@ export default function TemplateBuilderPage() {
                 onCheckedChange={c => setTemplate({ ...template, isDefault: c })}
                 disabled={isArchived}
               />
-              <Label htmlFor="is-default">Set as default for new projects</Label>
+              <Label htmlFor="is-default">{t("admin.templateBuilder.detailsCard.fieldDefault")}</Label>
             </div>
           </div>
           <div className="space-y-2">
-            <Label>Description</Label>
+            <Label>{t("admin.templateBuilder.detailsCard.fieldDescription")}</Label>
             <Textarea
               value={template.description}
               onChange={e => setTemplate({ ...template, description: e.target.value })}
@@ -380,17 +394,17 @@ export default function TemplateBuilderPage() {
       <div className="space-y-4">
         <div className="flex justify-between items-end">
           <div>
-            <h2 className="text-xl font-bold">Pipeline Stages</h2>
-            <p className="text-sm text-muted-foreground">Define the steps a project moves through, in order.</p>
+            <h2 className="text-xl font-bold">{t("admin.templateBuilder.stages.title")}</h2>
+            <p className="text-sm text-muted-foreground">{t("admin.templateBuilder.stages.subtitle")}</p>
           </div>
           {!isArchived && (
-            <Button onClick={addStage} variant="outline" size="sm"><Plus className="me-2 h-4 w-4" /> Add Stage</Button>
+            <Button onClick={addStage} variant="outline" size="sm"><Plus className="me-2 h-4 w-4" /> {t("admin.templateBuilder.stages.addStage")}</Button>
           )}
         </div>
 
         {template.stages.length === 0 ? (
           <div className="text-center p-8 border border-dashed rounded-lg bg-muted/20">
-            <p className="text-muted-foreground">No stages defined yet.{!isArchived && " Click Add Stage to begin."}</p>
+            <p className="text-muted-foreground">{t("admin.templateBuilder.stages.noStages")}{!isArchived && t("admin.templateBuilder.stages.noStagesHint")}</p>
           </div>
         ) : (
           <Accordion type="multiple" className="space-y-4">
@@ -410,7 +424,7 @@ export default function TemplateBuilderPage() {
                         <span className="bg-primary text-primary-foreground h-6 w-6 rounded-full flex items-center justify-center text-xs">{index + 1}</span>
                         {stage.name || "Unnamed Stage"}
                       </span>
-                      <span className="text-xs text-muted-foreground font-normal">{stage.progressBaseline}% baseline</span>
+                      <span className="text-xs text-muted-foreground font-normal">{stage.progressBaseline}% {t("admin.templateBuilder.stages.baselineLabel")}</span>
                     </div>
                   </AccordionTrigger>
                   {!isArchived && (
@@ -423,40 +437,40 @@ export default function TemplateBuilderPage() {
                 <AccordionContent className="pt-2 pb-6 space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted/30 rounded-md">
                     <div className="space-y-2">
-                      <Label>Stage Name</Label>
+                      <Label>{t("admin.templateBuilder.stages.fieldStageName")}</Label>
                       <Input value={stage.name} onChange={e => updateStage(stage.id, { name: e.target.value })} disabled={isArchived} />
                     </div>
                     <div className="space-y-2">
-                      <Label>Category</Label>
+                      <Label>{t("admin.templateBuilder.stages.fieldCategory")}</Label>
                       <Select value={stage.category} onValueChange={(v: StageInputCategory) => updateStage(stage.id, { category: v })} disabled={isArchived}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="on-hold">On Hold (Pre-start)</SelectItem>
-                          <SelectItem value="active">Active Execution</SelectItem>
-                          <SelectItem value="complete">Completed / Operational</SelectItem>
+                          <SelectItem value="on-hold">{t("admin.templateBuilder.stages.categoryOnHold")}</SelectItem>
+                          <SelectItem value="active">{t("admin.templateBuilder.stages.categoryActive")}</SelectItem>
+                          <SelectItem value="complete">{t("admin.templateBuilder.stages.categoryComplete")}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label>Progress Baseline (%)</Label>
+                      <Label>{t("admin.templateBuilder.stages.fieldProgressBaseline")}</Label>
                       <Input type="number" min="0" max="100" value={stage.progressBaseline} onChange={e => updateStage(stage.id, { progressBaseline: Number(e.target.value) })} disabled={isArchived} />
                     </div>
                     <div className="space-y-2 md:col-span-3">
-                      <Label>Description</Label>
+                      <Label>{t("admin.templateBuilder.stages.fieldDescription")}</Label>
                       <Input value={stage.description} onChange={e => updateStage(stage.id, { description: e.target.value })} disabled={isArchived} />
                     </div>
                   </div>
 
                   <div>
                     <div className="flex justify-between items-center mb-3">
-                      <Label className="text-base font-semibold">Custom Data Fields</Label>
+                      <Label className="text-base font-semibold">{t("admin.templateBuilder.stages.customFields")}</Label>
                       {!isArchived && (
-                        <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => addField(stage.id)}><Plus className="me-1 h-3 w-3" /> Add Field</Button>
+                        <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => addField(stage.id)}><Plus className="me-1 h-3 w-3" /> {t("admin.templateBuilder.stages.addField")}</Button>
                       )}
                     </div>
 
                     {stage.fields.length === 0 ? (
-                      <p className="text-sm text-muted-foreground italic ps-2">No custom fields for this stage.</p>
+                      <p className="text-sm text-muted-foreground italic ps-2">{t("admin.templateBuilder.stages.noFields")}</p>
                     ) : (
                       <div className="space-y-4">
                         {stage.fields.map((field) => {
@@ -468,27 +482,27 @@ export default function TemplateBuilderPage() {
                               <div className="flex flex-col md:flex-row gap-3 items-start p-3">
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 flex-1 w-full">
                                   <div className="space-y-1">
-                                    <Label className="text-xs">Field Label</Label>
+                                    <Label className="text-xs">{t("admin.templateBuilder.stages.fieldLabel")}</Label>
                                     <Input className="h-8 text-sm" value={field.name} onChange={e => updateField(stage.id, field.id, { name: e.target.value })} disabled={isArchived} />
                                   </div>
                                   <div className="space-y-1">
-                                    <Label className="text-xs">Data Type</Label>
+                                    <Label className="text-xs">{t("admin.templateBuilder.stages.fieldDataType")}</Label>
                                     <Select value={field.baseType} onValueChange={(v) => changeBaseType(stage.id, field.id, v)} disabled={isArchived}>
                                       <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                                       <SelectContent>
-                                        <SelectItem value="text">Text</SelectItem>
-                                        <SelectItem value="number">Number</SelectItem>
-                                        <SelectItem value="date">Date</SelectItem>
-                                        <SelectItem value="boolean">Yes / No</SelectItem>
-                                        <SelectItem value="single-choice">Single Choice</SelectItem>
-                                        <SelectItem value="multi-choice">Multi Choice</SelectItem>
-                                        <SelectItem value="file">File Upload</SelectItem>
-                                        <SelectItem value="image">Photo / Image</SelectItem>
+                                        <SelectItem value="text">{t("admin.templateBuilder.stages.typeText")}</SelectItem>
+                                        <SelectItem value="number">{t("admin.templateBuilder.stages.typeNumber")}</SelectItem>
+                                        <SelectItem value="date">{t("admin.templateBuilder.stages.typeDate")}</SelectItem>
+                                        <SelectItem value="boolean">{t("admin.templateBuilder.stages.typeBoolean")}</SelectItem>
+                                        <SelectItem value="single-choice">{t("admin.templateBuilder.stages.typeSingleChoice")}</SelectItem>
+                                        <SelectItem value="multi-choice">{t("admin.templateBuilder.stages.typeMultiChoice")}</SelectItem>
+                                        <SelectItem value="file">{t("admin.templateBuilder.stages.typeFile")}</SelectItem>
+                                        <SelectItem value="image">{t("admin.templateBuilder.stages.typeImage")}</SelectItem>
                                       </SelectContent>
                                     </Select>
                                   </div>
                                   <div className="space-y-1">
-                                    <Label className="text-xs">UI Widget</Label>
+                                    <Label className="text-xs">{t("admin.templateBuilder.stages.fieldWidget")}</Label>
                                     <Select
                                       value={field.widget}
                                       onValueChange={(v: any) => updateField(stage.id, field.id, { widget: v })}
@@ -497,7 +511,7 @@ export default function TemplateBuilderPage() {
                                       <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                                       <SelectContent>
                                         {availableWidgets.map(w => (
-                                          <SelectItem key={w.value} value={w.value}>{w.label}</SelectItem>
+                                          <SelectItem key={w.value} value={w.value}>{t(w.labelKey)}</SelectItem>
                                         ))}
                                       </SelectContent>
                                     </Select>
@@ -505,7 +519,7 @@ export default function TemplateBuilderPage() {
                                   <div className="space-y-1 flex flex-col justify-end pb-1">
                                     <div className="flex items-center gap-2">
                                       <Switch id={`req-${field.id}`} checked={field.required} onCheckedChange={c => updateField(stage.id, field.id, { required: c })} disabled={isArchived} />
-                                      <Label htmlFor={`req-${field.id}`} className="text-xs font-normal">Required</Label>
+                                      <Label htmlFor={`req-${field.id}`} className="text-xs font-normal">{t("admin.templateBuilder.stages.fieldRequired")}</Label>
                                     </div>
                                   </div>
                                 </div>
@@ -519,7 +533,7 @@ export default function TemplateBuilderPage() {
 
                               {needsOptions && (
                                 <div className="px-3 pb-3">
-                                  <Label className="text-xs">Options <span className="text-muted-foreground font-normal">(one per line)</span></Label>
+                                  <Label className="text-xs">{t("admin.templateBuilder.stages.fieldOptions")} <span className="text-muted-foreground font-normal">{t("admin.templateBuilder.stages.fieldOptionsHint")}</span></Label>
                                   <Textarea
                                     className="mt-1 text-xs resize-none h-20"
                                     value={field.optionsStr}
