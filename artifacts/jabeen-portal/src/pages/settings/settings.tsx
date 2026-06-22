@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const settingsSchema = z.object({
   stalledThresholdDays: z.coerce.number().min(1),
@@ -20,6 +21,7 @@ const settingsSchema = z.object({
 });
 
 export default function SettingsPage() {
+  const { t } = useTranslation();
   const { data: settings, isLoading } = useGetSettings();
   const updateSettings = useUpdateSettings();
   const { toast } = useToast();
@@ -44,9 +46,9 @@ export default function SettingsPage() {
   const onSubmit = async (data: z.infer<typeof settingsSchema>) => {
     try {
       await updateSettings.mutateAsync({ data });
-      toast({ title: "Settings updated", description: "System configuration saved successfully." });
+      toast({ title: t("settings.toast.updatedTitle"), description: t("settings.toast.updatedDesc") });
     } catch (error: any) {
-      toast({ title: "Error", description: error.data?.message || "Failed to update settings", variant: "destructive" });
+      toast({ title: t("settings.toast.errorTitle"), description: error.data?.message || t("settings.toast.errorDesc"), variant: "destructive" });
     }
   };
 
@@ -57,16 +59,16 @@ export default function SettingsPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in duration-500">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">System Settings</h1>
-        <p className="text-muted-foreground">Configure global portal parameters and thresholds.</p>
+        <h1 className="text-3xl font-bold tracking-tight">{t("settings.title")}</h1>
+        <p className="text-muted-foreground">{t("settings.subtitle")}</p>
       </div>
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Project Status Thresholds</CardTitle>
-              <CardDescription>Determine when projects are automatically flagged based on inactivity.</CardDescription>
+              <CardTitle>{t("settings.thresholdsTitle")}</CardTitle>
+              <CardDescription>{t("settings.thresholdsDesc")}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -75,11 +77,11 @@ export default function SettingsPage() {
                   name="delayedThresholdDays"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Delayed Threshold (Days)</FormLabel>
+                      <FormLabel>{t("settings.delayedThreshold")}</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
-                      <FormDescription>Days without an update before a project is marked Delayed.</FormDescription>
+                      <FormDescription>{t("settings.delayedThresholdDesc")}</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -89,11 +91,11 @@ export default function SettingsPage() {
                   name="stalledThresholdDays"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Stalled Threshold (Days)</FormLabel>
+                      <FormLabel>{t("settings.stalledThreshold")}</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
-                      <FormDescription>Days without an update before a project is marked Stalled.</FormDescription>
+                      <FormDescription>{t("settings.stalledThresholdDesc")}</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -104,8 +106,8 @@ export default function SettingsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Security & Notifications</CardTitle>
-              <CardDescription>Configure login protection and external alerts.</CardDescription>
+              <CardTitle>{t("settings.securityTitle")}</CardTitle>
+              <CardDescription>{t("settings.securityDesc")}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -114,7 +116,7 @@ export default function SettingsPage() {
                   name="loginThrottleMaxAttempts"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Max Login Attempts</FormLabel>
+                      <FormLabel>{t("settings.maxLoginAttempts")}</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
@@ -127,7 +129,7 @@ export default function SettingsPage() {
                   name="loginThrottleWindowSeconds"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Throttle Window (Seconds)</FormLabel>
+                      <FormLabel>{t("settings.throttleWindow")}</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
@@ -142,9 +144,9 @@ export default function SettingsPage() {
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
-                      <FormLabel className="text-base">Email Notifications</FormLabel>
+                      <FormLabel className="text-base">{t("settings.emailNotifications")}</FormLabel>
                       <FormDescription>
-                        Send email alerts for important updates and messages.
+                        {t("settings.emailNotificationsDesc")}
                       </FormDescription>
                     </div>
                     <FormControl>
@@ -158,7 +160,7 @@ export default function SettingsPage() {
 
           <div className="flex justify-end">
             <Button type="submit" size="lg" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? "Saving..." : "Save Configuration"}
+              {form.formState.isSubmitting ? t("settings.saving") : t("settings.saveConfig")}
             </Button>
           </div>
         </form>
