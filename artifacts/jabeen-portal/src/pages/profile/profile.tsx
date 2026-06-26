@@ -4,7 +4,8 @@ import { useUpdateMe } from "@workspace/api-client-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { DgaCardV2, DgaTag, DgaInlineAlert, DgaButton } from "platformscode-new-react";
+import { DgaTag, DgaInlineAlert, DgaButton } from "platformscode-new-react";
+import { DgaContentCard } from "@/components/ui/dga-card";
 import { DgaForm } from "@/components/ui/dga-form";
 import { DgaTextField } from "@/components/ui/dga-text-field";
 import { DgaSubmitButton } from "@/components/ui/dga-brand-button";
@@ -24,8 +25,9 @@ const profileSchema = z.object({
 
 const MFA_REQUIRED_ROLES = ["administrator", "project-manager"];
 
-/** DgaCardV2 is a bare themed container; this wraps it with padding + an optional
- *  title/description header, replacing the shadcn Card/CardHeader/CardContent. */
+/** Wraps DgaContentCard with an optional title/description header, replacing the
+ *  shadcn Card/CardHeader/CardContent. (DgaContentCard already supplies the card
+ *  padding/border, so this only adds the header + body spacing.) */
 function ProfileCard({
   title,
   description,
@@ -38,18 +40,16 @@ function ProfileCard({
   children: React.ReactNode;
 }) {
   return (
-    <DgaCardV2 effect="stroke">
-      <div className="p-6 space-y-4">
-        <div className="flex items-start gap-3">
-          <div className="flex-1">
-            <h2 className="text-lg font-semibold text-foreground">{title}</h2>
-            <p className="text-sm text-muted-foreground">{description}</p>
-          </div>
-          {headerAside}
+    <DgaContentCard className="space-y-4">
+      <div className="flex items-start gap-3">
+        <div className="flex-1">
+          <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+          <p className="text-sm text-muted-foreground">{description}</p>
         </div>
-        {children}
+        {headerAside}
       </div>
-    </DgaCardV2>
+      {children}
+    </DgaContentCard>
   );
 }
 
