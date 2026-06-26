@@ -5,9 +5,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { TFunction } from "i18next";
 import { useAuth } from "@/hooks/use-auth";
-import { Form } from "@/components/ui/form";
 import { DgaTextField } from "@/components/ui/dga-text-field";
-import { DgaBrandButton } from "@/components/ui/dga-brand-button";
+import { DgaForm } from "@/components/ui/dga-form";
+import { DgaSubmitButton } from "@/components/ui/dga-brand-button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { ShieldCheck, Activity, MapPin } from "lucide-react";
@@ -153,6 +153,9 @@ export default function LoginPage() {
     }
   };
 
+  const submitLogin = loginForm.handleSubmit(onLoginSubmit);
+  const submitRegister = registerForm.handleSubmit(onRegisterSubmit);
+
   return (
     <div className="min-h-[100dvh] flex flex-col md:flex-row bg-background">
       {/* Brand Side */}
@@ -268,20 +271,7 @@ export default function LoginPage() {
                   <p className="text-muted-foreground text-sm">{t("auth.welcomeBackDesc")}</p>
                 </div>
 
-                <Form {...loginForm}>
-                  <form
-                    onSubmit={loginForm.handleSubmit(onLoginSubmit)}
-                    onKeyDown={(e) => {
-                      // The DGA button can't submit a form natively (its <button>
-                      // is in shadow DOM) and there's no native submit target for
-                      // Enter — so wire Enter straight to react-hook-form.
-                      if (e.key === "Enter" && (e.target as HTMLElement).tagName === "INPUT") {
-                        e.preventDefault();
-                        loginForm.handleSubmit(onLoginSubmit)();
-                      }
-                    }}
-                    className="space-y-5"
-                  >
+                <DgaForm onSubmit={submitLogin} className="space-y-5">
                     {/* Phase 3: DGA text inputs (label + validation via the
                         component's own props). data-testid was DOM-only and the
                         web component doesn't forward it; tests are HTTP-level. */}
@@ -300,16 +290,15 @@ export default function LoginPage() {
                       placeholder="••••••••"
                       required
                     />
-                    <DgaBrandButton
-                      type="button"
+                    <DgaSubmitButton
+                      onSubmit={submitLogin}
                       size="lg"
                       fullWidth
-                      disabled={loginForm.formState.isSubmitting}
-                      onOnClick={() => loginForm.handleSubmit(onLoginSubmit)()}
-                      label={loginForm.formState.isSubmitting ? t("auth.signingIn") : t("auth.signInButton")}
+                      loading={loginForm.formState.isSubmitting}
+                      loadingLabel={t("auth.signingIn")}
+                      label={t("auth.signInButton")}
                     />
-                  </form>
-                </Form>
+                  </DgaForm>
               </TabsContent>
 
               <TabsContent value="register" className="space-y-6">
@@ -318,17 +307,7 @@ export default function LoginPage() {
                   <p className="text-muted-foreground text-sm">{t("auth.investorRegistrationDesc")}</p>
                 </div>
 
-                <Form {...registerForm}>
-                  <form
-                    onSubmit={registerForm.handleSubmit(onRegisterSubmit)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && (e.target as HTMLElement).tagName === "INPUT") {
-                        e.preventDefault();
-                        registerForm.handleSubmit(onRegisterSubmit)();
-                      }
-                    }}
-                    className="space-y-4"
-                  >
+                <DgaForm onSubmit={submitRegister} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <DgaTextField
                         control={registerForm.control}
@@ -378,16 +357,15 @@ export default function LoginPage() {
                       />
                     </div>
 
-                    <DgaBrandButton
-                      type="button"
+                    <DgaSubmitButton
+                      onSubmit={submitRegister}
                       size="lg"
                       fullWidth
-                      disabled={registerForm.formState.isSubmitting}
-                      onOnClick={() => registerForm.handleSubmit(onRegisterSubmit)()}
-                      label={registerForm.formState.isSubmitting ? t("auth.creatingAccount") : t("auth.registerButton")}
+                      loading={registerForm.formState.isSubmitting}
+                      loadingLabel={t("auth.creatingAccount")}
+                      label={t("auth.registerButton")}
                     />
-                  </form>
-                </Form>
+                  </DgaForm>
               </TabsContent>
             </Tabs>
           )}

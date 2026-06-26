@@ -48,3 +48,35 @@ export function DgaBrandButton({
     />
   );
 }
+
+/**
+ * Submit button for DGA forms. The DGA button can't submit a form natively (its
+ * <button type="submit"> is in shadow DOM), so we make it `type="button"` and
+ * drive submission through its click event — DgaButton emits its click as the
+ * `onClick` @Event, surfaced by @lit/react as the React prop `onOnClick`. Pair
+ * with <DgaForm> so Enter also submits.
+ */
+export function DgaSubmitButton({
+  onSubmit,
+  label,
+  loading,
+  loadingLabel,
+  disabled,
+  ...props
+}: Omit<ComponentProps<typeof DgaBrandButton>, "type" | "onOnClick" | "label"> & {
+  /** The react-hook-form handler, i.e. `form.handleSubmit(onValid)`. */
+  onSubmit: () => void;
+  label: string;
+  loading?: boolean;
+  loadingLabel?: string;
+}) {
+  return (
+    <DgaBrandButton
+      type="button"
+      onOnClick={() => onSubmit()}
+      disabled={loading || disabled}
+      label={loading ? loadingLabel ?? label : label}
+      {...props}
+    />
+  );
+}
