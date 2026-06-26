@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { Project } from "@workspace/api-client-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Building2, User, Mail, Phone, MapPin, CheckCircle2, Circle } from "lucide-react";
+import { DgaContentCard } from "@/components/ui/dga-card";
+import { DgaTag } from "platformscode-new-react";
+import { Building2, Mail, Phone, CheckCircle2, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -18,12 +18,12 @@ export default function ProjectOverviewTab({ project, isPrivileged }: Props) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <CardHeader><CardTitle>{t("projects.overview.timelineTitle")}</CardTitle></CardHeader>
-            <CardContent className="py-8 text-center text-muted-foreground">
+          <DgaContentCard className="space-y-4">
+            <h3 className="text-base font-semibold text-foreground">{t("projects.overview.timelineTitle")}</h3>
+            <div className="py-8 text-center text-muted-foreground">
               {t("projects.overview.noPipelineDesc")}
-            </CardContent>
-          </Card>
+            </div>
+          </DgaContentCard>
         </div>
       </div>
     );
@@ -36,11 +36,9 @@ export default function ProjectOverviewTab({ project, isPrivileged }: Props) {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2 space-y-6">
         {/* Visual Pipeline Timeline */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("projects.overview.pipelineLabel", { name: project.pipeline.name })}</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <DgaContentCard className="space-y-4">
+          <h3 className="text-base font-semibold text-foreground">{t("projects.overview.pipelineLabel", { name: project.pipeline.name })}</h3>
+          <div>
             <div className="relative border-s-2 border-muted ms-3 md:ms-4 space-y-6 py-2">
               {stages.map((stage, idx) => {
                 const isPast = currentIndex !== -1 && idx < currentIndex;
@@ -90,27 +88,23 @@ export default function ProjectOverviewTab({ project, isPrivileged }: Props) {
                 );
               })}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </DgaContentCard>
 
         {/* Project Notes */}
         {project.notes && (
-          <Card>
-            <CardHeader><CardTitle>{t("projects.overview.projectNotes")}</CardTitle></CardHeader>
-            <CardContent>
-              <p className="whitespace-pre-wrap text-sm text-muted-foreground leading-relaxed">{project.notes}</p>
-            </CardContent>
-          </Card>
+          <DgaContentCard className="space-y-4">
+            <h3 className="text-base font-semibold text-foreground">{t("projects.overview.projectNotes")}</h3>
+            <p className="whitespace-pre-wrap text-sm text-muted-foreground leading-relaxed">{project.notes}</p>
+          </DgaContentCard>
         )}
       </div>
 
       <div className="space-y-6">
         {/* Investor Card */}
-        <Card>
-          <CardHeader className="pb-4">
-            <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">{t("projects.overview.investorDetails")}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <DgaContentCard className="space-y-4">
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("projects.overview.investorDetails")}</h3>
+          <div className="space-y-4">
             {project.investor ? (
               <>
                 <div className="flex items-center gap-3 border-b pb-4">
@@ -137,10 +131,10 @@ export default function ProjectOverviewTab({ project, isPrivileged }: Props) {
                     <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
                     <div className="flex flex-wrap gap-1.5">
                       {project.city && (
-                        <Badge variant="secondary">{project.city.name ?? project.city.shortName}</Badge>
+                        <DgaTag variant="info" size="sm" label={project.city.name ?? project.city.shortName} />
                       )}
                       {project.category && (
-                        <Badge variant="outline">{project.category.name}</Badge>
+                        <DgaTag variant="neutral" size="sm" outlined label={project.category.name} />
                       )}
                     </div>
                   </div>
@@ -149,8 +143,8 @@ export default function ProjectOverviewTab({ project, isPrivileged }: Props) {
             ) : (
               <div className="text-sm text-muted-foreground italic">{t("projects.overview.noInvestor")}</div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </DgaContentCard>
       </div>
     </div>
   );

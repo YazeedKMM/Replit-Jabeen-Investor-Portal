@@ -6,17 +6,7 @@ import { Building2, MapPin, Calendar, ArrowRight, Clock } from "lucide-react";
 import { fmtDate } from "@/lib/format";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-
-/** Map a derived project status to a DgaStatusTag color. */
-function statusColor(status: string): "neutral" | "green" | "blue" | "yellow" | "red" {
-  switch (status) {
-    case "on-track": return "green";
-    case "delayed": return "yellow";
-    case "stalled": return "red";
-    case "complete": return "blue";
-    default: return "neutral";
-  }
-}
+import { dgaStatusColor } from "@/lib/dga-status";
 
 export default function MyProjectsPage() {
   const { user, checkActivationStatus } = useAuth();
@@ -94,7 +84,7 @@ export default function MyProjectsPage() {
                 </div>
                 <div className="shrink-0">
                   <DgaStatusTag
-                    color={statusColor(project.derivedStatus)}
+                    color={dgaStatusColor(project.derivedStatus)}
                     status="subtle"
                     size="sm"
                     label={t(`status.${project.derivedStatus}`)}
