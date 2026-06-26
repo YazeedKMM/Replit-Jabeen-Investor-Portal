@@ -1,20 +1,41 @@
-import { DgaTextInput } from "platformscode-new-react";
-import { DgaBrandButton } from "@/components/ui/dga-brand-button";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { DgaBrandButton, DgaSubmitButton } from "@/components/ui/dga-brand-button";
+import { DgaForm } from "@/components/ui/dga-form";
+import { DgaTextField } from "@/components/ui/dga-text-field";
+import {
+  DgaTextareaField,
+  DgaDropdownField,
+  DgaCheckboxField,
+  DgaSwitchField,
+  DgaRadioField,
+} from "@/components/ui/dga-fields";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 /**
- * Phase 0 scratch route — proves the DGA "Platforms Code" wiring is live:
- *   - JABEEN gold primary button (variant="primary-brand")
- *   - DGA dark/light surfaces (--background-body / --background-card)
- *   - RTL + Arabic (dir/lang) and IBM Plex Sans Arabic
- *   - Gold brand text via --text-primary (darkens to gold-800 in light mode)
- *
- * Reachable at /dga-scratch, not linked in nav. Safe to delete after sign-off.
- * Component props verified against @platformscode/core@0.0.50 type defs:
- *   DgaButton  -> { variant, label, size, ... }  (NO "primary" variant; use "primary-brand")
- *   DgaTextInput -> { label, placeholder, fullwidth, type, value, ... }
+ * Scratch route (/dga-scratch, public, unlinked) — proves the DGA wiring and the
+ * react-hook-form field adapters. Remove after the Phase 3 rollout is signed off.
  */
+const schema = z.object({
+  email: z.string().email("بريد إلكتروني غير صالح"),
+  notes: z.string().min(1, "حقل مطلوب"),
+  city: z.string().min(1, "اختر مدينة"),
+  agree: z.boolean().refine((v) => v, "يجب الموافقة"),
+  notify: z.boolean(),
+  plan: z.string().min(1, "اختر خياراً"),
+});
+type Demo = z.infer<typeof schema>;
+
 export default function DgaScratchPage() {
+  const [result, setResult] = useState<Demo | null>(null);
+  const form = useForm<Demo>({
+    resolver: zodResolver(schema),
+    defaultValues: { email: "", notes: "", city: "", agree: false, notify: false, plan: "" },
+  });
+  const submit = form.handleSubmit(setResult);
+
   return (
     <div
       dir="rtl"
@@ -35,30 +56,54 @@ export default function DgaScratchPage() {
           borderRadius: 12,
           background: "var(--background-card)",
           border: "1px solid var(--border-neutral-primary)",
-          display: "flex",
-          flexDirection: "column",
-          gap: 24,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, marginBottom: 24 }}>
           <h1 style={{ margin: 0, fontSize: 24, color: "var(--text-primary)" }}>
-            بوابة جابين — اختبار نظام DGA
+            بوابة جابين — اختبار حقول DGA
           </h1>
-          {/* Phase 1: live theme toggle (also lives in the app header). */}
           <ThemeToggle />
         </div>
-        <p style={{ margin: 0, lineHeight: 1.7 }}>
-          تأكيد المرحلة 0: اللون الذهبي الأساسي، الأسطح الداكنة/الفاتحة، الاتجاه من
-          اليمين إلى اليسار، وخط IBM Plex Sans Arabic.
-        </p>
 
-        <DgaTextInput
-          label="البريد الإلكتروني"
-          placeholder="name@example.com"
-          fullwidth
-        />
+        <DgaForm onSubmit={submit} className="space-y-5">
+          <DgaTextField control={form.control} name="email" label="البريد الإلكتروني" placeholder="name@example.com" required />
+          <DgaTextareaField control={form.control} name="notes" label="ملاحظات" placeholder="اكتب هنا" rows={3} required />
+          <DgaDropdownField
+            control={form.control}
+            name="city"
+            label="المدينة"
+            placeholder="اختر مدينة"
+            options={[
+              { label: "الجبيل", value: "JUB" },
+              { label: "ينبع", value: "YNB" },
+              { label: "رأس الخير", value: "RAS" },
+            ]}
+          />
+          <DgaCheckboxField control={form.control} name="agree" label="أوافق على الشروط" />
+          <DgaSwitchField control={form.control} name="notify" label="تفعيل الإشعارات" />
+          <DgaRadioField
+            control={form.control}
+            name="plan"
+            options={[
+              { label: "خطة شهرية", value: "monthly" },
+              { label: "خطة سنوية", value: "yearly" },
+            ]}
+          />
+          <DgaSubmitButton onSubmit={submit} fullWidth size="lg" label="إرسال" />
+        </DgaForm>
 
-        <DgaBrandButton label="إرسال" />
+        {result && (
+          <pre
+            id="demo-result"
+            style={{ marginTop: 24, padding: 16, borderRadius: 8, background: "var(--background-body)", color: "var(--text-default)", fontSize: 13, overflow: "auto" }}
+          >
+            {JSON.stringify(result, null, 2)}
+          </pre>
+        )}
+
+        <div style={{ marginTop: 24 }}>
+          <DgaBrandButton label="زر ذهبي" />
+        </div>
       </div>
     </div>
   );
