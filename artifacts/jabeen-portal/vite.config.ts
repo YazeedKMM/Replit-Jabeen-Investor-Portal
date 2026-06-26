@@ -26,9 +26,40 @@ if (!basePath) {
   );
 }
 
+/**
+ * The DGA "Platforms Code" packages (`platformscode-new-react` /
+ * `@platformscode/core`) ship a global, UNLAYERED CSS reset — most importantly
+ * `@platformscode/core/dist/core/core.css`, which the Stencil component runtime
+ * auto-injects. Its `*{margin:0;padding:0}` / `html{font-size:62.5%}` rules beat
+ * Tailwind v4's layered utilities (unlayered > any layer), zeroing all spacing
+ * app-wide. We can't change how the runtime injects it, so we wrap every DGA
+ * package stylesheet in `@layer dga` at transform time. Combined with the
+ * `@layer dga, theme, base, components, utilities;` order declared in index.css,
+ * the reset ranks below Tailwind and stops bleeding into the app. DGA components
+ * use Shadow DOM, so their visuals are unaffected by this layering.
+ */
+function dgaCssInLayer() {
+  return {
+    name: "dga-css-in-layer",
+    enforce: "pre" as const,
+    transform(code: string, id: string) {
+      const file = id.split("?")[0];
+      if (
+        file.endsWith(".css") &&
+        (file.includes("@platformscode/core") ||
+          file.includes("platformscode-new-react"))
+      ) {
+        return { code: `@layer dga {\n${code}\n}`, map: null };
+      }
+      return null;
+    },
+  };
+}
+
 export default defineConfig({
   base: basePath,
   plugins: [
+    dgaCssInLayer(),
     react(),
     tailwindcss(),
     runtimeErrorOverlay(),

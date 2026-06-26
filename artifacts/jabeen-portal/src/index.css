@@ -1,6 +1,18 @@
+/* Establish cascade-layer order so the DGA reset (wrapped into `dga` by the
+   dgaCssInLayer Vite plugin) ranks BELOW Tailwind's layers. Unlayered app rules
+   still win over all of these. */
+@layer dga, theme, base, components, utilities;
+
 @import "tailwindcss";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
+
+/* The DGA core.css reset (now in the `dga` layer) forces html{font-size:62.5%}.
+   Tailwind sets no html font-size, so re-assert the browser default here,
+   UNLAYERED, so the rem-based app isn't shrunk. DGA components are px-based. */
+html {
+  font-size: 100%;
+}
 
 @custom-variant dark (&:is(.dark *));
 
