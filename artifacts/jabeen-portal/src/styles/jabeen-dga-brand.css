@@ -1,0 +1,108 @@
+/* ============================================================================
+   jabeen-dga-brand.css
+   JABEEN brand override for the DGA "Platforms Code" design system.
+   Supports BOTH light and dark themes with a user toggle.
+
+   HOW THIS WORKS
+   DGA ships a primitive palette (--colors-*) and semantic tokens
+   (--background-*, --border-*, --button-*, --text-*) that reference primitives.
+   We override ONLY the primary primitive ramp (--colors-primary-sa-flag-*) with
+   a JABEEN gold ramp, so every primary surface, button, border, and focus ring
+   becomes gold in BOTH themes. No component CSS is touched.
+
+   LOAD ORDER (critical):
+   1. import 'platformscode-new-react/dist/style.css'   (DGA tokens + components)
+   2. import './jabeen-dga-brand.css'                    (this file, AFTER DGA)
+
+   THEME ACTIVATION
+   - Light theme  -> default (:root), no attribute.
+   - Dark theme   -> data-theme="dark" on <html>.
+   - dir="rtl" lang="ar" on <html> for RTL + Arabic.
+   The ThemeToggle component switches data-theme at runtime and persists it.
+   ============================================================================ */
+
+
+/* ---------------------------------------------------------------------------
+   1. FONT (IBM Plex Sans Arabic). Package points to /assets/fonts/... which is
+   absent in your app, so load it here. Self-host for offline/gov hosting.
+   --------------------------------------------------------------------------- */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap');
+
+
+/* ---------------------------------------------------------------------------
+   2. JABEEN GOLD RAMP — overrides the DGA primary primitive scale.
+   Theme-independent: gold is gold in both light and dark. Anchored on the
+   JABEEN brand gold #B38916 at the 600 step.
+   --------------------------------------------------------------------------- */
+:root,
+[data-theme="dark"] {
+  --colors-primary-sa-flag-25:          #fcf8eb;
+  --colors-primary-sa-flag-50:          #f9f3e2;
+  --colors-primary-sa-flag-100:         #f4ecd4;
+  --colors-primary-sa-flag-200:         #e8dab2;
+  --colors-primary-sa-flag-300:         #d9c386;
+  --colors-primary-sa-flag-400:         #c8a954;
+  --colors-primary-sa-flag-500:         #bc9731;
+  --colors-primary-sa-flag-500-alpha-10:#b3891619;
+  --colors-primary-sa-flag-600-primary: #b38916;   /* JABEEN brand gold */
+  --colors-primary-sa-flag-700:         #9b7613;
+  --colors-primary-sa-flag-800:         #826311;
+  --colors-primary-sa-flag-900:         #664e0e;
+  --colors-primary-sa-flag-950:         #4e3a0b;
+}
+
+
+/* ---------------------------------------------------------------------------
+   3. THEME-AWARE GOLD TEXT  (accessibility, REQUIRED for light mode)
+   Measured: brand gold #B38916 as TEXT scores 5.85:1 on dark (good) but only
+   3.23:1 on white (fails AA). So gold text/links darken to gold-800 in light
+   mode and use the brand gold in dark mode. Order matters: dark rule comes
+   second so it wins when data-theme="dark" is present (equal specificity).
+   Gold FILLS and BORDERS are unaffected and stay the brand gold in both themes.
+   --------------------------------------------------------------------------- */
+:root {
+  --text-primary: var(--colors-primary-sa-flag-800);          /* #826311, 5.6:1 on white */
+}
+[data-theme="dark"] {
+  --text-primary: var(--colors-primary-sa-flag-600-primary);  /* #b38916, 5.85:1 on dark */
+}
+
+
+/* ---------------------------------------------------------------------------
+   4. ACCESSIBILITY FIX — gold primary button label  (REQUIRED, both themes)
+   White label on gold = 3.23:1 (FAILS). Dark label on gold = 5.5-5.9:1 (PASS).
+   Force a dark label on primary/brand buttons. These are Shadow DOM components;
+   confirm the selector against rendered output (see DESIGN_SYSTEM.md).
+   --------------------------------------------------------------------------- */
+dga-button[variant="primary-brand"]::part(label),
+dga-button-v2[variant="primary-brand"]::part(label),
+dga-button[variant="primary"]::part(label),
+dga-button-v2[variant="primary"]::part(label) {
+  color: var(--colors-neutral-950);
+}
+dga-button[variant^="primary"],
+dga-button-v2[variant^="primary"] {
+  --text-oncolor-primary: var(--colors-neutral-950);
+}
+
+
+/* ---------------------------------------------------------------------------
+   5. OPTIONAL: exact JABEEN darkest surface (#0E0E0B) in dark mode.
+   DGA's darkest neutral #0c111b is already nearly identical. Uncomment to match.
+   --------------------------------------------------------------------------- */
+/*
+[data-theme="dark"] {
+  --colors-neutral-950: #0e0e0b;
+}
+*/
+
+
+/* ---------------------------------------------------------------------------
+   6. NOTES
+   - Do NOT override --text-oncolor-primary globally. White is correct for text
+     on success / error / info / secondary surfaces. Section 4 scopes it to
+     primary buttons only.
+   - Verify link components in light mode. If a link uses a token other than
+     --text-primary, darken that token under :root the same way (to gold-800).
+   - For small gold text on dark, prefer gold-300 (#d9c386) or gold-400 (#c8a954).
+   --------------------------------------------------------------------------- */

@@ -17,6 +17,7 @@ import TemplatesPage from "@/pages/admin/templates";
 import TemplateBuilderPage from "@/pages/admin/template-builder";
 import ProjectWorkspacePage from "@/pages/projects/project-workspace";
 import NotFound from "@/pages/not-found";
+import DgaScratchPage from "@/pages/dga-scratch";
 import { useAuth } from "@/hooks/use-auth";
 
 function RoleRedirect() {
@@ -32,6 +33,9 @@ export function AppRouter() {
     <Switch>
       <Route path="/login" component={LoginPage} />
       <Route path="/mfa/setup" component={MfaSetupPage} />
+
+      {/* Phase 0 scratch route — DGA wiring proof, public, unlinked. Remove after sign-off. */}
+      <Route path="/dga-scratch" component={DgaScratchPage} />
       <Route path="/" component={RoleRedirect} />
       
       {/* Investor Route */}

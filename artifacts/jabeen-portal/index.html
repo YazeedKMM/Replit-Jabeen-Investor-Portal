@@ -3,6 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <!-- Anti-flash theme script (DGA Platforms Code). Runs before React paints so
+         there is no flash of the wrong theme. Owns data-theme on <html>; do NOT
+         hardcode data-theme on the <html> tag. Persisted by ThemeToggle. -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('jabeen-theme');
+          if (t !== 'light' && t !== 'dark') t = 'dark'; /* brand default */
+          document.documentElement.setAttribute('data-theme', t);
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      })();
+    </script>
     <title>JABEEN Investor Portal</title>
     <meta name="description" content="JABEEN Investor Portal — built on Replit. Update this description to reflect the app." />
     <meta name="robots" content="index, follow" />
