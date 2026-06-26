@@ -14,7 +14,9 @@ html {
   font-size: 100%;
 }
 
-@custom-variant dark (&:is(.dark *));
+/* Drive Tailwind's `dark:` variant off the DGA theme attribute too (the app has
+   no active `.dark` class — the DGA toggle sets data-theme on <html>). */
+@custom-variant dark (&:is(.dark *, [data-theme="dark"] *));
 
 @theme inline {
   --color-background: hsl(var(--background));
@@ -178,6 +180,48 @@ html {
   --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
   --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
   --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+}
+
+/* ----------------------------------------------------------------------------
+   Dark theme bridge. The DGA toggle sets data-theme="dark" on <html>; the DGA
+   components already follow it. Flip the app's own shadcn surface/text/border
+   tokens to the DGA cool-neutral dark scale so the shell, cards, and DGA
+   components theme together (no more white-on-white labels). Gold (primary/ring),
+   destructive, charts and the brand sidebar stay as they are. HSL triplets match
+   @platformscode/core neutral-* (900/800/700/400/50).
+---------------------------------------------------------------------------- */
+[data-theme="dark"] {
+  --button-outline: rgba(255, 255, 255, 0.14);
+  --badge-outline: rgba(255, 255, 255, 0.08);
+  --opaque-button-border-intensity: 8; /* lighten opaque borders on dark */
+  --elevate-1: rgba(255, 255, 255, 0.04);
+  --elevate-2: rgba(255, 255, 255, 0.08);
+
+  --background: 218 39% 11%;       /* neutral-900 #111927 */
+  --foreground: 210 20% 98%;       /* neutral-50  #f9fafb */
+
+  --border: 217 19% 27%;           /* neutral-700 #374151 */
+  --input: 217 19% 27%;
+  --ring: 44 69% 45%;              /* gold, a touch brighter for dark */
+
+  --card: 213 28% 17%;             /* neutral-800 #1f2a37 */
+  --card-foreground: 210 20% 98%;
+  --card-border: 217 19% 27%;
+
+  --popover: 213 28% 17%;
+  --popover-foreground: 210 20% 98%;
+  --popover-border: 217 19% 27%;
+
+  /* --primary stays JABEEN gold. */
+
+  --secondary: 217 19% 27%;        /* neutral-700 */
+  --secondary-foreground: 210 20% 98%;
+
+  --muted: 213 28% 17%;            /* neutral-800 */
+  --muted-foreground: 215 9% 65%;  /* neutral-400 #9da4ae */
+
+  --accent: 217 19% 27%;           /* neutral-700 */
+  --accent-foreground: 210 20% 98%;
 }
 
 @layer base {

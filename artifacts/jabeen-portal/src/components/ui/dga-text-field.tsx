@@ -88,20 +88,15 @@ function DgaTextInputControlled({
   // @lit/react forwards `ref` to the host element.
   const ref = useRef<(HTMLElement & { value?: string }) | null>(null);
 
-  // Wire native bubbling events (input -> value out, focusout -> blur/touched).
+  // Wire native bubbling input for value-out (proven to carry e.target.value).
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const handleInput = (e: Event) =>
       onValueChange((e.target as HTMLInputElement).value);
-    const handleFocusOut = () => onFieldBlur();
     el.addEventListener("input", handleInput);
-    el.addEventListener("focusout", handleFocusOut);
-    return () => {
-      el.removeEventListener("input", handleInput);
-      el.removeEventListener("focusout", handleFocusOut);
-    };
-  }, [onValueChange, onFieldBlur]);
+    return () => el.removeEventListener("input", handleInput);
+  }, [onValueChange]);
 
   // Push value INTO the element, but never while it's being edited (cursor-safe).
   useEffect(() => {
@@ -115,5 +110,18 @@ function DgaTextInputControlled({
     }
   }, [value]);
 
-  return <DgaTextInput ref={ref as never} fullwidth {...rest} />;
+  // DgaTextInput invokes this.onInput / this.onChange / this.onBlur
+  // UNCONDITIONALLY (not optional-chained) — passing undefined throws
+  // "this.onBlur is not a function" on blur. They must be functions. Value-out is
+  // handled by the native `input` listener above; we use onBlur for RHF touched.
+  return (
+    <DgaTextInput
+      ref={ref as never}
+      fullwidth
+      {...rest}
+      onInput={() => {}}
+      onChange={() => {}}
+      onBlur={() => onFieldBlur()}
+    />
+  );
 }
