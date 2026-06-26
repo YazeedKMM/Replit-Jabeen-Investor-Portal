@@ -70,20 +70,20 @@
 
 /* ---------------------------------------------------------------------------
    4. ACCESSIBILITY FIX — gold primary button label  (REQUIRED, both themes)
-   White label on gold = 3.23:1 (FAILS). Dark label on gold = 5.5-5.9:1 (PASS).
-   Force a dark label on primary/brand buttons. These are Shadow DOM components;
-   confirm the selector against rendered output (see DESIGN_SYSTEM.md).
+   White label on gold = 3.23:1 (FAILS). Dark label on gold = ~5.4:1 (PASS).
+
+   NOTE: the original ::part(label) / [variant="primary-brand"] hooks do NOT work
+   against the real rendered DOM (core@0.0.50): the host exposes no `variant`
+   attribute (it's an internal shadow class .dga-btn--primary-brand) and there is
+   no part="label" (the label is <span class="dga-btn-label">). The label color
+   comes from the custom property `--text-oncolor-primary`, which DOES pierce the
+   shadow boundary — but it is shared with primary-neutral / des-primary / the
+   on-color variants, which legitimately need white, so it must NOT be overridden
+   globally here. Instead it is scoped per-button via the <DgaBrandButton>
+   wrapper's inline style (see components/ui/dga-brand-button.tsx) — inline style
+   is used rather than a marker class because @lit/react routes className onto the
+   host `class` and would clobber Stencil's `hydrated` class on re-render.
    --------------------------------------------------------------------------- */
-dga-button[variant="primary-brand"]::part(label),
-dga-button-v2[variant="primary-brand"]::part(label),
-dga-button[variant="primary"]::part(label),
-dga-button-v2[variant="primary"]::part(label) {
-  color: var(--colors-neutral-950);
-}
-dga-button[variant^="primary"],
-dga-button-v2[variant^="primary"] {
-  --text-oncolor-primary: var(--colors-neutral-950);
-}
 
 
 /* ---------------------------------------------------------------------------

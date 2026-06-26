@@ -1,4 +1,5 @@
-import { DgaButton, DgaTextInput } from "platformscode-new-react";
+import { DgaTextInput } from "platformscode-new-react";
+import { DgaBrandButton } from "@/components/ui/dga-brand-button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 /**
@@ -57,7 +58,7 @@ export default function DgaScratchPage() {
           fullwidth
         />
 
-        <DgaButton variant="primary-brand" label="إرسال" />
+        <DgaBrandButton label="إرسال" />
       </div>
     </div>
   );
