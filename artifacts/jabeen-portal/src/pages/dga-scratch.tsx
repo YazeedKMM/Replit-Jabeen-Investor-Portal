@@ -1,4 +1,5 @@
 import { DgaButton, DgaTextInput } from "platformscode-new-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 /**
  * Phase 0 scratch route — proves the DGA "Platforms Code" wiring is live:
@@ -38,9 +39,13 @@ export default function DgaScratchPage() {
           gap: 24,
         }}
       >
-        <h1 style={{ margin: 0, fontSize: 24, color: "var(--text-primary)" }}>
-          بوابة جابين — اختبار نظام DGA
-        </h1>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+          <h1 style={{ margin: 0, fontSize: 24, color: "var(--text-primary)" }}>
+            بوابة جابين — اختبار نظام DGA
+          </h1>
+          {/* Phase 1: live theme toggle (also lives in the app header). */}
+          <ThemeToggle />
+        </div>
         <p style={{ margin: 0, lineHeight: 1.7 }}>
           تأكيد المرحلة 0: اللون الذهبي الأساسي، الأسطح الداكنة/الفاتحة، الاتجاه من
           اليمين إلى اليسار، وخط IBM Plex Sans Arabic.

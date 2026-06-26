@@ -4,6 +4,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/use-auth";
 import { CitySwitcher } from "@/components/city-switcher";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { NotificationPanel } from "./notification-panel";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useGetUnreadCount, getGetUnreadCountQueryKey } from "@workspace/api-client-react";
@@ -29,6 +30,7 @@ export function Header() {
       <CitySwitcher />
       <div className="flex-1" />
       <div className="flex items-center gap-4">
+        <ThemeToggle />
         <LanguageSwitcher />
         <div className="flex flex-col items-end hidden md:flex">
           <span className="text-sm font-medium leading-none">{user?.fullName}</span>
