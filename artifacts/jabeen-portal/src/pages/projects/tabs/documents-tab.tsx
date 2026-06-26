@@ -1,8 +1,9 @@
 import { useTranslation } from "react-i18next";
 import { Project, useListProjectDocuments, useUploadDocument, useDeleteDocument } from "@workspace/api-client-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, FileIcon, Download, Trash2, UploadCloud } from "lucide-react";
+import { DgaContentCard } from "@/components/ui/dga-card";
+import { DgaBrandButton } from "@/components/ui/dga-brand-button";
+import { Loader2, FileIcon, Download, Trash2 } from "lucide-react";
 import { fmtDate } from "@/lib/format";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -62,47 +63,44 @@ export default function ProjectDocumentsTab({ project }: Props) {
         <h2 className="text-xl font-bold">{t("projects.documents.title")}</h2>
         <div>
           <input type="file" className="hidden" ref={fileInputRef} onChange={handleFileSelect} />
-          <Button onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
-            {isUploading ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <UploadCloud className="me-2 h-4 w-4" />}
-            {t("projects.documents.uploadButton")}
-          </Button>
+          <DgaBrandButton
+            label={t("projects.documents.uploadButton")}
+            disabled={isUploading}
+            onOnClick={() => fileInputRef.current?.click()}
+          />
         </div>
       </div>
 
       {isLoading ? (
         <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
       ) : !documents?.length ? (
-        <Card className="border-dashed">
-          <CardContent className="py-12 text-center text-muted-foreground flex flex-col items-center">
-            <FileIcon className="h-10 w-10 mb-4 opacity-20" />
-            <p>{t("projects.documents.emptyDesc")}</p>
-          </CardContent>
-        </Card>
+        <DgaContentCard className="py-12 text-center text-muted-foreground flex flex-col items-center">
+          <FileIcon className="h-10 w-10 mb-4 opacity-20" />
+          <p>{t("projects.documents.emptyDesc")}</p>
+        </DgaContentCard>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {documents.map(doc => (
-            <Card key={doc.id} className="hover:shadow-md transition-shadow group">
-              <CardContent className="p-4 flex items-start gap-4">
-                <div className="h-12 w-12 bg-primary/10 text-primary rounded flex items-center justify-center shrink-0">
-                  <FileIcon className="h-6 w-6" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm truncate" title={doc.fileName}>{doc.fileName}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{formatSize(doc.size)} • {fmtDate(doc.createdAt)}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{t("projects.documents.uploadedBy", { name: doc.uploader?.fullName || t("projects.documents.unknownUploader") })}</p>
-                </div>
-                <div className="flex flex-col gap-2 shrink-0">
-                  <a href={`/api/projects/${project.id}/documents/${doc.id}/download`} download>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Download className="h-4 w-4" />
-                    </Button>
-                  </a>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDelete(doc.id)}>
-                    <Trash2 className="h-4 w-4" />
+            <DgaContentCard key={doc.id} className="group flex items-start gap-4">
+              <div className="h-12 w-12 bg-primary/10 text-primary rounded flex items-center justify-center shrink-0">
+                <FileIcon className="h-6 w-6" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm truncate" title={doc.fileName}>{doc.fileName}</p>
+                <p className="text-xs text-muted-foreground mt-1">{formatSize(doc.size)} • {fmtDate(doc.createdAt)}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{t("projects.documents.uploadedBy", { name: doc.uploader?.fullName || t("projects.documents.unknownUploader") })}</p>
+              </div>
+              <div className="flex flex-col gap-2 shrink-0">
+                <a href={`/api/projects/${project.id}/documents/${doc.id}/download`} download>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Download className="h-4 w-4" />
                   </Button>
-                </div>
-              </CardContent>
-            </Card>
+                </a>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDelete(doc.id)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </DgaContentCard>
           ))}
         </div>
       )}
