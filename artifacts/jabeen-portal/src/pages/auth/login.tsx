@@ -15,6 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { DgaTextField } from "@/components/ui/dga-text-field";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowRight, ShieldCheck, Activity, MapPin } from "lucide-react";
@@ -277,31 +278,23 @@ export default function LoginPage() {
 
                 <Form {...loginForm}>
                   <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-5">
-                    <FormField
+                    {/* Phase 3: DGA text inputs (label + validation via the
+                        component's own props). data-testid was DOM-only and the
+                        web component doesn't forward it; tests are HTTP-level. */}
+                    <DgaTextField
                       control={loginForm.control}
                       name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("auth.workEmail")}</FormLabel>
-                          <FormControl>
-                            <Input type="email" inputMode="email" autoComplete="email" autoCapitalize="none" spellCheck={false} placeholder="name@company.com" {...field} className="h-11" data-testid="input-email" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      label={t("auth.workEmail")}
+                      placeholder="name@company.com"
+                      required
                     />
-                    <FormField
+                    <DgaTextField
                       control={loginForm.control}
                       name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("auth.password")}</FormLabel>
-                          <FormControl>
-                            <Input type="password" autoComplete="current-password" placeholder="••••••••" {...field} className="h-11" data-testid="input-password" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      type="password"
+                      label={t("auth.password")}
+                      placeholder="••••••••"
+                      required
                     />
                     <Button type="submit" className="login-press w-full h-11 text-base font-semibold mt-2" disabled={loginForm.formState.isSubmitting} data-testid="button-submit-login">
                       {loginForm.formState.isSubmitting ? t("auth.signingIn") : t("auth.signInButton")}

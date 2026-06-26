@@ -87,6 +87,20 @@
 
 
 /* ---------------------------------------------------------------------------
+   4b. LAYOUT — DGA form-field hosts are inline custom elements by default, so a
+   `space-y-*` parent's vertical margins don't separate stacked fields. Make the
+   common field hosts block-level.
+   --------------------------------------------------------------------------- */
+dga-text-input,
+dga-textarea,
+dga-number-input,
+dga-dropdown,
+dga-search-box {
+  display: block;
+}
+
+
+/* ---------------------------------------------------------------------------
    5. OPTIONAL: exact JABEEN darkest surface (#0E0E0B) in dark mode.
    DGA's darkest neutral #0c111b is already nearly identical. Uncomment to match.
    --------------------------------------------------------------------------- */
