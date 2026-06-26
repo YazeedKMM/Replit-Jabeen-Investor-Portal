@@ -7,7 +7,11 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const labelVariants = cva(
-  "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+  // `block` so vertical spacing from a `space-y-*` parent applies: a <label> is
+  // inline by UA default, and inline elements ignore block margins, which left
+  // form labels touching their inputs. Harmless for labels placed beside a
+  // control inside a flex row (the flex parent keeps them in-line).
+  "block text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
 )
 
 const Label = React.forwardRef<
