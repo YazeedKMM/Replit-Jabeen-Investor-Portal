@@ -5,20 +5,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { TFunction } from "i18next";
 import { useAuth } from "@/hooks/use-auth";
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Form } from "@/components/ui/form";
 import { DgaTextField } from "@/components/ui/dga-text-field";
+import { DgaBrandButton } from "@/components/ui/dga-brand-button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowRight, ShieldCheck, Activity, MapPin } from "lucide-react";
+import { ShieldCheck, Activity, MapPin } from "lucide-react";
 import { MfaVerifyStep } from "./mfa-verify";
 import { MfaSetupFlow } from "./mfa-setup";
 import { LanguageSwitcher } from "@/components/language-switcher";
@@ -277,7 +269,19 @@ export default function LoginPage() {
                 </div>
 
                 <Form {...loginForm}>
-                  <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-5">
+                  <form
+                    onSubmit={loginForm.handleSubmit(onLoginSubmit)}
+                    onKeyDown={(e) => {
+                      // The DGA button can't submit a form natively (its <button>
+                      // is in shadow DOM) and there's no native submit target for
+                      // Enter — so wire Enter straight to react-hook-form.
+                      if (e.key === "Enter" && (e.target as HTMLElement).tagName === "INPUT") {
+                        e.preventDefault();
+                        loginForm.handleSubmit(onLoginSubmit)();
+                      }
+                    }}
+                    className="space-y-5"
+                  >
                     {/* Phase 3: DGA text inputs (label + validation via the
                         component's own props). data-testid was DOM-only and the
                         web component doesn't forward it; tests are HTTP-level. */}
@@ -296,10 +300,14 @@ export default function LoginPage() {
                       placeholder="••••••••"
                       required
                     />
-                    <Button type="submit" className="login-press w-full h-11 text-base font-semibold mt-2" disabled={loginForm.formState.isSubmitting} data-testid="button-submit-login">
-                      {loginForm.formState.isSubmitting ? t("auth.signingIn") : t("auth.signInButton")}
-                      {!loginForm.formState.isSubmitting && <ArrowRight className="ms-2 h-4 w-4 rtl-flip" />}
-                    </Button>
+                    <DgaBrandButton
+                      type="button"
+                      size="lg"
+                      fullWidth
+                      disabled={loginForm.formState.isSubmitting}
+                      onOnClick={() => loginForm.handleSubmit(onLoginSubmit)()}
+                      label={loginForm.formState.isSubmitting ? t("auth.signingIn") : t("auth.signInButton")}
+                    />
                   </form>
                 </Form>
               </TabsContent>
@@ -311,96 +319,73 @@ export default function LoginPage() {
                 </div>
 
                 <Form {...registerForm}>
-                  <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
+                  <form
+                    onSubmit={registerForm.handleSubmit(onRegisterSubmit)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && (e.target as HTMLElement).tagName === "INPUT") {
+                        e.preventDefault();
+                        registerForm.handleSubmit(onRegisterSubmit)();
+                      }
+                    }}
+                    className="space-y-4"
+                  >
                     <div className="grid grid-cols-2 gap-4">
-                      <FormField
+                      <DgaTextField
                         control={registerForm.control}
                         name="fullName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t("auth.fullName")}</FormLabel>
-                            <FormControl>
-                              <Input autoComplete="name" placeholder="John Doe" {...field} className="h-10" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                        label={t("auth.fullName")}
+                        placeholder="John Doe"
+                        required
                       />
-                      <FormField
+                      <DgaTextField
                         control={registerForm.control}
                         name="companyName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t("auth.company")}</FormLabel>
-                            <FormControl>
-                              <Input autoComplete="organization" placeholder="Acme Corp" {...field} className="h-10" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                        label={t("auth.company")}
+                        placeholder="Acme Corp"
+                        required
                       />
                     </div>
 
-                    <FormField
+                    <DgaTextField
                       control={registerForm.control}
                       name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("auth.workEmail")}</FormLabel>
-                          <FormControl>
-                            <Input type="email" inputMode="email" autoComplete="email" autoCapitalize="none" spellCheck={false} placeholder="name@company.com" {...field} className="h-10" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      label={t("auth.workEmail")}
+                      placeholder="name@company.com"
+                      required
                     />
 
-                    <FormField
+                    <DgaTextField
                       control={registerForm.control}
                       name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("auth.password")}</FormLabel>
-                          <FormControl>
-                            <Input type="password" autoComplete="new-password" placeholder="••••••••" {...field} className="h-10" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      type="password"
+                      label={t("auth.password")}
+                      placeholder="••••••••"
+                      required
                     />
 
                     <div className="grid grid-cols-2 gap-4">
-                      <FormField
+                      <DgaTextField
                         control={registerForm.control}
                         name="title"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t("auth.jobTitle")} <span className="text-muted-foreground font-normal">{t("auth.optional")}</span></FormLabel>
-                            <FormControl>
-                              <Input autoComplete="organization-title" placeholder="Project Manager" {...field} className="h-10" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                        label={`${t("auth.jobTitle")} ${t("auth.optional")}`}
+                        placeholder="Project Manager"
                       />
-                      <FormField
+                      <DgaTextField
                         control={registerForm.control}
                         name="phone"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t("auth.phone")} <span className="text-muted-foreground font-normal">{t("auth.optional")}</span></FormLabel>
-                            <FormControl>
-                              <Input type="tel" inputMode="tel" autoComplete="tel" placeholder="+966…" {...field} className="h-10" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                        label={`${t("auth.phone")} ${t("auth.optional")}`}
+                        placeholder="+966…"
                       />
                     </div>
 
-                    <Button type="submit" className="login-press w-full h-11 text-base font-semibold mt-4" disabled={registerForm.formState.isSubmitting} data-testid="button-submit-register">
-                      {registerForm.formState.isSubmitting ? t("auth.creatingAccount") : t("auth.registerButton")}
-                    </Button>
+                    <DgaBrandButton
+                      type="button"
+                      size="lg"
+                      fullWidth
+                      disabled={registerForm.formState.isSubmitting}
+                      onOnClick={() => registerForm.handleSubmit(onRegisterSubmit)()}
+                      label={registerForm.formState.isSubmitting ? t("auth.creatingAccount") : t("auth.registerButton")}
+                    />
                   </form>
                 </Form>
               </TabsContent>

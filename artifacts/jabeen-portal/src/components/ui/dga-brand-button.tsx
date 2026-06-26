@@ -26,15 +26,25 @@ const DARK_LABEL_ON_GOLD = {
   "--text-oncolor-primary": "var(--colors-neutral-950)",
 } as CSSProperties;
 
+// DgaButton's inner button is shadow-encapsulated and sizes to its content, with
+// no `part` to reach it. A grid host stretches that single child to full width
+// (cross-axis stretch) without piercing the shadow boundary.
+const FULL_WIDTH = { display: "grid", width: "100%" } as CSSProperties;
+
 export function DgaBrandButton({
   style,
+  fullWidth,
   ...props
-}: ComponentProps<typeof DgaButton>) {
+}: ComponentProps<typeof DgaButton> & { fullWidth?: boolean }) {
   return (
     <DgaButton
       variant="primary-brand"
       {...props}
-      style={{ ...DARK_LABEL_ON_GOLD, ...style }}
+      style={{
+        ...DARK_LABEL_ON_GOLD,
+        ...(fullWidth ? FULL_WIDTH : null),
+        ...style,
+      }}
     />
   );
 }
