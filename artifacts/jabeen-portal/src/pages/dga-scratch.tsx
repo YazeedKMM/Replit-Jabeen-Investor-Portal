@@ -2,7 +2,9 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { DgaButton } from "platformscode-new-react";
 import { DgaBrandButton, DgaSubmitButton } from "@/components/ui/dga-brand-button";
+import { DgaModal } from "@/components/ui/dga-modal";
 import { DgaForm } from "@/components/ui/dga-form";
 import { DgaTextField } from "@/components/ui/dga-text-field";
 import {
@@ -30,6 +32,7 @@ type Demo = z.infer<typeof schema>;
 
 export default function DgaScratchPage() {
   const [result, setResult] = useState<Demo | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
   const form = useForm<Demo>({
     resolver: zodResolver(schema),
     defaultValues: { email: "", notes: "", city: "", agree: false, notify: false, plan: "" },
@@ -101,10 +104,28 @@ export default function DgaScratchPage() {
           </pre>
         )}
 
-        <div style={{ marginTop: 24 }}>
+        <div style={{ marginTop: 24, display: "flex", gap: 12 }}>
           <DgaBrandButton label="زر ذهبي" />
+          <DgaButton id="open-modal-btn" variant="secondary" label="افتح النافذة" onOnClick={() => setModalOpen(true)} />
         </div>
       </div>
+
+      <DgaModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        title="نافذة اختبار DGA"
+        footer={
+          <div id="modal-footer" style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
+            <DgaButton variant="secondary-outline" label="إلغاء" onOnClick={() => setModalOpen(false)} />
+            <DgaBrandButton label="تأكيد" onOnClick={() => setModalOpen(false)} />
+          </div>
+        }
+      >
+        <div id="modal-body-content" style={{ color: "var(--text-default)", fontSize: 14, lineHeight: 1.6 }}>
+          هذا محتوى النافذة. نتحقق من فتح/إغلاق النافذة، والعنوان، والمحتوى،
+          وأزرار التذييل، والخلفية المعتمة في كلا الوضعين.
+        </div>
+      </DgaModal>
     </div>
   );
 }
