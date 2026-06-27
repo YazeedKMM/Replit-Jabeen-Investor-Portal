@@ -62,7 +62,13 @@ export default function ProjectMessagesTab({ project }: Props) {
                   <span className="text-[10px] text-muted-foreground uppercase">{msg.authorRole.replace('-', ' ')}</span>
                   <span className="text-[10px] text-muted-foreground ms-2">{fmtDateTime(msg.createdAt)}</span>
                 </div>
-                <div className={cn("p-3 rounded-lg text-sm", isMe ? "bg-primary text-primary-foreground rounded-se-none" : "bg-muted rounded-ss-none")}>
+                {/* Own bubble is brand gold in BOTH themes; white-on-gold is only
+                    3.23:1 (fails AA), so the label is dark (#0c111b ≈ 5.4:1) — the
+                    same dark-on-gold treatment DgaBrandButton uses. */}
+                <div
+                  className={cn("p-3 rounded-lg text-sm", isMe ? "bg-primary rounded-se-none" : "bg-muted rounded-ss-none")}
+                  style={isMe ? { color: "#0c111b" } : undefined}
+                >
                   <p className="whitespace-pre-wrap">{msg.body}</p>
                 </div>
               </div>
