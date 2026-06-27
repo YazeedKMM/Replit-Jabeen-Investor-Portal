@@ -127,6 +127,18 @@ export default function LoginPage() {
     }
   };
 
+  // TODO(backend): there is no password-recovery endpoint yet — the only
+  // "recovery" in the API is MFA recovery codes (api-server/src/lib/mfa.ts),
+  // which is unrelated. When a real reset flow lands (e.g.
+  // POST /api/auth/forgot-password + a reset page), wire this handler to it.
+  // Until then, direct users to the JABEEN administrator.
+  const onForgotPassword = () => {
+    toast({
+      title: t("auth.forgotPasswordTitle"),
+      description: t("auth.forgotPasswordDesc"),
+    });
+  };
+
   const onMfaVerifySuccess = (accessToken: string, user: any) => {
     handleAuthResult({ accessToken, user });
     toast({ title: t("auth.toast.welcomeBackTitle"), description: t("auth.toast.welcomeBackMfaDesc") });
@@ -302,6 +314,21 @@ export default function LoginPage() {
                       placeholder="••••••••"
                       required
                     />
+                    {/* Forgot-password affordance. Logical text-end keeps it on
+                        the trailing edge in both LTR and RTL. Colored via the
+                        theme-split --text-primary token so it stays gold and AA
+                        (gold-800 #826311 on the light card = 5.6:1; brand gold on
+                        dark = 5.85:1) rather than the lighter utility gold. */}
+                    <div className="-mt-3 text-end">
+                      <button
+                        type="button"
+                        onClick={onForgotPassword}
+                        className="text-sm font-medium hover:underline"
+                        style={{ color: "var(--text-primary)" }}
+                      >
+                        {t("auth.forgotPassword")}
+                      </button>
+                    </div>
                     <DgaSubmitButton
                       onSubmit={submitLogin}
                       size="lg"
