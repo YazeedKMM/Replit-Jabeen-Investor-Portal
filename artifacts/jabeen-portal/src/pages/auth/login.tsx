@@ -191,6 +191,15 @@ export default function LoginPage() {
           className="absolute inset-0 pointer-events-none"
           style={{ background: 'linear-gradient(0deg, rgba(7,5,3,0.72) 0%, rgba(7,5,3,0) 32%)' }}
         />
+        {/* Focused scrim centered on the headline/feature text zone. The large
+            headline sits over the brightest sunset pixels where the diagonal
+            scrim above is only ~0.39 alpha (≈2.9:1 white-on-image, below AA).
+            This radial adds darkening only behind the text column and fades to
+            transparent before the refinery, so the photo isn't flattened. */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: `radial-gradient(120% 82% at ${dir === "rtl" ? "70%" : "30%"} 47%, rgba(7,5,3,0.58) 0%, rgba(7,5,3,0.36) 40%, rgba(7,5,3,0) 72%)` }}
+        />
         {/* Faint warm wash to seat the photo in the gold identity */}
         <div className="absolute inset-0 pointer-events-none mix-blend-soft-light bg-primary/15" />
 
