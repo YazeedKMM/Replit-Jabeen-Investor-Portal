@@ -101,6 +101,26 @@ dga-search-box {
 
 
 /* ---------------------------------------------------------------------------
+   4c. INPUT STROKE — the Stencil-injected core.css reset (meyerweb `border: 0`)
+   zeroes the DGA field border-width on DgaTextInput/Textarea (whose own border
+   rule is not !important), leaving them as strokeless white boxes. Restore the
+   intended 1px neutral stroke + a gold focus stroke. (NumberInput/Dropdown/
+   SearchBox already force their own !important border.) These selectors are
+   unlayered and higher-specificity than the element-level reset, so they win
+   without !important.
+   --------------------------------------------------------------------------- */
+dga-text-input .input,
+dga-textarea .textarea {
+  border-width: 1px;
+  border-color: var(--border-neutral-primary);
+}
+dga-text-input .input:focus-within,
+dga-textarea .textarea:focus-within {
+  border-color: var(--border-primary);
+}
+
+
+/* ---------------------------------------------------------------------------
    5. OPTIONAL: exact JABEEN darkest surface (#0E0E0B) in dark mode.
    DGA's darkest neutral #0c111b is already nearly identical. Uncomment to match.
    --------------------------------------------------------------------------- */
