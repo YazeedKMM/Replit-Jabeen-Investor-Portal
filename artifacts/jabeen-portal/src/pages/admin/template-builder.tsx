@@ -12,7 +12,6 @@ import {
   StageFieldInputBaseType,
   StageFieldInputWidget
 } from "@workspace/api-client-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,8 +21,10 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowLeft, Plus, Trash2, GripVertical, Save, Loader2, Eye, GitBranch, Info } from "lucide-react";
+import { DgaContentCard } from "@/components/ui/dga-card";
+import { DgaBrandButton } from "@/components/ui/dga-brand-button";
+import { DgaInlineAlert } from "platformscode-new-react";
+import { ArrowLeft, Plus, Trash2, GripVertical, Loader2, Eye, GitBranch } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -322,44 +323,28 @@ export default function TemplateBuilderPage() {
           )}
         </div>
         {!isArchived && (
-          <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <Save className="me-2 h-4 w-4" />}
-            {t("admin.templateBuilder.saveTemplate")}
-          </Button>
+          <DgaBrandButton label={t("admin.templateBuilder.saveTemplate")} disabled={isSaving} onOnClick={handleSave} />
         )}
       </div>
 
       {isArchived && (
-        <Alert>
-          <Info className="h-4 w-4" />
-          <AlertDescription>
-            {t("admin.templateBuilder.archivedAlert")}
-          </AlertDescription>
-        </Alert>
+        <DgaInlineAlert type="info" colored leadText={t("admin.templateBuilder.archivedAlert")} />
       )}
 
       {!isNew && !isArchived && assignedProjectCount > 0 && (
-        <Alert>
-          <GitBranch className="h-4 w-4" />
-          <AlertDescription
-            dangerouslySetInnerHTML={{
-              __html: t("admin.templateBuilder.inUseAlert", {
-                count: assignedProjectCount,
-                version: serverTemplate?.versionNumber
-              })
-                .replace("<1>", "<strong>")
-                .replace("</1>", "</strong>")
-            }}
-          />
-        </Alert>
+        <DgaInlineAlert
+          type="info"
+          colored
+          leadText={t("admin.templateBuilder.inUseAlert", { count: assignedProjectCount, version: serverTemplate?.versionNumber }).replace(/<\/?1>/g, "")}
+        />
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("admin.templateBuilder.detailsCard.title")}</CardTitle>
-          <CardDescription>{t("admin.templateBuilder.detailsCard.description")}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <DgaContentCard className="space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">{t("admin.templateBuilder.detailsCard.title")}</h2>
+          <p className="text-sm text-muted-foreground">{t("admin.templateBuilder.detailsCard.description")}</p>
+        </div>
+        <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>{t("admin.templateBuilder.detailsCard.fieldName")}</Label>
@@ -388,8 +373,8 @@ export default function TemplateBuilderPage() {
               disabled={isArchived}
             />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </DgaContentCard>
 
       <div className="space-y-4">
         <div className="flex justify-between items-end">
