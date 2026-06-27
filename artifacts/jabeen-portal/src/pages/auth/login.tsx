@@ -259,8 +259,20 @@ export default function LoginPage() {
 
           {/* Normal Login / Register */}
           {mfaStep.type === "none" && (
-            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-8 h-12 p-1 bg-muted">
+            <>
+              {/* Brand mark on the form side — anchors the column so it doesn't
+                  float in empty space, and mirrors the hero logo. Native logo is
+                  two-tone gold + dark (reads on the light card); invert to white
+                  in dark theme where the card surface goes dark. */}
+              <div className="mb-9 flex justify-center md:justify-start">
+                <img
+                  src={`${BASE}/jabeen-logo.svg`}
+                  alt="JABEEN"
+                  className="h-12 w-auto dark:brightness-0 dark:invert"
+                />
+              </div>
+              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6 h-12 p-1 bg-muted">
                 <TabsTrigger value="login" className="text-sm font-semibold rounded-md h-full data-[state=active]:bg-background data-[state=active]:shadow-sm">{t("auth.tabSignIn")}</TabsTrigger>
                 <TabsTrigger value="register" className="text-sm font-semibold rounded-md h-full data-[state=active]:bg-background data-[state=active]:shadow-sm">{t("auth.tabRegister")}</TabsTrigger>
               </TabsList>
@@ -368,6 +380,7 @@ export default function LoginPage() {
                   </DgaForm>
               </TabsContent>
             </Tabs>
+            </>
           )}
         </div>
       </div>
