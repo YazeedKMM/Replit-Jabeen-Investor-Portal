@@ -146,6 +146,22 @@ dga-textarea .textarea:focus-within {
 
 
 /* ---------------------------------------------------------------------------
+   4d. BUTTON LABEL COLOR — the same Stencil core.css reset injects an unlayered
+   `button { color: … }` that outranks Tailwind's layered `text-white` utility
+   (any unlayered rule beats any layered one). So shadcn <button>s that rely on
+   text-white — the purple internal-notes "Save" button and the blue updates-tab
+   actions — render with the inherited dark page text (#222) on a saturated
+   fill: ~2.25:1, below AA. Re-assert white with an unlayered, higher-specificity
+   selector (button.text-white = 0,1,1 beats the element rule 0,0,1). Scoped to
+   .text-white so ghost/outline buttons, which correctly inherit the foreground
+   colour, are untouched. (Same reset-bleed family as 4c and the gold-link fix.)
+   --------------------------------------------------------------------------- */
+button.text-white {
+  color: #fff;
+}
+
+
+/* ---------------------------------------------------------------------------
    5. OPTIONAL: exact JABEEN darkest surface (#0E0E0B) in dark mode.
    DGA's darkest neutral #0c111b is already nearly identical. Uncomment to match.
    --------------------------------------------------------------------------- */
