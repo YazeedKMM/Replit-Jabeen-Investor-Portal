@@ -1,9 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { Project, useListMessages, useCreateMessage } from "@workspace/api-client-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, MessageSquare, Send } from "lucide-react";
+import { DgaBrandButton } from "@/components/ui/dga-brand-button";
+import { Loader2, MessageSquare } from "lucide-react";
 import { fmtDateTime } from "@/lib/format";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -87,14 +86,13 @@ export default function ProjectMessagesTab({ project }: Props) {
                 }
               }}
             />
-            <Button
-              className="shrink-0 h-[80px] w-[80px] flex flex-col gap-1"
-              onClick={handleSend}
-              disabled={!body.trim() || createMutation.isPending}
-            >
-              {createMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
-              <span>{t("projects.messages.sendButton")}</span>
-            </Button>
+            <div className="shrink-0 self-stretch flex items-stretch">
+              <DgaBrandButton
+                label={t("projects.messages.sendButton")}
+                disabled={!body.trim() || createMutation.isPending}
+                onOnClick={handleSend}
+              />
+            </div>
           </div>
         </div>
       )}
