@@ -101,18 +101,24 @@ dga-search-box {
 
 
 /* ---------------------------------------------------------------------------
-   4c. INPUT STROKE — the Stencil-injected core.css reset (meyerweb `border: 0`)
-   zeroes the DGA field border-width on DgaTextInput/Textarea (whose own border
-   rule is not !important), leaving them as strokeless white boxes. Restore the
-   intended 1px neutral stroke + a gold focus stroke. (NumberInput/Dropdown/
-   SearchBox already force their own !important border.) These selectors are
-   unlayered and higher-specificity than the element-level reset, so they win
-   without !important.
+   4c. INPUT STROKE + PADDING — the Stencil-injected core.css reset (meyerweb
+   `border: 0` and `padding: 0`) zeroes both the border-width AND the inner
+   padding on the DgaTextInput/Textarea wrappers (their own rules aren't
+   !important), leaving strokeless boxes whose text hugs the edge. Restore the
+   1px neutral stroke + gold focus stroke + comfortable inner padding.
+   (NumberInput/Dropdown/SearchBox already force their own !important border.)
+   These selectors are unlayered and higher-specificity than the element-level
+   reset, so they win without !important.
    --------------------------------------------------------------------------- */
-dga-text-input .input,
+dga-text-input .input {
+  border-width: 1px;
+  border-color: var(--border-neutral-primary);
+  padding-inline: var(--spacing-lg); /* 12px — keep text off the border */
+}
 dga-textarea .textarea {
   border-width: 1px;
   border-color: var(--border-neutral-primary);
+  padding: var(--spacing-md) var(--spacing-lg); /* 8px / 12px for multi-line */
 }
 dga-text-input .input:focus-within,
 dga-textarea .textarea:focus-within {
