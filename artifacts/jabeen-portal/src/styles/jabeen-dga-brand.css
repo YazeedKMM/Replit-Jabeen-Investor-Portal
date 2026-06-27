@@ -64,7 +64,26 @@
   --text-primary: var(--colors-primary-sa-flag-800);          /* #826311, 5.6:1 on white */
 }
 [data-theme="dark"] {
-  --text-primary: var(--colors-primary-sa-flag-600-primary);  /* #b38916, 5.85:1 on dark */
+  /* gold-500 #bc9731, not the brand gold-600 #b38916: as TEXT, #b38916 scores
+     5.85:1 on the darkest body bg but only ~4.47:1 on the lighter card surface
+     (#1f2a37) — below AA. gold-500 is one step brighter (still unmistakably the
+     brand gold) and clears AA on both: 6.8:1 on body, ~5.15:1 on cards. This is
+     the gold-TEXT token only; gold fills/borders keep the brand gold-600. */
+  --text-primary: var(--colors-primary-sa-flag-500);          /* #bc9731 */
+}
+
+
+/* ---------------------------------------------------------------------------
+   3b. GOLD LINKS — anchors that carry the `.text-primary` utility render DARK,
+   not gold: the Stencil core.css reset injects an UNLAYERED `a { color: inherit }`
+   which outranks Tailwind's `.text-primary` (it lives in the `utilities` layer,
+   and any unlayered rule beats any layered one). Re-assert the gold with an
+   unlayered, higher-specificity selector (a.text-primary = 0,1,1 beats a = 0,0,1)
+   so it wins on both axes. Uses --text-primary → tracks the light/dark split
+   above (gold-800 #826311 on light = 5.6:1 AA; brand gold on dark = 5.85:1 AA).
+   --------------------------------------------------------------------------- */
+a.text-primary {
+  color: var(--text-primary);
 }
 
 
