@@ -2,8 +2,8 @@
 
 **Branch:** `elastic-lederberg-16ee00`
 **Scope:** `artifacts/jabeen-portal/` (all UI source — `index.html`, `src/**`)
-**Method:** `web-design-guidelines` skill (Vercel Web Interface Guidelines, fetched live) applied against the UI source.
-**Date:** 2026-06-27
+**Method:** `web-design-guidelines` skill (Vercel Web Interface Guidelines, fetched live) applied against the UI source, then a runtime pass against the running app to verify rendered behavior (see §5).
+**Date:** 2026-06-27 (static); runtime pass 2026-06-28
 **Status:** Audit only. No UI code changed; this report is the sole artifact.
 
 Paths below are relative to `artifacts/jabeen-portal/`.
@@ -35,17 +35,19 @@ Paths below are relative to `artifacts/jabeen-portal/`.
 
 | Category | P1 | P2 | P3 | Total |
 |---|---|---|---|---|
-| Accessibility (WCAG AA) | 0 | 12 | 4 | 16 |
+| Accessibility (WCAG AA) | 0 | 13 | 4 | 17 |
 | Semantics | 0 | 3 | 2 | 5 |
-| Keyboard & focus | 0 | 4 | 1 | 5 |
+| Keyboard & focus | 0 | 5 | 0 | 5 |
 | Forms | 0 | 3 | 2 | 5 |
 | Responsive | 1 | 0 | 3 | 4 |
 | Motion | 0 | 1 | 2 | 3 |
 | Performance | 0 | 1 | 4 | 5 |
 | RTL / i18n | 0 | 3 | 7 | 10 |
-| **Total** | **1** | **27** | **25** | **53** |
+| **Total** | **1** | **29** | **24** | **54** |
 
 Priority key: **P1** broken / fails accessibility · **P2** important · **P3** polish.
+
+Findings tagged **[runtime-confirmed]** were verified in the running app (see §5). Two findings were added or upgraded as a result of the runtime pass: the focus-visibility failure (Keyboard & focus, upgraded P3→P2) and the light-theme inactive-tab contrast (Accessibility, new P2).
 
 ---
 
@@ -53,7 +55,8 @@ Priority key: **P1** broken / fails accessibility · **P2** important · **P3** 
 
 ### Accessibility (WCAG AA)
 
-- `src/components/layout/header.tsx:42` — P2 — Notifications icon button has no accessible name; only a conditional `sr-only` count when `unreadCount>0`, so it's unnamed at 0 unread. Fix: add `aria-label`.
+- `src/components/layout/header.tsx:42` — P2 — **[runtime-confirmed]** Notifications icon button has no accessible name; only a conditional `sr-only` count when `unreadCount>0`, so it's unnamed at 0 unread (live DOM: `aria-label`/`title` both null; named only because the test user had unread items). Fix: add `aria-label`.
+- `src/components/ui/tabs.tsx:30` (used `src/pages/auth/login.tsx:297-298`) — P2 — **[runtime-confirmed]** Inactive tab label in **light** theme measured **4.33:1** (`#6e737c` on `#f3f4f6`, 14px/600) — below AA 4.5. Dark theme passes. Fix: darken inactive `data-[state=inactive]` tab text, e.g. to `foreground/70`.
 - `src/components/ui/dga-text-field.tsx` / `src/components/ui/city-switcher.tsx:11` see Forms/below — see category entries.
 - `src/components/city-switcher.tsx:11` — P2 — `SelectTrigger` has no `aria-label`; relies on placeholder/value only. Fix: `aria-label={t("common.cityFilter")}`.
 - `src/pages/dashboard/dashboard.tsx:432` — P2 — Search `<Input>` has placeholder but no label/`aria-label`. Fix: add visually-hidden `<label>` or `aria-label`.
@@ -73,19 +76,19 @@ Priority key: **P1** broken / fails accessibility · **P2** important · **P3** 
 
 ### Semantics
 
-- `src/components/layout/app-layout.tsx:17` + `src/components/ui/sidebar.tsx:310` — P2 — Nested/duplicate `<main>`: `SidebarInset` renders `<main>`, and `app-layout` nests a second `<main>` inside it. Fix: make the inner wrapper a `<div>`; keep one `main`.
-- `src/components/layout/header.tsx:28` — P2 — `<header>` banner is rendered inside the outer `<main>` (`SidebarInset`). Banner must not be inside main. Fix: hoist header out of the `main` landmark.
-- `src/components/layout/sidebar-nav.tsx:112-127` — P2 — Primary navigation is not wrapped in a `<nav>` landmark (no `<nav>` emitted by the sidebar menu). Fix: wrap the menu in `<nav aria-label={t("nav.primary")}>`.
+- `src/components/layout/app-layout.tsx:17` + `src/components/ui/sidebar.tsx:310` — P2 — **[runtime-confirmed]** Nested/duplicate `<main>`: `SidebarInset` renders `<main>`, and `app-layout` nests a second `<main>` inside it (live DOM: 2 `<main>`, one inside the other). Fix: make the inner wrapper a `<div>`; keep one `main`.
+- `src/components/layout/header.tsx:28` — P2 — **[runtime-confirmed]** `<header>` banner is rendered inside the outer `<main>` (`SidebarInset`). Banner must not be inside main. Fix: hoist header out of the `main` landmark.
+- `src/components/layout/sidebar-nav.tsx:112-127` — P2 — **[runtime-confirmed]** Primary navigation is not wrapped in a `<nav>` landmark (live DOM: 0 `<nav>` elements; sidebar links not inside any `nav`). Fix: wrap the menu in `<nav aria-label={t("nav.primary")}>`.
 - `src/components/layout/notification-panel.tsx:46` — P3 — `<h4>` used with no preceding `h1`–`h3` in the popover subtree (heading-level skip). Fix: use `<h2>`/`<h3>` or a non-heading.
 - `src/pages/dashboard/dashboard.tsx:403,414` vs `:429` — P3 — Breakdown `<h3>` headings appear before the table's `<h2>` under the page `<h1>` (out-of-order). Fix: demote/reorder so levels descend.
 
 ### Keyboard & focus
 
-- `src/components/layout/app-layout.tsx` — P2 — No skip-to-content link; keyboard users must tab the whole sidebar each navigation. Fix: add a focusable skip link targeting `main`.
+- `src/index.css` / DGA `core.css` reset (app-wide) — P2 — **[runtime-confirmed]** No visible focus indicator on keyboard focus. With `:focus-visible` actually matching (verified live), focused controls render `outline: 0px none` and a transparent ring: card links `a` "View details" (`my-projects.tsx`/`dashboard.tsx`), the city `SelectTrigger`, `ThemeToggle`, language switcher, and the notifications `Button` all showed no ring. The unlayered DGA reset neutralizes outlines and outranks Tailwind's layered `focus-visible:ring-*` (same reset-bleed family the brand CSS documents for borders/labels). WCAG 2.4.7. Fix: restore a visible `:focus-visible` outline/ring app-wide (unlayered, or `!`-scoped) so it beats the reset.
+- `src/components/layout/app-layout.tsx` — P2 — **[runtime-confirmed]** No skip-to-content link (live DOM: no `a[href^="#"]`); keyboard users must tab the whole sidebar each navigation. Fix: add a focusable skip link targeting `main`.
 - `src/components/layout/notification-panel.tsx:65` — P2 — Notification row is a clickable `<div>` (`onClick`) with no `role`/`tabIndex`/key handler; not keyboard operable. Fix: render as `<button>`.
 - `src/pages/projects/tabs/updates-tab.tsx:107` — P2 — Image-zoom wrapper is a clickable `<div>` with no keyboard support. Fix: use `<button>`.
 - `src/pages/projects/tabs/updates-tab.tsx:71-75` — P2 — `<img onClick>` (zoom) is not focusable/operable by keyboard. Fix: wrap in a `<button>`.
-- `src/components/ThemeToggle.tsx:72` / `src/pages/auth/login.tsx:332` — P3 — Inline-styled controls rely on the UA default outline (no enhanced `:focus-visible` ring consistent with shadcn). Fix: add a `focus-visible` ring.
 
 ### Forms
 
@@ -136,3 +139,30 @@ Priority key: **P1** broken / fails accessibility · **P2** important · **P3** 
 - shadcn/ui primitives in `src/components/ui/*` largely follow the guidelines (paired `focus-visible` rings after `outline-none`, logical properties, `role="alert"` in `field.tsx`/`alert.tsx`). Findings above target app-level usage and the custom DGA adapters.
 - Several DGA components are closed web components (`platformscode-new-react`); error-state ARIA and internal focus styling could not be verified from source and are flagged for runtime verification.
 - Counts treat each unique issue once under its primary category; some findings have secondary effects in another category (noted inline).
+
+---
+
+## 5. Runtime verification (live app)
+
+A second pass drove the running app in a real browser to verify rendered behavior the static review could not confirm (contrast, focus visibility, landmark counts, RTL).
+
+**Setup:** app served via the project's Docker stack (`.docker-run/docker-compose.yml`) at `http://localhost:5173`; the SPA bundle is the same UI commit this branch shares. Signed in as the seeded investor (`investor1@acmecorp.com`); routes exercised: `/login`, `/my-projects`, `/projects/1`. Both themes and both languages (en LTR / ar RTL) toggled via the in-app controls. Measurements taken by reading computed styles and the live a11y/DOM state in the page; contrast computed with the WCAG sRGB formula (alpha-composited over the resolved background).
+
+**Confirmed from the live DOM:**
+- Viewport `maximum-scale=1` present in the served HTML — pinch-zoom blocked (P1).
+- App shell: exactly **2 `<main>` elements, one nested in the other**; `<header>` resolves inside the outer `<main>`; **0 `<nav>` landmarks** (sidebar links in no `nav`); **no skip link**; `color-scheme` not set on `<html>`.
+- Login email field renders `type="text"` (not `email`); no `autocomplete`.
+- Notifications button: `aria-label`/`title` both null at runtime (named only when unread items inject the `sr-only` span).
+- `ThemeToggle` `aria-label` served as Arabic text while the UI was in English.
+
+**Contrast (measured):**
+- Light theme — inactive tab label **4.33:1 (fails AA)**; muted subtext 4.56–4.77 (passes, borderline); forgot-password link 5.61 (pass).
+- Dark theme — all sampled text passes comfortably (body/muted 7.0:1, gold link 6.4:1, headings 16.9:1). Dimmed timeline "future step" text is 7.03:1 (the dimming is cosmetic, not a contrast issue).
+
+**Focus visibility:** `:focus-visible` was verified to actually match on keyboard focus, yet focused links and buttons rendered **no outline and a transparent ring** — confirmed on card links, the city select, theme toggle, language switcher, and notifications button. Promoted to P2 (WCAG 2.4.7); this is the most significant issue surfaced by the runtime pass.
+
+**RTL (Arabic):** mirrors correctly — sidebar flips to the right, text/labels right-align, the "View details" chevron mirrors, dates render `2026/06/12`. No horizontal overflow at the tested width (`<html dir="rtl" lang="ar">`). Tabs expose correct `role="tablist"/"tab"/"tabpanel"` with `aria-selected` + `aria-controls`. The login hero image loads correctly (the initial near-black frame was decode latency, not a broken asset).
+
+**Not verifiable in this environment:**
+- True mobile viewport — the test display could not shrink the browser viewport below ~2040 CSS px, so the responsive findings (login `grid-cols-2`, wide-table overflow, touch-target sizes) remain code-derived, not runtime-confirmed.
+- `prefers-reduced-motion` behavior and DGA web-component error-state ARIA were not exercised at runtime.
