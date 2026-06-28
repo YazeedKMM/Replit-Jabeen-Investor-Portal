@@ -2,13 +2,14 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { Project, useUpdateProject, useDeleteProject, useListUsers, useListTemplates, useGetCities, useGetProjectCategories, getGetCitiesQueryKey, getGetProjectCategoriesQueryKey } from "@workspace/api-client-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DgaContentCard } from "@/components/ui/dga-card";
+import { DgaSubmitButton } from "@/components/ui/dga-brand-button";
+import { DgaButton } from "platformscode-new-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -108,13 +109,12 @@ export default function ProjectManageTab({ project, isAdmin }: Props) {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("projects.manage.metadataTitle")}</CardTitle>
-          <CardDescription>{t("projects.manage.metadataDesc")}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
+      <DgaContentCard className="space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">{t("projects.manage.metadataTitle")}</h2>
+          <p className="text-sm text-muted-foreground">{t("projects.manage.metadataDesc")}</p>
+        </div>
+        <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField control={form.control} name="name" render={({ field }) => (
@@ -191,23 +191,25 @@ export default function ProjectManageTab({ project, isAdmin }: Props) {
               )} />
 
               <div className="flex justify-end pt-4">
-                <Button type="submit" disabled={updateMutation.isPending}>{t("projects.manage.saveChanges")}</Button>
+                <DgaSubmitButton
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  loading={updateMutation.isPending}
+                  loadingLabel={t("projects.manage.saveChanges")}
+                  label={t("projects.manage.saveChanges")}
+                />
               </div>
             </form>
           </Form>
-        </CardContent>
-      </Card>
+      </DgaContentCard>
 
       {isAdmin && (
-        <Card className="border-destructive/50 shadow-none bg-destructive/5">
-          <CardHeader>
-            <CardTitle className="text-destructive flex items-center"><Trash2 className="me-2 h-5 w-5" /> {t("projects.manage.dangerZoneTitle")}</CardTitle>
-            <CardDescription>{t("projects.manage.dangerZoneDesc")}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button variant="destructive" onClick={handleDelete} disabled={deleteMutation.isPending}>{t("projects.manage.deleteButton")}</Button>
-          </CardContent>
-        </Card>
+        <DgaContentCard className="space-y-4">
+          <div>
+            <h2 className="text-destructive flex items-center text-lg font-semibold"><Trash2 className="me-2 h-5 w-5" /> {t("projects.manage.dangerZoneTitle")}</h2>
+            <p className="text-sm text-muted-foreground">{t("projects.manage.dangerZoneDesc")}</p>
+          </div>
+          <DgaButton variant="des-primary" label={t("projects.manage.deleteButton")} disabled={deleteMutation.isPending} onOnClick={handleDelete} />
+        </DgaContentCard>
       )}
     </div>
   );

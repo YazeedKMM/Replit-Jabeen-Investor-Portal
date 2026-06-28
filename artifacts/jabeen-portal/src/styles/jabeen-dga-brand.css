@@ -1,0 +1,206 @@
+/* ============================================================================
+   jabeen-dga-brand.css
+   JABEEN brand override for the DGA "Platforms Code" design system.
+   Supports BOTH light and dark themes with a user toggle.
+
+   HOW THIS WORKS
+   DGA ships a primitive palette (--colors-*) and semantic tokens
+   (--background-*, --border-*, --button-*, --text-*) that reference primitives.
+   We override ONLY the primary primitive ramp (--colors-primary-sa-flag-*) with
+   a JABEEN gold ramp, so every primary surface, button, border, and focus ring
+   becomes gold in BOTH themes. No component CSS is touched.
+
+   LOAD ORDER (critical):
+   1. import 'platformscode-new-react/dist/style.css'   (DGA tokens + components)
+   2. import './jabeen-dga-brand.css'                    (this file, AFTER DGA)
+
+   THEME ACTIVATION
+   - Light theme  -> default (:root), no attribute.
+   - Dark theme   -> data-theme="dark" on <html>.
+   - dir="rtl" lang="ar" on <html> for RTL + Arabic.
+   The ThemeToggle component switches data-theme at runtime and persists it.
+   ============================================================================ */
+
+
+/* ---------------------------------------------------------------------------
+   1. FONT (IBM Plex Sans Arabic). Loaded via the preconnected <link> in
+   index.html. Do NOT re-add a CSS `@import url(...)` here: a CSS @import is
+   render-blocking and serialized after this stylesheet downloads, and it
+   duplicated the index.html <link> (the font was fetched twice). For
+   offline/gov hosting, self-host the font files and swap the <link> for a
+   local @font-face instead.
+   --------------------------------------------------------------------------- */
+
+
+/* ---------------------------------------------------------------------------
+   2. JABEEN GOLD RAMP — overrides the DGA primary primitive scale.
+   Theme-independent: gold is gold in both light and dark. Anchored on the
+   JABEEN brand gold #B38916 at the 600 step.
+   --------------------------------------------------------------------------- */
+:root,
+[data-theme="dark"] {
+  --colors-primary-sa-flag-25:          #fcf8eb;
+  --colors-primary-sa-flag-50:          #f9f3e2;
+  --colors-primary-sa-flag-100:         #f4ecd4;
+  --colors-primary-sa-flag-200:         #e8dab2;
+  --colors-primary-sa-flag-300:         #d9c386;
+  --colors-primary-sa-flag-400:         #c8a954;
+  --colors-primary-sa-flag-500:         #bc9731;
+  --colors-primary-sa-flag-500-alpha-10:#b3891619;
+  --colors-primary-sa-flag-600-primary: #b38916;   /* JABEEN brand gold */
+  --colors-primary-sa-flag-700:         #9b7613;
+  --colors-primary-sa-flag-800:         #826311;
+  --colors-primary-sa-flag-900:         #664e0e;
+  --colors-primary-sa-flag-950:         #4e3a0b;
+}
+
+
+/* ---------------------------------------------------------------------------
+   3. THEME-AWARE GOLD TEXT  (accessibility, REQUIRED for light mode)
+   Measured: brand gold #B38916 as TEXT scores 5.85:1 on dark (good) but only
+   3.23:1 on white (fails AA). So gold text/links darken to gold-800 in light
+   mode and use the brand gold in dark mode. Order matters: dark rule comes
+   second so it wins when data-theme="dark" is present (equal specificity).
+   Gold FILLS and BORDERS are unaffected and stay the brand gold in both themes.
+   --------------------------------------------------------------------------- */
+:root {
+  --text-primary: var(--colors-primary-sa-flag-800);          /* #826311, 5.6:1 on white */
+}
+[data-theme="dark"] {
+  /* gold-500 #bc9731, not the brand gold-600 #b38916: as TEXT, #b38916 scores
+     5.85:1 on the darkest body bg but only ~4.47:1 on the lighter card surface
+     (#1f2a37) — below AA. gold-500 is one step brighter (still unmistakably the
+     brand gold) and clears AA on both: 6.8:1 on body, ~5.15:1 on cards. This is
+     the gold-TEXT token only; gold fills/borders keep the brand gold-600. */
+  --text-primary: var(--colors-primary-sa-flag-500);          /* #bc9731 */
+}
+
+
+/* ---------------------------------------------------------------------------
+   3b. GOLD LINKS — anchors that carry the `.text-primary` utility render DARK,
+   not gold: the Stencil core.css reset injects an UNLAYERED `a { color: inherit }`
+   which outranks Tailwind's `.text-primary` (it lives in the `utilities` layer,
+   and any unlayered rule beats any layered one). Re-assert the gold with an
+   unlayered, higher-specificity selector (a.text-primary = 0,1,1 beats a = 0,0,1)
+   so it wins on both axes. Uses --text-primary → tracks the light/dark split
+   above (gold-800 #826311 on light = 5.6:1 AA; brand gold on dark = 5.85:1 AA).
+   --------------------------------------------------------------------------- */
+a.text-primary {
+  color: var(--text-primary);
+}
+
+
+/* ---------------------------------------------------------------------------
+   4. ACCESSIBILITY FIX — gold primary button label  (REQUIRED, both themes)
+   White label on gold = 3.23:1 (FAILS). Dark label on gold = ~5.4:1 (PASS).
+
+   NOTE: the original ::part(label) / [variant="primary-brand"] hooks do NOT work
+   against the real rendered DOM (core@0.0.50): the host exposes no `variant`
+   attribute (it's an internal shadow class .dga-btn--primary-brand) and there is
+   no part="label" (the label is <span class="dga-btn-label">). The label color
+   comes from the custom property `--text-oncolor-primary`, which DOES pierce the
+   shadow boundary — but it is shared with primary-neutral / des-primary / the
+   on-color variants, which legitimately need white, so it must NOT be overridden
+   globally here. Instead it is scoped per-button via the <DgaBrandButton>
+   wrapper's inline style (see components/ui/dga-brand-button.tsx) — inline style
+   is used rather than a marker class because @lit/react routes className onto the
+   host `class` and would clobber Stencil's `hydrated` class on re-render.
+   --------------------------------------------------------------------------- */
+
+
+/* ---------------------------------------------------------------------------
+   4b. LAYOUT — DGA form-field hosts are inline custom elements by default, so a
+   `space-y-*` parent's vertical margins don't separate stacked fields. Make the
+   common field hosts block-level.
+   --------------------------------------------------------------------------- */
+dga-text-input,
+dga-textarea,
+dga-number-input,
+dga-dropdown,
+dga-search-box {
+  display: block;
+}
+
+
+/* ---------------------------------------------------------------------------
+   4c. INPUT STROKE + PADDING — the Stencil-injected core.css reset (meyerweb
+   `border: 0` and `padding: 0`) zeroes both the border-width AND the inner
+   padding on the DgaTextInput/Textarea wrappers (their own rules aren't
+   !important), leaving strokeless boxes whose text hugs the edge. Restore the
+   1px neutral stroke + gold focus stroke + comfortable inner padding.
+   (NumberInput/Dropdown/SearchBox already force their own !important border.)
+   These selectors are unlayered and higher-specificity than the element-level
+   reset, so they win without !important.
+   --------------------------------------------------------------------------- */
+dga-text-input .input {
+  border-width: 1px;
+  border-color: var(--border-neutral-primary);
+  padding-inline: var(--spacing-lg); /* 12px — keep text off the border */
+}
+dga-textarea .textarea {
+  border-width: 1px;
+  border-color: var(--border-neutral-primary);
+  padding: var(--spacing-md) var(--spacing-lg); /* 8px / 12px for multi-line */
+}
+dga-text-input .input:focus-within,
+dga-textarea .textarea:focus-within {
+  border-color: var(--border-primary);
+}
+
+
+/* ---------------------------------------------------------------------------
+   4d. BUTTON LABEL COLOR — the same Stencil core.css reset injects an unlayered
+   `button { color: … }` that outranks Tailwind's layered `text-white` utility
+   (any unlayered rule beats any layered one). So shadcn <button>s that rely on
+   text-white — the purple internal-notes "Save" button and the blue updates-tab
+   actions — render with the inherited dark page text (#222) on a saturated
+   fill: ~2.25:1, below AA. Re-assert white with an unlayered, higher-specificity
+   selector (button.text-white = 0,1,1 beats the element rule 0,0,1). Scoped to
+   .text-white so ghost/outline buttons, which correctly inherit the foreground
+   colour, are untouched. (Same reset-bleed family as 4c and the gold-link fix.)
+   --------------------------------------------------------------------------- */
+button.text-white {
+  color: #fff;
+}
+
+
+/* ---------------------------------------------------------------------------
+   4e. FOCUS VISIBILITY (WCAG 2.4.7). The DGA reset (now demoted to @layer dga by
+   the runtime layer guard) used to zero outlines app-wide while shadcn's ring
+   resolved transparent, leaving keyboard focus invisible on links, selects, and
+   the header toggles. Guarantee a visible gold focus ring on every interactive
+   element in both themes. Unlayered + the :focus-visible pseudo so it wins where
+   a component ships no visible ring of its own.
+
+   Exclude native form controls: text inputs match :focus-visible on mouse click
+   too, and they ALREADY show a focus treatment (DGA gold :focus-within border in
+   §4c, shadcn gold ring via --ring). Adding this outline on top produced a
+   double border on focus. They keep their own single indicator.
+   --------------------------------------------------------------------------- */
+:focus-visible:not(input):not(textarea):not(select) {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+
+/* ---------------------------------------------------------------------------
+   5. OPTIONAL: exact JABEEN darkest surface (#0E0E0B) in dark mode.
+   DGA's darkest neutral #0c111b is already nearly identical. Uncomment to match.
+   --------------------------------------------------------------------------- */
+/*
+[data-theme="dark"] {
+  --colors-neutral-950: #0e0e0b;
+}
+*/
+
+
+/* ---------------------------------------------------------------------------
+   6. NOTES
+   - Do NOT override --text-oncolor-primary globally. White is correct for text
+     on success / error / info / secondary surfaces. Section 4 scopes it to
+     primary buttons only.
+   - Verify link components in light mode. If a link uses a token other than
+     --text-primary, darken that token under :root the same way (to gold-800).
+   - For small gold text on dark, prefer gold-300 (#d9c386) or gold-400 (#c8a954).
+   --------------------------------------------------------------------------- */

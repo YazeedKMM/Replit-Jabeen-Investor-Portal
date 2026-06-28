@@ -2,11 +2,11 @@ import { useGetSettings, useUpdateSettings } from "@workspace/api-client-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
+import { DgaContentCard } from "@/components/ui/dga-card";
+import { DgaForm } from "@/components/ui/dga-form";
+import { DgaTextField } from "@/components/ui/dga-text-field";
+import { DgaSwitchField } from "@/components/ui/dga-fields";
+import { DgaSubmitButton } from "@/components/ui/dga-brand-button";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
@@ -52,6 +52,8 @@ export default function SettingsPage() {
     }
   };
 
+  const submit = form.handleSubmit(onSubmit);
+
   if (isLoading) {
     return <div className="flex h-64 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
@@ -63,108 +65,53 @@ export default function SettingsPage() {
         <p className="text-muted-foreground">{t("settings.subtitle")}</p>
       </div>
 
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("settings.thresholdsTitle")}</CardTitle>
-              <CardDescription>{t("settings.thresholdsDesc")}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="delayedThresholdDays"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("settings.delayedThreshold")}</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} />
-                      </FormControl>
-                      <FormDescription>{t("settings.delayedThresholdDesc")}</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="stalledThresholdDays"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("settings.stalledThreshold")}</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} />
-                      </FormControl>
-                      <FormDescription>{t("settings.stalledThresholdDesc")}</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("settings.securityTitle")}</CardTitle>
-              <CardDescription>{t("settings.securityDesc")}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="loginThrottleMaxAttempts"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("settings.maxLoginAttempts")}</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="loginThrottleWindowSeconds"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("settings.throttleWindow")}</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <FormField
-                control={form.control}
-                name="outOfBandNotificationsEnabled"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">{t("settings.emailNotifications")}</FormLabel>
-                      <FormDescription>
-                        {t("settings.emailNotificationsDesc")}
-                      </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </CardContent>
-          </Card>
-
-          <div className="flex justify-end">
-            <Button type="submit" size="lg" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? t("settings.saving") : t("settings.saveConfig")}
-            </Button>
+      <DgaForm onSubmit={submit} className="space-y-6">
+        <DgaContentCard className="space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">{t("settings.thresholdsTitle")}</h2>
+            <p className="text-sm text-muted-foreground">{t("settings.thresholdsDesc")}</p>
           </div>
-        </form>
-      </Form>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-1">
+              <DgaTextField control={form.control} name="delayedThresholdDays" label={t("settings.delayedThreshold")} required />
+              <p className="text-xs text-muted-foreground">{t("settings.delayedThresholdDesc")}</p>
+            </div>
+            <div className="space-y-1">
+              <DgaTextField control={form.control} name="stalledThresholdDays" label={t("settings.stalledThreshold")} required />
+              <p className="text-xs text-muted-foreground">{t("settings.stalledThresholdDesc")}</p>
+            </div>
+          </div>
+        </DgaContentCard>
+
+        <DgaContentCard className="space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">{t("settings.securityTitle")}</h2>
+            <p className="text-sm text-muted-foreground">{t("settings.securityDesc")}</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <DgaTextField control={form.control} name="loginThrottleMaxAttempts" label={t("settings.maxLoginAttempts")} required />
+            <DgaTextField control={form.control} name="loginThrottleWindowSeconds" label={t("settings.throttleWindow")} required />
+          </div>
+          <div className="rounded-lg border border-border p-4">
+            <DgaSwitchField
+              control={form.control}
+              name="outOfBandNotificationsEnabled"
+              label={t("settings.emailNotifications")}
+              helperText={t("settings.emailNotificationsDesc")}
+            />
+          </div>
+        </DgaContentCard>
+
+        <div className="flex justify-end">
+          <DgaSubmitButton
+            onSubmit={submit}
+            size="lg"
+            loading={form.formState.isSubmitting}
+            loadingLabel={t("settings.saving")}
+            label={t("settings.saveConfig")}
+          />
+        </div>
+      </DgaForm>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DgaBrandButton } from "@/components/ui/dga-brand-button";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, KeyRound } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -87,13 +87,12 @@ export function MfaVerifyStep({ mfaToken, onSuccess, onBack }: MfaVerifyStepProp
         </div>
       )}
 
-      <Button
-        className="w-full h-11 text-base font-semibold"
-        onClick={verify}
+      <DgaBrandButton
+        fullWidth
+        label={isLoading ? t("auth.mfa.verifying") : t("auth.mfa.verify")}
+        onOnClick={verify}
         disabled={isLoading || (useRecovery ? !recoveryCode : code.length !== 6)}
-      >
-        {isLoading ? t("auth.mfa.verifying") : t("auth.mfa.verify")}
-      </Button>
+      />
 
       <div className="flex items-center justify-between text-sm">
         <button

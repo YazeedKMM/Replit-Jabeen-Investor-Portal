@@ -4,10 +4,12 @@ import { useLocation, useParams } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useGetProject, getGetProjectQueryKey } from "@workspace/api-client-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Building2, MapPin, Loader2, Calendar, FileText, Activity, MessageSquare, History, Settings } from "lucide-react";
+import { DgaContentCard } from "@/components/ui/dga-card";
+import { DgaStatusTag, DgaLinearProgressBar } from "platformscode-new-react";
+import { Building2, MapPin, Calendar, FileText, Activity, MessageSquare, History, Settings } from "lucide-react";
 import { fmtDate } from "@/lib/format";
+import { dgaStatusColor } from "@/lib/dga-status";
 
 // Mock imports for tab components (to be implemented next)
 import ProjectOverviewTab from "./tabs/overview-tab";
@@ -28,16 +30,6 @@ export default function ProjectWorkspacePage() {
     query: { enabled: !!projectId, queryKey: getGetProjectQueryKey(projectId) }
   });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'on-track': return 'bg-sky-500/15 text-sky-700 border-sky-200';
-      case 'delayed': return 'bg-amber-500/15 text-amber-700 border-amber-200';
-      case 'stalled': return 'bg-destructive/15 text-destructive border-destructive/30';
-      case 'complete': return 'bg-blue-500/15 text-blue-700 border-blue-200';
-      default: return 'bg-muted text-muted-foreground';
-    }
-  };
-
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-64 text-center">
@@ -57,7 +49,7 @@ export default function ProjectWorkspacePage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto pb-12">
       {/* Header Profile Area */}
-      <div className="bg-card border rounded-lg p-6 shadow-sm">
+      <DgaContentCard>
         {isLoading ? (
           <div className="space-y-4">
             <Skeleton className="h-10 w-2/3" />
@@ -72,13 +64,9 @@ export default function ProjectWorkspacePage() {
             <div className="space-y-4 flex-1">
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className="text-3xl font-bold tracking-tight text-foreground">{project.name}</h1>
-                <Badge variant="outline" className={`uppercase tracking-wider text-xs font-bold px-2.5 py-0.5 ${getStatusColor(project.derivedStatus)}`}>
-                  {t(`status.${project.derivedStatus}`)}
-                </Badge>
+                <DgaStatusTag color={dgaStatusColor(project.derivedStatus)} status="subtle" size="sm" label={t(`status.${project.derivedStatus}`)} />
                 {project.attentionFlag && (
-                  <Badge variant="destructive" className="uppercase tracking-wider text-xs font-bold px-2.5 py-0.5">
-                    {t("projects.workspace.needsAttention")}
-                  </Badge>
+                  <DgaStatusTag color="red" status="subtle" size="sm" label={t("projects.workspace.needsAttention")} />
                 )}
               </div>
 
@@ -106,10 +94,14 @@ export default function ProjectWorkspacePage() {
               <span className="text-sm font-medium uppercase tracking-wider text-muted-foreground">{t("projects.workspace.currentStage")}</span>
               <div className="text-lg font-bold">{project.currentStage?.name || t("projects.workspace.stageInitializing")}</div>
               <div className="flex items-center gap-2 w-full mt-1">
-                <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-primary transition-all duration-500 ease-out"
-                    style={{ width: `${project.constructionPct}%` }}
+                <div className="flex-1">
+                  <DgaLinearProgressBar
+                    style={{ display: "block", width: "100%" }}
+                    percentage={project.constructionPct}
+                    progressStyle="primary"
+                    size="small"
+                    showLabel={false}
+                    showHelperText={false}
                   />
                 </div>
                 <span className="text-sm font-medium w-9 text-end">{project.constructionPct}%</span>
@@ -117,7 +109,7 @@ export default function ProjectWorkspacePage() {
             </div>
           </div>
         )}
-      </div>
+      </DgaContentCard>
 
       {/* Tabs */}
       {project && (

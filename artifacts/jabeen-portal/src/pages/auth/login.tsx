@@ -5,19 +5,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { TFunction } from "i18next";
 import { useAuth } from "@/hooks/use-auth";
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { DgaTextField } from "@/components/ui/dga-text-field";
+import { DgaForm } from "@/components/ui/dga-form";
+import { DgaSubmitButton } from "@/components/ui/dga-brand-button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowRight, ShieldCheck, Activity, MapPin } from "lucide-react";
+import { ShieldCheck, Activity, MapPin } from "lucide-react";
 import { MfaVerifyStep } from "./mfa-verify";
 import { MfaSetupFlow } from "./mfa-setup";
 import { LanguageSwitcher } from "@/components/language-switcher";
@@ -134,6 +127,18 @@ export default function LoginPage() {
     }
   };
 
+  // TODO(backend): there is no password-recovery endpoint yet — the only
+  // "recovery" in the API is MFA recovery codes (api-server/src/lib/mfa.ts),
+  // which is unrelated. When a real reset flow lands (e.g.
+  // POST /api/auth/forgot-password + a reset page), wire this handler to it.
+  // Until then, direct users to the JABEEN administrator.
+  const onForgotPassword = () => {
+    toast({
+      title: t("auth.forgotPasswordTitle"),
+      description: t("auth.forgotPasswordDesc"),
+    });
+  };
+
   const onMfaVerifySuccess = (accessToken: string, user: any) => {
     handleAuthResult({ accessToken, user });
     toast({ title: t("auth.toast.welcomeBackTitle"), description: t("auth.toast.welcomeBackMfaDesc") });
@@ -160,6 +165,9 @@ export default function LoginPage() {
     }
   };
 
+  const submitLogin = loginForm.handleSubmit(onLoginSubmit);
+  const submitRegister = registerForm.handleSubmit(onRegisterSubmit);
+
   return (
     <div className="min-h-[100dvh] flex flex-col md:flex-row bg-background">
       {/* Brand Side */}
@@ -172,6 +180,7 @@ export default function LoginPage() {
           width={1920}
           height={1080}
           decoding="async"
+          fetchPriority="high"
           className="absolute inset-0 h-full w-full object-cover object-[60%_center]"
         />
         {/* Legibility scrim — darken left + bottom where text sits, so it holds AA contrast over the photo */}
@@ -182,6 +191,15 @@ export default function LoginPage() {
         <div
           className="absolute inset-0 pointer-events-none"
           style={{ background: 'linear-gradient(0deg, rgba(7,5,3,0.72) 0%, rgba(7,5,3,0) 32%)' }}
+        />
+        {/* Focused scrim centered on the headline/feature text zone. The large
+            headline sits over the brightest sunset pixels where the diagonal
+            scrim above is only ~0.39 alpha (≈2.9:1 white-on-image, below AA).
+            This radial adds darkening only behind the text column and fades to
+            transparent before the refinery, so the photo isn't flattened. */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: `radial-gradient(120% 82% at ${dir === "rtl" ? "70%" : "30%"} 47%, rgba(7,5,3,0.58) 0%, rgba(7,5,3,0.36) 40%, rgba(7,5,3,0) 72%)` }}
         />
         {/* Faint warm wash to seat the photo in the gold identity */}
         <div className="absolute inset-0 pointer-events-none mix-blend-soft-light bg-primary/15" />
@@ -263,8 +281,20 @@ export default function LoginPage() {
 
           {/* Normal Login / Register */}
           {mfaStep.type === "none" && (
-            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-8 h-12 p-1 bg-muted">
+            <>
+              {/* Brand mark on the form side — anchors the column so it doesn't
+                  float in empty space, and mirrors the hero logo. Native logo is
+                  two-tone gold + dark (reads on the light card); invert to white
+                  in dark theme where the card surface goes dark. */}
+              <div className="mb-9 flex justify-center md:justify-start">
+                <img
+                  src={`${BASE}/jabeen-logo.svg`}
+                  alt="JABEEN"
+                  className="h-12 w-auto dark:brightness-0 dark:invert"
+                />
+              </div>
+              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6 h-12 p-1 bg-muted">
                 <TabsTrigger value="login" className="text-sm font-semibold rounded-md h-full data-[state=active]:bg-background data-[state=active]:shadow-sm">{t("auth.tabSignIn")}</TabsTrigger>
                 <TabsTrigger value="register" className="text-sm font-semibold rounded-md h-full data-[state=active]:bg-background data-[state=active]:shadow-sm">{t("auth.tabRegister")}</TabsTrigger>
               </TabsList>
@@ -275,40 +305,53 @@ export default function LoginPage() {
                   <p className="text-muted-foreground text-sm">{t("auth.welcomeBackDesc")}</p>
                 </div>
 
-                <Form {...loginForm}>
-                  <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-5">
-                    <FormField
+                <DgaForm onSubmit={submitLogin} className="space-y-5">
+                    {/* Phase 3: DGA text inputs (label + validation via the
+                        component's own props). data-testid was DOM-only and the
+                        web component doesn't forward it; tests are HTTP-level. */}
+                    <DgaTextField
                       control={loginForm.control}
                       name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("auth.workEmail")}</FormLabel>
-                          <FormControl>
-                            <Input type="email" inputMode="email" autoComplete="email" autoCapitalize="none" spellCheck={false} placeholder="name@company.com" {...field} className="h-11" data-testid="input-email" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      type="email"
+                      autoComplete="username"
+                      inputMode="email"
+                      label={t("auth.workEmail")}
+                      placeholder="name@company.com"
+                      required
                     />
-                    <FormField
+                    <DgaTextField
                       control={loginForm.control}
                       name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("auth.password")}</FormLabel>
-                          <FormControl>
-                            <Input type="password" autoComplete="current-password" placeholder="••••••••" {...field} className="h-11" data-testid="input-password" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      type="password"
+                      autoComplete="current-password"
+                      label={t("auth.password")}
+                      placeholder="••••••••"
+                      required
                     />
-                    <Button type="submit" className="login-press w-full h-11 text-base font-semibold mt-2" disabled={loginForm.formState.isSubmitting} data-testid="button-submit-login">
-                      {loginForm.formState.isSubmitting ? t("auth.signingIn") : t("auth.signInButton")}
-                      {!loginForm.formState.isSubmitting && <ArrowRight className="ms-2 h-4 w-4 rtl-flip" />}
-                    </Button>
-                  </form>
-                </Form>
+                    {/* Forgot-password affordance. Logical text-end keeps it on
+                        the trailing edge in both LTR and RTL. Colored via the
+                        theme-split --text-primary token so it stays gold and AA
+                        (gold-800 #826311 on the light card = 5.6:1; brand gold on
+                        dark = 5.85:1) rather than the lighter utility gold. */}
+                    <div className="-mt-3 text-end">
+                      <button
+                        type="button"
+                        onClick={onForgotPassword}
+                        className="text-sm font-medium hover:underline"
+                        style={{ color: "var(--text-primary)" }}
+                      >
+                        {t("auth.forgotPassword")}
+                      </button>
+                    </div>
+                    <DgaSubmitButton
+                      onSubmit={submitLogin}
+                      size="lg"
+                      fullWidth
+                      loading={loginForm.formState.isSubmitting}
+                      loadingLabel={t("auth.signingIn")}
+                      label={t("auth.signInButton")}
+                    />
+                  </DgaForm>
               </TabsContent>
 
               <TabsContent value="register" className="space-y-6">
@@ -317,101 +360,78 @@ export default function LoginPage() {
                   <p className="text-muted-foreground text-sm">{t("auth.investorRegistrationDesc")}</p>
                 </div>
 
-                <Form {...registerForm}>
-                  <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
+                <DgaForm onSubmit={submitRegister} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                      <FormField
+                      <DgaTextField
                         control={registerForm.control}
                         name="fullName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t("auth.fullName")}</FormLabel>
-                            <FormControl>
-                              <Input autoComplete="name" placeholder="John Doe" {...field} className="h-10" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                        autoComplete="name"
+                        label={t("auth.fullName")}
+                        placeholder="John Doe"
+                        required
                       />
-                      <FormField
+                      <DgaTextField
                         control={registerForm.control}
                         name="companyName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t("auth.company")}</FormLabel>
-                            <FormControl>
-                              <Input autoComplete="organization" placeholder="Acme Corp" {...field} className="h-10" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                        autoComplete="organization"
+                        label={t("auth.company")}
+                        placeholder="Acme Corp"
+                        required
                       />
                     </div>
 
-                    <FormField
+                    <DgaTextField
                       control={registerForm.control}
                       name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("auth.workEmail")}</FormLabel>
-                          <FormControl>
-                            <Input type="email" inputMode="email" autoComplete="email" autoCapitalize="none" spellCheck={false} placeholder="name@company.com" {...field} className="h-10" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      type="email"
+                      autoComplete="email"
+                      inputMode="email"
+                      label={t("auth.workEmail")}
+                      placeholder="name@company.com"
+                      required
                     />
 
-                    <FormField
+                    <DgaTextField
                       control={registerForm.control}
                       name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("auth.password")}</FormLabel>
-                          <FormControl>
-                            <Input type="password" autoComplete="new-password" placeholder="••••••••" {...field} className="h-10" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      type="password"
+                      autoComplete="new-password"
+                      label={t("auth.password")}
+                      placeholder="••••••••"
+                      required
                     />
 
                     <div className="grid grid-cols-2 gap-4">
-                      <FormField
+                      <DgaTextField
                         control={registerForm.control}
                         name="title"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t("auth.jobTitle")} <span className="text-muted-foreground font-normal">{t("auth.optional")}</span></FormLabel>
-                            <FormControl>
-                              <Input autoComplete="organization-title" placeholder="Project Manager" {...field} className="h-10" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                        autoComplete="organization-title"
+                        label={`${t("auth.jobTitle")} ${t("auth.optional")}`}
+                        placeholder="Project Manager"
                       />
-                      <FormField
+                      <DgaTextField
                         control={registerForm.control}
                         name="phone"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t("auth.phone")} <span className="text-muted-foreground font-normal">{t("auth.optional")}</span></FormLabel>
-                            <FormControl>
-                              <Input type="tel" inputMode="tel" autoComplete="tel" placeholder="+966…" {...field} className="h-10" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                        type="tel"
+                        autoComplete="tel"
+                        inputMode="tel"
+                        label={`${t("auth.phone")} ${t("auth.optional")}`}
+                        placeholder="+966…"
                       />
                     </div>
 
-                    <Button type="submit" className="login-press w-full h-11 text-base font-semibold mt-4" disabled={registerForm.formState.isSubmitting} data-testid="button-submit-register">
-                      {registerForm.formState.isSubmitting ? t("auth.creatingAccount") : t("auth.registerButton")}
-                    </Button>
-                  </form>
-                </Form>
+                    <DgaSubmitButton
+                      onSubmit={submitRegister}
+                      size="lg"
+                      fullWidth
+                      loading={registerForm.formState.isSubmitting}
+                      loadingLabel={t("auth.creatingAccount")}
+                      label={t("auth.registerButton")}
+                    />
+                  </DgaForm>
               </TabsContent>
             </Tabs>
+            </>
           )}
         </div>
       </div>

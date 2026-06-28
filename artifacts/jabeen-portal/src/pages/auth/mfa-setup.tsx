@@ -4,9 +4,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Shield, Copy, Check, Download, AlertTriangle, Smartphone } from "lucide-react";
+import { DgaBrandButton } from "@/components/ui/dga-brand-button";
+import { Shield, Copy, Check, Download, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "react-i18next";
 
@@ -143,9 +142,7 @@ export function MfaSetupFlow({ mfaToken, onComplete, isRequired }: MfaSetupProps
             {t("auth.mfa.download")}
           </Button>
         </div>
-        <Button className="w-full" onClick={finish}>
-          {t("auth.mfa.savedCodesButton")}
-        </Button>
+        <DgaBrandButton fullWidth label={t("auth.mfa.savedCodesButton")} onOnClick={finish} />
       </div>
     );
   }
@@ -200,10 +197,7 @@ export function MfaSetupFlow({ mfaToken, onComplete, isRequired }: MfaSetupProps
       </div>
 
       {!setupInitiated ? (
-        <Button className="w-full h-11" onClick={initiateSetup} disabled={isLoading}>
-          <Smartphone className="h-4 w-4 me-2" />
-          {isLoading ? t("auth.mfa.generating") : t("auth.mfa.beginSetup")}
-        </Button>
+        <DgaBrandButton fullWidth label={isLoading ? t("auth.mfa.generating") : t("auth.mfa.beginSetup")} onOnClick={initiateSetup} disabled={isLoading} />
       ) : setupData ? (
         <div className="space-y-6">
           <div className="flex flex-col items-center gap-4">
@@ -214,14 +208,12 @@ export function MfaSetupFlow({ mfaToken, onComplete, isRequired }: MfaSetupProps
             <p className="text-xs text-muted-foreground text-center">{t("auth.mfa.orEnterManually")}</p>
             <div className="flex items-center gap-2 bg-muted rounded-md px-3 py-2">
               <code className="flex-1 text-xs font-mono tracking-wider break-all">{setupData.secret}</code>
-              <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={() => copyToClipboard(setupData.secret, "secret")}>
-                {copied === "secret" ? <Check className="h-3.5 w-3.5 text-blue-500" /> : <Copy className="h-3.5 w-3.5" />}
+              <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={() => copyToClipboard(setupData.secret, "secret")} aria-label={t("auth.mfa.copySecret")}>
+                {copied === "secret" ? <Check className="h-3.5 w-3.5 text-blue-500" aria-hidden="true" /> : <Copy className="h-3.5 w-3.5" aria-hidden="true" />}
               </Button>
             </div>
           </div>
-          <Button className="w-full h-11" onClick={() => setStep("confirm")}>
-            {t("auth.mfa.addedAccountEnterCode")}
-          </Button>
+          <DgaBrandButton fullWidth label={t("auth.mfa.addedAccountEnterCode")} onOnClick={() => setStep("confirm")} />
         </div>
       ) : null}
     </div>

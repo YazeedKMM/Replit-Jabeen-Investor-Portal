@@ -305,9 +305,13 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
   )
 }
 
-function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
+// Renders a <div>, not <main>: app-layout supplies the single <main> landmark
+// for page content, and the <header> must sit OUTSIDE that <main> (banner role
+// cannot be nested in main). Keeping this a generic container avoids duplicate
+// <main> landmarks and a header-inside-main structure.
+function SidebarInset({ className, ...props }: React.ComponentProps<"div">) {
   return (
-    <main
+    <div
       data-slot="sidebar-inset"
       className={cn(
         "bg-background relative flex w-full flex-1 flex-col",

@@ -15,20 +15,22 @@ import {
   getListUsersQueryKey,
   getListProjectsQueryKey,
   getGetUserCitiesQueryKey,
-  UserRole,
   User,
 } from "@workspace/api-client-react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Plus, UserX, UserCheck, KeyRound, Loader2, Copy, Check, UserCog, Clock, ShieldOff, MapPin } from "lucide-react";
+import { DgaContentCard } from "@/components/ui/dga-card";
+import { DgaModal } from "@/components/ui/dga-modal";
+import { DgaForm } from "@/components/ui/dga-form";
+import { DgaTextField } from "@/components/ui/dga-text-field";
+import { DgaDropdownField } from "@/components/ui/dga-fields";
+import { DgaBrandButton, DgaSubmitButton } from "@/components/ui/dga-brand-button";
+import { DgaTag, DgaStatusTag, DgaButton } from "platformscode-new-react";
+import { Search, UserX, UserCheck, KeyRound, Loader2, Copy, Check, UserCog, ShieldOff, MapPin } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -54,6 +56,23 @@ const makeActivateSchemaAdmin = () => z.object({
 const makeActivateSchemaPM = (t: TFunction) => z.object({
   projectId: z.string().min(1, t("validation.projectRequiredForPM")),
 });
+
+/**
+ * Role → DgaTag variant. Roles are categorical, not severity, so don't borrow
+ * warning/error chips. External party (investor) = neutral; internal staff
+ * (administrator, project-manager, top-management) = info.
+ */
+function roleTagVariant(role: string): "neutral" | "info" {
+  if (role === "investor") return "neutral";
+  return "info";
+}
+
+/** User status → DgaStatusTag color. */
+function userStatusColor(status: string): "neutral" | "green" | "yellow" {
+  if (status === "active") return "green";
+  if (status === "pending") return "yellow";
+  return "neutral";
+}
 
 export default function UsersPage() {
   const { user: currentUser } = useAuth();
@@ -229,24 +248,17 @@ export default function UsersPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case 'administrator': return 'bg-purple-500/15 text-purple-700 border-purple-200';
-      case 'top-management': return 'bg-blue-500/15 text-blue-700 border-blue-200';
-      case 'project-manager': return 'bg-blue-500/15 text-blue-700 border-blue-200';
-      case 'investor': return 'bg-amber-500/15 text-amber-700 border-amber-200';
-      default: return 'bg-muted text-muted-foreground';
-    }
-  };
+  const roleOptions = [
+    { label: t("roles.investor"), value: "investor" },
+    { label: t("roles.project-manager"), value: "project-manager" },
+    { label: t("roles.top-management"), value: "top-management" },
+    { label: t("roles.administrator"), value: "administrator" },
+  ];
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active': return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">{t("admin.users.statusActive")}</Badge>;
-      case 'inactive': return <Badge variant="outline" className="bg-muted text-muted-foreground">{t("admin.users.statusInactive")}</Badge>;
-      case 'pending': return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200"><Clock className="h-3 w-3 me-1" />{t("admin.users.statusPending")}</Badge>;
-      default: return null;
-    }
-  };
+  const projectOptions = [
+    ...(!isPM ? [{ label: t("admin.users.activateDialog.noProjectLink"), value: "none" }] : []),
+    ...(projects?.map((p) => ({ label: `${p.name} (${p.agreementNumber})`, value: String(p.id) })) ?? []),
+  ];
 
   // Combine active + inactive for the "All" tab (exclude pending)
   const allUsers = [
@@ -256,8 +268,17 @@ export default function UsersPage() {
   const pendingUsers = pendingUsersQuery.data ?? [];
   const isAllLoading = activeUsersQuery.isLoading || inactiveUsersQuery.isLoading;
 
-  // Investors without an assigned project (for linking during activation)
-  const unassignedProjects = projects?.filter(p => !p.investor) ?? [];
+  const createSubmit = form.handleSubmit(onCreateSubmit);
+  const activateSubmit = activateForm.handleSubmit(handleActivateSubmit);
+
+  const PasswordReveal = ({ pass }: { pass: string }) => (
+    <div className="bg-muted p-4 rounded-md flex items-center justify-between border">
+      <code className="font-mono text-lg font-medium">{pass}</code>
+      <Button variant="ghost" size="icon" onClick={() => copyToClipboard(pass)} aria-label={t("admin.users.copyPassword")}>
+        {copied ? <Check className="h-4 w-4 text-blue-500" aria-hidden="true" /> : <Copy className="h-4 w-4" aria-hidden="true" />}
+      </Button>
+    </div>
+  );
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -266,108 +287,8 @@ export default function UsersPage() {
           <h1 className="text-3xl font-bold tracking-tight text-foreground">{t("admin.users.title")}</h1>
           <p className="text-muted-foreground">{t("admin.users.subtitle")}</p>
         </div>
-
         {isAdmin && (
-          <Dialog open={createDialogOpen} onOpenChange={(open) => { setCreateDialogOpen(open); if (!open) { setSelectedCityIds([]); form.reset(); } }}>
-            <DialogTrigger asChild>
-              <Button><Plus className="me-2 h-4 w-4" /> {t("admin.users.createUser")}</Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
-              {createdUserTempPassword ? (
-                <div className="space-y-6">
-                  <DialogHeader>
-                    <DialogTitle>{t("admin.users.createdDialog.title")}</DialogTitle>
-                    <DialogDescription>
-                      {t("admin.users.createdDialog.description", { name: createdUserTempPassword.name })}
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="bg-muted p-4 rounded-md flex items-center justify-between border">
-                    <code className="font-mono text-lg font-medium">{createdUserTempPassword.pass}</code>
-                    <Button variant="ghost" size="icon" onClick={() => copyToClipboard(createdUserTempPassword.pass)}>
-                      {copied ? <Check className="h-4 w-4 text-blue-500" /> : <Copy className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                  <DialogFooter>
-                    <Button onClick={() => { setCreatedUserTempPassword(null); setCreateDialogOpen(false); }}>{t("common.close")}</Button>
-                  </DialogFooter>
-                </div>
-              ) : (
-                <>
-                  <DialogHeader>
-                    <DialogTitle>{t("admin.users.createDialog.title")}</DialogTitle>
-                    <DialogDescription>{t("admin.users.createDialog.description")}</DialogDescription>
-                  </DialogHeader>
-                  <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onCreateSubmit)} className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField control={form.control} name="fullName" render={({ field }) => (
-                          <FormItem><FormLabel>{t("admin.users.createDialog.fieldFullName")}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField control={form.control} name="email" render={({ field }) => (
-                          <FormItem><FormLabel>{t("admin.users.createDialog.fieldEmail")}</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField control={form.control} name="companyName" render={({ field }) => (
-                          <FormItem><FormLabel>{t("admin.users.createDialog.fieldCompany")}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField control={form.control} name="role" render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t("admin.users.createDialog.fieldRole")}</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl><SelectTrigger><SelectValue placeholder={t("admin.users.createDialog.fieldRolePlaceholder")} /></SelectTrigger></FormControl>
-                              <SelectContent>
-                                <SelectItem value="investor">{t("roles.investor")}</SelectItem>
-                                <SelectItem value="project-manager">{t("roles.project-manager")}</SelectItem>
-                                <SelectItem value="top-management">{t("roles.top-management")}</SelectItem>
-                                <SelectItem value="administrator">{t("roles.administrator")}</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )} />
-                        <FormField control={form.control} name="title" render={({ field }) => (
-                          <FormItem><FormLabel>{t("admin.users.createDialog.fieldJobTitle")}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField control={form.control} name="phone" render={({ field }) => (
-                          <FormItem><FormLabel>{t("admin.users.createDialog.fieldPhone")}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                      </div>
-                      {watchedRole === "project-manager" && (
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">{t("admin.users.createDialog.assignedCities")}</label>
-                          <div className="grid grid-cols-2 gap-2" data-testid="pm-cities">
-                            {allCities.filter((c) => c.enabled).map((c) => {
-                              const checked = selectedCityIds.includes(c.id);
-                              return (
-                                <label key={c.id} className="flex items-center gap-2 text-sm cursor-pointer">
-                                  <Checkbox
-                                    checked={checked}
-                                    onCheckedChange={(v) =>
-                                      setSelectedCityIds((prev) =>
-                                        v ? [...prev, c.id] : prev.filter((id) => id !== c.id)
-                                      )
-                                    }
-                                    data-testid={`city-checkbox-${c.code}`}
-                                  />
-                                  {c.shortName}
-                                </label>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-                      <DialogFooter className="pt-4">
-                        <Button variant="outline" type="button" onClick={() => setCreateDialogOpen(false)}>{t("common.cancel")}</Button>
-                        <Button type="submit" disabled={form.formState.isSubmitting}>
-                          {form.formState.isSubmitting && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-                          {t("admin.users.createDialog.submitCreate")}
-                        </Button>
-                      </DialogFooter>
-                    </form>
-                  </Form>
-                </>
-              )}
-            </DialogContent>
-          </Dialog>
+          <DgaBrandButton label={t("admin.users.createUser")} onOnClick={() => setCreateDialogOpen(true)} />
         )}
       </div>
 
@@ -386,279 +307,299 @@ export default function UsersPage() {
 
         {/* ─── All Users Tab ─────────────────────────────────────── */}
         <TabsContent value="all">
-          <Card>
-            <CardHeader className="pb-4 border-b bg-muted/10">
-              <div className="flex flex-col sm:flex-row justify-between gap-4">
-                <div className="relative w-full sm:max-w-xs">
-                  <Search className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="search"
-                    placeholder={t("admin.users.searchPlaceholder")}
-                    className="ps-8"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                  />
-                </div>
-                <Select value={roleFilter} onValueChange={setRoleFilter}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder={t("admin.users.filterByRole")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t("admin.users.allRoles")}</SelectItem>
-                    <SelectItem value="investor">{t("roles.investor")}</SelectItem>
-                    <SelectItem value="project-manager">{t("roles.project-manager")}</SelectItem>
-                    <SelectItem value="top-management">{t("roles.top-management")}</SelectItem>
-                    <SelectItem value="administrator">{t("roles.administrator")}</SelectItem>
-                  </SelectContent>
-                </Select>
+          <DgaContentCard className="space-y-4">
+            <div className="flex flex-col sm:flex-row justify-between gap-4 pb-4 border-b border-border">
+              <div className="relative w-full sm:max-w-xs">
+                <Search className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder={t("admin.users.searchPlaceholder")}
+                  className="ps-8"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
               </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t("admin.users.colUser")}</TableHead>
-                    <TableHead>{t("admin.users.colCompany")}</TableHead>
-                    <TableHead>{t("admin.users.colRole")}</TableHead>
-                    <TableHead>{t("admin.users.colStatus")}</TableHead>
-                    {isAdmin && <TableHead className="text-end">{t("admin.users.colActions")}</TableHead>}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isAllLoading ? (
-                    <TableRow><TableCell colSpan={isAdmin ? 5 : 4} className="h-24 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" /></TableCell></TableRow>
-                  ) : !allUsers.length ? (
-                    <TableRow><TableCell colSpan={isAdmin ? 5 : 4} className="h-24 text-center text-muted-foreground">{t("admin.users.noUsersFound")}</TableCell></TableRow>
-                  ) : (
-                    allUsers.map(u => (
-                      <TableRow key={u.id} className={u.status === "inactive" ? "bg-muted/50" : ""}>
-                        <TableCell>
-                          <div className="font-medium text-foreground">{u.fullName}</div>
-                          <div className="text-xs text-muted-foreground">{u.email}</div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-sm">{u.companyName}</div>
-                          <div className="text-xs text-muted-foreground">{u.title || "—"}</div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className={getRoleColor(u.role)}>
-                            {t(`roles.${u.role}`)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{getStatusBadge(u.status)}</TableCell>
-                        {isAdmin && (
-                          <TableCell className="text-end flex gap-2 justify-end">
-                            {u.role === "project-manager" && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => { setManageCitiesTarget(u); setManageCityIds([]); }}
-                                title={t("admin.users.tooltipManageCities")}
-                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                              >
-                                <MapPin className="h-4 w-4" />
-                              </Button>
-                            )}
+              <Select value={roleFilter} onValueChange={setRoleFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder={t("admin.users.filterByRole")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("admin.users.allRoles")}</SelectItem>
+                  <SelectItem value="investor">{t("roles.investor")}</SelectItem>
+                  <SelectItem value="project-manager">{t("roles.project-manager")}</SelectItem>
+                  <SelectItem value="top-management">{t("roles.top-management")}</SelectItem>
+                  <SelectItem value="administrator">{t("roles.administrator")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("admin.users.colUser")}</TableHead>
+                  <TableHead>{t("admin.users.colCompany")}</TableHead>
+                  <TableHead>{t("admin.users.colRole")}</TableHead>
+                  <TableHead>{t("admin.users.colStatus")}</TableHead>
+                  {isAdmin && <TableHead className="text-end">{t("admin.users.colActions")}</TableHead>}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isAllLoading ? (
+                  <TableRow><TableCell colSpan={isAdmin ? 5 : 4} className="h-24 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" /></TableCell></TableRow>
+                ) : !allUsers.length ? (
+                  <TableRow><TableCell colSpan={isAdmin ? 5 : 4} className="h-24 text-center text-muted-foreground">{t("admin.users.noUsersFound")}</TableCell></TableRow>
+                ) : (
+                  allUsers.map(u => (
+                    <TableRow key={u.id} className={u.status === "inactive" ? "bg-muted/50" : ""}>
+                      <TableCell>
+                        <div className="font-medium text-foreground">{u.fullName}</div>
+                        <div className="text-xs text-muted-foreground">{u.email}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">{u.companyName}</div>
+                        <div className="text-xs text-muted-foreground">{u.title || "—"}</div>
+                      </TableCell>
+                      <TableCell>
+                        <DgaTag variant={roleTagVariant(u.role)} size="sm" label={t(`roles.${u.role}`)} />
+                      </TableCell>
+                      <TableCell>
+                        <DgaStatusTag color={userStatusColor(u.status)} status="subtle" size="sm" label={t(`admin.users.status${u.status.charAt(0).toUpperCase() + u.status.slice(1)}`)} />
+                      </TableCell>
+                      {isAdmin && (
+                        <TableCell className="text-end flex gap-2 justify-end">
+                          {u.role === "project-manager" && (
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => handleResetMfa(u)}
-                              title={u.mfaEnabled ? t("admin.users.tooltipResetMfa") : t("admin.users.tooltipMfaNotEnabled")}
-                              className={u.mfaEnabled ? "text-amber-600 hover:text-amber-700 hover:bg-amber-50" : "text-muted-foreground/40 cursor-default"}
+                              onClick={() => { setManageCitiesTarget(u); setManageCityIds([]); }}
+                              title={t("admin.users.tooltipManageCities")}
+                              aria-label={t("admin.users.tooltipManageCities")}
+                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                             >
-                              <ShieldOff className="h-4 w-4" />
+                              <MapPin className="h-4 w-4" aria-hidden="true" />
                             </Button>
-                            <Button variant="ghost" size="icon" onClick={() => handleResetPassword(u)} title={t("admin.users.tooltipResetPassword")}>
-                              <KeyRound className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => handleToggleStatus(u)} title={u.status === "active" ? t("admin.users.tooltipDeactivate") : t("admin.users.tooltipActivate")}>
-                              {u.status === "active" ? <UserX className="h-4 w-4 text-destructive" /> : <UserCheck className="h-4 w-4 text-blue-600" />}
-                            </Button>
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleResetMfa(u)}
+                            title={u.mfaEnabled ? t("admin.users.tooltipResetMfa") : t("admin.users.tooltipMfaNotEnabled")}
+                            aria-label={u.mfaEnabled ? t("admin.users.tooltipResetMfa") : t("admin.users.tooltipMfaNotEnabled")}
+                            className={u.mfaEnabled ? "text-amber-600 hover:text-amber-700 hover:bg-amber-50" : "text-muted-foreground/40 cursor-default"}
+                          >
+                            <ShieldOff className="h-4 w-4" aria-hidden="true" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleResetPassword(u)} title={t("admin.users.tooltipResetPassword")} aria-label={t("admin.users.tooltipResetPassword")}>
+                            <KeyRound className="h-4 w-4" aria-hidden="true" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleToggleStatus(u)} title={u.status === "active" ? t("admin.users.tooltipDeactivate") : t("admin.users.tooltipActivate")} aria-label={u.status === "active" ? t("admin.users.tooltipDeactivate") : t("admin.users.tooltipActivate")}>
+                            {u.status === "active" ? <UserX className="h-4 w-4 text-destructive" aria-hidden="true" /> : <UserCheck className="h-4 w-4 text-blue-600" aria-hidden="true" />}
+                          </Button>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </DgaContentCard>
         </TabsContent>
 
         {/* ─── Pending Activation Tab ────────────────────────────── */}
         <TabsContent value="pending">
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
+          <DgaContentCard className="overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("admin.users.colApplicant")}</TableHead>
+                  <TableHead>{t("admin.users.colCompany")}</TableHead>
+                  <TableHead>{t("admin.users.colRegistered")}</TableHead>
+                  <TableHead className="text-end">{t("admin.users.colActions")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pendingUsersQuery.isLoading ? (
+                  <TableRow><TableCell colSpan={4} className="h-24 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" /></TableCell></TableRow>
+                ) : !pendingUsers.length ? (
                   <TableRow>
-                    <TableHead>{t("admin.users.colApplicant")}</TableHead>
-                    <TableHead>{t("admin.users.colCompany")}</TableHead>
-                    <TableHead>{t("admin.users.colRegistered")}</TableHead>
-                    <TableHead className="text-end">{t("admin.users.colActions")}</TableHead>
+                    <TableCell colSpan={4} className="h-24 text-center">
+                      <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                        <UserCheck className="h-8 w-8 text-blue-500/50" />
+                        <p>{t("admin.users.noPendingAccounts")}</p>
+                      </div>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {pendingUsersQuery.isLoading ? (
-                    <TableRow><TableCell colSpan={4} className="h-24 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" /></TableCell></TableRow>
-                  ) : !pendingUsers.length ? (
-                    <TableRow>
-                      <TableCell colSpan={4} className="h-24 text-center">
-                        <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                          <UserCheck className="h-8 w-8 text-blue-500/50" />
-                          <p>{t("admin.users.noPendingAccounts")}</p>
-                        </div>
+                ) : (
+                  pendingUsers.map(u => (
+                    <TableRow key={u.id} className="bg-amber-50/30 dark:bg-amber-950/10">
+                      <TableCell>
+                        <div className="font-medium text-foreground">{u.fullName}</div>
+                        <div className="text-xs text-muted-foreground">{u.email}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">{u.companyName}</div>
+                        <div className="text-xs text-muted-foreground">{u.title || "—"}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm text-muted-foreground">{fmtDate(u.createdAt)}</div>
+                      </TableCell>
+                      <TableCell className="text-end">
+                        <Button size="sm" onClick={() => { setActivateTarget(u); activateForm.reset(); }}>
+                          <UserCog className="h-4 w-4 me-2" /> {t("admin.users.activateButton")}
+                        </Button>
                       </TableCell>
                     </TableRow>
-                  ) : (
-                    pendingUsers.map(u => (
-                      <TableRow key={u.id} className="bg-amber-50/30 dark:bg-amber-950/10">
-                        <TableCell>
-                          <div className="font-medium text-foreground">{u.fullName}</div>
-                          <div className="text-xs text-muted-foreground">{u.email}</div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-sm">{u.companyName}</div>
-                          <div className="text-xs text-muted-foreground">{u.title || "—"}</div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-sm text-muted-foreground">
-                            {fmtDate(u.createdAt)}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-end">
-                          <Button
-                            size="sm"
-                            onClick={() => { setActivateTarget(u); activateForm.reset(); }}
-                          >
-                            <UserCog className="h-4 w-4 me-2" /> {t("admin.users.activateButton")}
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </DgaContentCard>
         </TabsContent>
       </Tabs>
 
+      {/* ─── Create User Modal (dual state: form / temp-password reveal) ─── */}
+      {isAdmin && (
+        <DgaModal
+          open={createDialogOpen}
+          onOpenChange={(open) => { setCreateDialogOpen(open); if (!open) { setSelectedCityIds([]); form.reset(); setCreatedUserTempPassword(null); } }}
+          title={createdUserTempPassword ? t("admin.users.createdDialog.title") : t("admin.users.createDialog.title")}
+          footer={
+            createdUserTempPassword ? (
+              <div className="flex justify-end">
+                <DgaButton variant="secondary" label={t("common.close")} onOnClick={() => { setCreatedUserTempPassword(null); setCreateDialogOpen(false); }} />
+              </div>
+            ) : (
+              <div className="flex gap-3 justify-end">
+                <DgaButton variant="secondary-outline" label={t("common.cancel")} onOnClick={() => setCreateDialogOpen(false)} />
+                <DgaSubmitButton
+                  onSubmit={createSubmit}
+                  loading={form.formState.isSubmitting}
+                  loadingLabel={t("common.loading")}
+                  label={t("admin.users.createDialog.submitCreate")}
+                />
+              </div>
+            )
+          }
+        >
+          {createdUserTempPassword ? (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">{t("admin.users.createdDialog.description", { name: createdUserTempPassword.name })}</p>
+              <PasswordReveal pass={createdUserTempPassword.pass} />
+            </div>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground mb-4">{t("admin.users.createDialog.description")}</p>
+              <DgaForm onSubmit={createSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <DgaTextField control={form.control} name="fullName" label={t("admin.users.createDialog.fieldFullName")} required />
+                  <DgaTextField control={form.control} name="email" label={t("admin.users.createDialog.fieldEmail")} required />
+                  <DgaTextField control={form.control} name="companyName" label={t("admin.users.createDialog.fieldCompany")} required />
+                  <DgaDropdownField control={form.control} name="role" label={t("admin.users.createDialog.fieldRole")} placeholder={t("admin.users.createDialog.fieldRolePlaceholder")} options={roleOptions} />
+                  <DgaTextField control={form.control} name="title" label={t("admin.users.createDialog.fieldJobTitle")} />
+                  <DgaTextField control={form.control} name="phone" label={t("admin.users.createDialog.fieldPhone")} />
+                </div>
+                {watchedRole === "project-manager" && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">{t("admin.users.createDialog.assignedCities")}</label>
+                    <div className="grid grid-cols-2 gap-2" data-testid="pm-cities">
+                      {allCities.filter((c) => c.enabled).map((c) => (
+                        <label key={c.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                          <Checkbox
+                            checked={selectedCityIds.includes(c.id)}
+                            onCheckedChange={(v) => setSelectedCityIds((prev) => v ? [...prev, c.id] : prev.filter((id) => id !== c.id))}
+                            data-testid={`city-checkbox-${c.code}`}
+                          />
+                          {c.shortName}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </DgaForm>
+            </>
+          )}
+        </DgaModal>
+      )}
+
       {/* ─── Activate Account Modal ─────────────────────────────── */}
-      <Dialog open={!!activateTarget} onOpenChange={(open) => { if (!open) { setActivateTarget(null); activateForm.reset(); } }}>
-        <DialogContent className="sm:max-w-[480px]">
-          <DialogHeader>
-            <DialogTitle>{t("admin.users.activateDialog.title")}</DialogTitle>
-            <DialogDescription>
-              {t("admin.users.activateDialog.description", { name: activateTarget?.fullName ?? "", email: activateTarget?.email ?? "", company: activateTarget?.companyName ?? "" })}
-              {activateTarget?.role === "investor" && (isPM ? t("admin.users.activateDialog.descriptionInvestorPM") : t("admin.users.activateDialog.descriptionInvestorAdmin"))}
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...activateForm}>
-            <form onSubmit={activateForm.handleSubmit(handleActivateSubmit)} className="space-y-4 pt-2">
-              {activateTarget?.role === "investor" && (
-                <FormField control={activateForm.control} name="projectId" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      {t("admin.users.activateDialog.linkToProject")}{" "}
-                      {isPM
-                        ? <span className="text-destructive font-normal">{t("admin.users.activateDialog.linkRequired")}</span>
-                        : <span className="text-muted-foreground font-normal">{t("admin.users.activateDialog.linkOptional")}</span>
-                      }
-                    </FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={t("admin.users.activateDialog.selectProject")} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {!isPM && <SelectItem value="none">{t("admin.users.activateDialog.noProjectLink")}</SelectItem>}
-                        {projects?.map(p => (
-                          <SelectItem key={p.id} value={String(p.id)}>
-                            {p.name} <span className="text-muted-foreground ms-1">({p.agreementNumber})</span>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-              )}
-              <DialogFooter className="pt-4">
-                <Button variant="outline" type="button" onClick={() => { setActivateTarget(null); activateForm.reset(); }}>
-                  {t("common.cancel")}
-                </Button>
-                <Button type="submit" disabled={activateUser.isPending}>
-                  {activateUser.isPending && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-                  {t("admin.users.activateDialog.submitActivate")}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+      <DgaModal
+        open={!!activateTarget}
+        onOpenChange={(open) => { if (!open) { setActivateTarget(null); activateForm.reset(); } }}
+        title={t("admin.users.activateDialog.title")}
+        footer={
+          <div className="flex gap-3 justify-end">
+            <DgaButton variant="secondary-outline" label={t("common.cancel")} onOnClick={() => { setActivateTarget(null); activateForm.reset(); }} />
+            <DgaSubmitButton
+              onSubmit={activateSubmit}
+              loading={activateUser.isPending}
+              loadingLabel={t("common.loading")}
+              label={t("admin.users.activateDialog.submitActivate")}
+            />
+          </div>
+        }
+      >
+        <p className="text-sm text-muted-foreground mb-4">
+          {t("admin.users.activateDialog.description", { name: activateTarget?.fullName ?? "", email: activateTarget?.email ?? "", company: activateTarget?.companyName ?? "" })}
+          {activateTarget?.role === "investor" && (isPM ? t("admin.users.activateDialog.descriptionInvestorPM") : t("admin.users.activateDialog.descriptionInvestorAdmin"))}
+        </p>
+        {activateTarget?.role === "investor" && (
+          <DgaForm onSubmit={activateSubmit} className="space-y-4">
+            <DgaDropdownField
+              control={activateForm.control}
+              name="projectId"
+              label={isPM ? `${t("admin.users.activateDialog.linkToProject")} ${t("admin.users.activateDialog.linkRequired")}` : `${t("admin.users.activateDialog.linkToProject")} ${t("admin.users.activateDialog.linkOptional")}`}
+              placeholder={t("admin.users.activateDialog.selectProject")}
+              options={projectOptions}
+            />
+          </DgaForm>
+        )}
+      </DgaModal>
 
       {/* ─── Manage PM Cities Modal ─────────────────────────────── */}
-      <Dialog open={!!manageCitiesTarget} onOpenChange={(open) => { if (!open) { setManageCitiesTarget(null); setManageCityIds([]); } }}>
-        <DialogContent className="sm:max-w-[440px]">
-          <DialogHeader>
-            <DialogTitle>{t("admin.users.manageCitiesDialog.title")}</DialogTitle>
-            <DialogDescription>
-              {t("admin.users.manageCitiesDialog.description", { name: manageCitiesTarget?.fullName ?? "" })}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2 py-2">
-            <div className="grid grid-cols-2 gap-2" data-testid="pm-cities-edit">
-              {allCities.filter((c) => c.enabled).map((c) => {
-                const checked = manageCityIds.includes(c.id);
-                return (
-                  <label key={c.id} className="flex items-center gap-2 text-sm cursor-pointer">
-                    <Checkbox
-                      checked={checked}
-                      onCheckedChange={(v) =>
-                        setManageCityIds((prev) =>
-                          v ? [...prev, c.id] : prev.filter((id) => id !== c.id)
-                        )
-                      }
-                      data-testid={`city-checkbox-edit-${c.code}`}
-                    />
-                    {c.shortName}
-                  </label>
-                );
-              })}
-            </div>
+      <DgaModal
+        open={!!manageCitiesTarget}
+        onOpenChange={(open) => { if (!open) { setManageCitiesTarget(null); setManageCityIds([]); } }}
+        title={t("admin.users.manageCitiesDialog.title")}
+        footer={
+          <div className="flex gap-3 justify-end">
+            <DgaButton variant="secondary-outline" label={t("common.cancel")} onOnClick={() => { setManageCitiesTarget(null); setManageCityIds([]); }} />
+            <DgaSubmitButton
+              onSubmit={handleManageCitiesSubmit}
+              loading={setUserCities.isPending}
+              loadingLabel={t("common.loading")}
+              label={t("admin.users.manageCitiesDialog.saveCities")}
+            />
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => { setManageCitiesTarget(null); setManageCityIds([]); }}>{t("common.cancel")}</Button>
-            <Button onClick={handleManageCitiesSubmit} disabled={setUserCities.isPending}>
-              {setUserCities.isPending && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-              {t("admin.users.manageCitiesDialog.saveCities")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        }
+      >
+        <p className="text-sm text-muted-foreground mb-4">{t("admin.users.manageCitiesDialog.description", { name: manageCitiesTarget?.fullName ?? "" })}</p>
+        <div className="grid grid-cols-2 gap-2" data-testid="pm-cities-edit">
+          {allCities.filter((c) => c.enabled).map((c) => (
+            <label key={c.id} className="flex items-center gap-2 text-sm cursor-pointer">
+              <Checkbox
+                checked={manageCityIds.includes(c.id)}
+                onCheckedChange={(v) => setManageCityIds((prev) => v ? [...prev, c.id] : prev.filter((id) => id !== c.id))}
+                data-testid={`city-checkbox-edit-${c.code}`}
+              />
+              {c.shortName}
+            </label>
+          ))}
+        </div>
+      </DgaModal>
 
-      {/* ─── Password modal for reset / create ─────────────────── */}
-      <Dialog open={!!createdUserTempPassword && !createDialogOpen} onOpenChange={(open) => !open && setCreatedUserTempPassword(null)}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>{t("admin.users.passwordResetDialog.title")}</DialogTitle>
-            <DialogDescription>
-              {t("admin.users.passwordResetDialog.description", { name: createdUserTempPassword?.name ?? "" })}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="bg-muted p-4 rounded-md flex items-center justify-between border">
-            <code className="font-mono text-lg font-medium">{createdUserTempPassword?.pass}</code>
-            <Button variant="ghost" size="icon" onClick={() => createdUserTempPassword && copyToClipboard(createdUserTempPassword.pass)}>
-              {copied ? <Check className="h-4 w-4 text-blue-500" /> : <Copy className="h-4 w-4" />}
-            </Button>
+      {/* ─── Password modal for reset (create flow reuses the create modal) ─── */}
+      <DgaModal
+        open={!!createdUserTempPassword && !createDialogOpen}
+        onOpenChange={(open) => !open && setCreatedUserTempPassword(null)}
+        title={t("admin.users.passwordResetDialog.title")}
+        footer={
+          <div className="flex justify-end">
+            <DgaBrandButton label={t("admin.users.passwordResetDialog.done")} onOnClick={() => setCreatedUserTempPassword(null)} />
           </div>
-          <DialogFooter>
-            <Button onClick={() => setCreatedUserTempPassword(null)}>{t("admin.users.passwordResetDialog.done")}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        }
+      >
+        <p className="text-sm text-muted-foreground mb-4">{t("admin.users.passwordResetDialog.description", { name: createdUserTempPassword?.name ?? "" })}</p>
+        {createdUserTempPassword && <PasswordReveal pass={createdUserTempPassword.pass} />}
+      </DgaModal>
     </div>
   );
 }

@@ -12,7 +12,6 @@ import {
   StageFieldInputBaseType,
   StageFieldInputWidget
 } from "@workspace/api-client-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,8 +21,10 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowLeft, Plus, Trash2, GripVertical, Save, Loader2, Eye, GitBranch, Info } from "lucide-react";
+import { DgaContentCard } from "@/components/ui/dga-card";
+import { DgaBrandButton } from "@/components/ui/dga-brand-button";
+import { DgaInlineAlert } from "platformscode-new-react";
+import { ArrowLeft, Plus, Trash2, GripVertical, Loader2, Eye, GitBranch } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -306,8 +307,8 @@ export default function TemplateBuilderPage() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-24">
       <div className="flex items-center gap-4 border-b pb-4">
-        <Button variant="ghost" size="icon" onClick={() => setLocation("/templates")}>
-          <ArrowLeft className="h-4 w-4 rtl-flip" />
+        <Button variant="ghost" size="icon" onClick={() => setLocation("/templates")} aria-label={t("common.back")}>
+          <ArrowLeft className="h-4 w-4 rtl-flip" aria-hidden="true" />
         </Button>
         <div className="flex-1">
           <h1 className="text-2xl font-bold">
@@ -322,44 +323,28 @@ export default function TemplateBuilderPage() {
           )}
         </div>
         {!isArchived && (
-          <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <Save className="me-2 h-4 w-4" />}
-            {t("admin.templateBuilder.saveTemplate")}
-          </Button>
+          <DgaBrandButton label={t("admin.templateBuilder.saveTemplate")} disabled={isSaving} onOnClick={handleSave} />
         )}
       </div>
 
       {isArchived && (
-        <Alert>
-          <Info className="h-4 w-4" />
-          <AlertDescription>
-            {t("admin.templateBuilder.archivedAlert")}
-          </AlertDescription>
-        </Alert>
+        <DgaInlineAlert type="info" colored leadText={t("admin.templateBuilder.archivedAlert")} />
       )}
 
       {!isNew && !isArchived && assignedProjectCount > 0 && (
-        <Alert>
-          <GitBranch className="h-4 w-4" />
-          <AlertDescription
-            dangerouslySetInnerHTML={{
-              __html: t("admin.templateBuilder.inUseAlert", {
-                count: assignedProjectCount,
-                version: serverTemplate?.versionNumber
-              })
-                .replace("<1>", "<strong>")
-                .replace("</1>", "</strong>")
-            }}
-          />
-        </Alert>
+        <DgaInlineAlert
+          type="info"
+          colored
+          leadText={t("admin.templateBuilder.inUseAlert", { count: assignedProjectCount, version: serverTemplate?.versionNumber }).replace(/<\/?1>/g, "")}
+        />
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("admin.templateBuilder.detailsCard.title")}</CardTitle>
-          <CardDescription>{t("admin.templateBuilder.detailsCard.description")}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <DgaContentCard className="space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">{t("admin.templateBuilder.detailsCard.title")}</h2>
+          <p className="text-sm text-muted-foreground">{t("admin.templateBuilder.detailsCard.description")}</p>
+        </div>
+        <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>{t("admin.templateBuilder.detailsCard.fieldName")}</Label>
@@ -388,8 +373,8 @@ export default function TemplateBuilderPage() {
               disabled={isArchived}
             />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </DgaContentCard>
 
       <div className="space-y-4">
         <div className="flex justify-between items-end">
@@ -413,8 +398,8 @@ export default function TemplateBuilderPage() {
                 <div className="flex items-center w-full gap-2">
                   {!isArchived && (
                     <div className="flex flex-col gap-1 px-1">
-                      <Button variant="ghost" size="icon" className="h-6 w-6" disabled={index === 0} onClick={(e) => { e.preventDefault(); moveStage(index, -1); }}>
-                        <GripVertical className="h-4 w-4 rotate-90" />
+                      <Button variant="ghost" size="icon" className="h-6 w-6" disabled={index === 0} onClick={(e) => { e.preventDefault(); moveStage(index, -1); }} aria-label={t("common.moveUp")}>
+                        <GripVertical className="h-4 w-4 rotate-90" aria-hidden="true" />
                       </Button>
                     </div>
                   )}
@@ -428,8 +413,8 @@ export default function TemplateBuilderPage() {
                     </div>
                   </AccordionTrigger>
                   {!isArchived && (
-                    <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => removeStage(stage.id)}>
-                      <Trash2 className="h-4 w-4" />
+                    <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => removeStage(stage.id)} aria-label={t("admin.templateBuilder.stages.removeStage")}>
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
                     </Button>
                   )}
                 </div>
@@ -525,8 +510,8 @@ export default function TemplateBuilderPage() {
                                 </div>
 
                                 {!isArchived && (
-                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0 self-end md:self-center" onClick={() => removeField(stage.id, field.id)}>
-                                    <Trash2 className="h-4 w-4" />
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0 self-end md:self-center" onClick={() => removeField(stage.id, field.id)} aria-label={t("admin.templateBuilder.stages.removeField")}>
+                                    <Trash2 className="h-4 w-4" aria-hidden="true" />
                                   </Button>
                                 )}
                               </div>

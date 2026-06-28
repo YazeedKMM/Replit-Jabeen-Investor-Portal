@@ -1,8 +1,22 @@
+/* Establish cascade-layer order so the DGA reset (wrapped into `dga` by the
+   dgaCssInLayer Vite plugin) ranks BELOW Tailwind's layers. Unlayered app rules
+   still win over all of these. */
+@layer dga, theme, base, components, utilities;
+
 @import "tailwindcss";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
 
-@custom-variant dark (&:is(.dark *));
+/* The DGA core.css reset (now in the `dga` layer) forces html{font-size:62.5%}.
+   Tailwind sets no html font-size, so re-assert the browser default here,
+   UNLAYERED, so the rem-based app isn't shrunk. DGA components are px-based. */
+html {
+  font-size: 100%;
+}
+
+/* Drive Tailwind's `dark:` variant off the DGA theme attribute too (the app has
+   no active `.dark` class — the DGA toggle sets data-theme on <html>). */
+@custom-variant dark (&:is(.dark *, [data-theme="dark"] *));
 
 @theme inline {
   --color-background: hsl(var(--background));
@@ -168,6 +182,48 @@
   --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 }
 
+/* ----------------------------------------------------------------------------
+   Dark theme bridge. The DGA toggle sets data-theme="dark" on <html>; the DGA
+   components already follow it. Flip the app's own shadcn surface/text/border
+   tokens to the DGA cool-neutral dark scale so the shell, cards, and DGA
+   components theme together (no more white-on-white labels). Gold (primary/ring),
+   destructive, charts and the brand sidebar stay as they are. HSL triplets match
+   @platformscode/core neutral-* (900/800/700/400/50).
+---------------------------------------------------------------------------- */
+[data-theme="dark"] {
+  --button-outline: rgba(255, 255, 255, 0.14);
+  --badge-outline: rgba(255, 255, 255, 0.08);
+  --opaque-button-border-intensity: 8; /* lighten opaque borders on dark */
+  --elevate-1: rgba(255, 255, 255, 0.04);
+  --elevate-2: rgba(255, 255, 255, 0.08);
+
+  --background: 218 39% 11%;       /* neutral-900 #111927 */
+  --foreground: 210 20% 98%;       /* neutral-50  #f9fafb */
+
+  --border: 217 19% 27%;           /* neutral-700 #374151 */
+  --input: 217 19% 27%;
+  --ring: 44 69% 45%;              /* gold, a touch brighter for dark */
+
+  --card: 213 28% 17%;             /* neutral-800 #1f2a37 */
+  --card-foreground: 210 20% 98%;
+  --card-border: 217 19% 27%;
+
+  --popover: 213 28% 17%;
+  --popover-foreground: 210 20% 98%;
+  --popover-border: 217 19% 27%;
+
+  /* --primary stays JABEEN gold. */
+
+  --secondary: 217 19% 27%;        /* neutral-700 */
+  --secondary-foreground: 210 20% 98%;
+
+  --muted: 213 28% 17%;            /* neutral-800 */
+  --muted-foreground: 215 9% 65%;  /* neutral-400 #9da4ae */
+
+  --accent: 217 19% 27%;           /* neutral-700 */
+  --accent-foreground: 210 20% 98%;
+}
+
 @layer base {
   * {
     @apply border-border;
@@ -236,6 +292,39 @@
   }
   .login-press:active {
     transform: none;
+  }
+  /* Decorative page-entrance reveals (tailwindcss-animate `animate-in fade-in
+     duration-500` on page roots) are non-essential motion: show instantly so the
+     content still appears (it animates from opacity 0). Essential loading
+     feedback (animate-spin / animate-pulse skeletons) is intentionally left
+     running. */
+  .animate-in {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+  }
+  html {
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Touch devices: enforce a 44x44 minimum hit area on interactive controls
+   (WCAG 2.5.8 Target Size). Scoped to coarse pointers so mouse/desktop density
+   is unchanged — on touch, larger targets are desirable, not distorting. Targets
+   light-DOM controls only; DGA web components size themselves in shadow DOM. */
+@media (pointer: coarse) {
+  button,
+  [role="button"],
+  [role="tab"],
+  [role="menuitem"],
+  summary {
+    min-height: 44px;
+  }
+  /* Icon-only controls also need the 44px width (a single svg child). */
+  button:has(> svg:only-child),
+  a:has(> svg:only-child),
+  [role="button"]:has(> svg:only-child) {
+    min-width: 44px;
+    min-height: 44px;
   }
 }
 

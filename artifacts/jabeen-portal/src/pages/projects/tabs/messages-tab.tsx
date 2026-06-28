@@ -1,9 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { Project, useListMessages, useCreateMessage } from "@workspace/api-client-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, MessageSquare, Send } from "lucide-react";
+import { DgaBrandButton } from "@/components/ui/dga-brand-button";
+import { Loader2, MessageSquare } from "lucide-react";
 import { fmtDateTime } from "@/lib/format";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -63,7 +62,13 @@ export default function ProjectMessagesTab({ project }: Props) {
                   <span className="text-[10px] text-muted-foreground uppercase">{msg.authorRole.replace('-', ' ')}</span>
                   <span className="text-[10px] text-muted-foreground ms-2">{fmtDateTime(msg.createdAt)}</span>
                 </div>
-                <div className={cn("p-3 rounded-lg text-sm", isMe ? "bg-primary text-primary-foreground rounded-se-none" : "bg-muted rounded-ss-none")}>
+                {/* Own bubble is brand gold in BOTH themes; white-on-gold is only
+                    3.23:1 (fails AA), so the label is dark (#0c111b ≈ 5.4:1) — the
+                    same dark-on-gold treatment DgaBrandButton uses. */}
+                <div
+                  className={cn("p-3 rounded-lg text-sm", isMe ? "bg-primary rounded-se-none" : "bg-muted rounded-ss-none")}
+                  style={isMe ? { color: "#0c111b" } : undefined}
+                >
                   <p className="whitespace-pre-wrap">{msg.body}</p>
                 </div>
               </div>
@@ -87,14 +92,13 @@ export default function ProjectMessagesTab({ project }: Props) {
                 }
               }}
             />
-            <Button
-              className="shrink-0 h-[80px] w-[80px] flex flex-col gap-1"
-              onClick={handleSend}
-              disabled={!body.trim() || createMutation.isPending}
-            >
-              {createMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
-              <span>{t("projects.messages.sendButton")}</span>
-            </Button>
+            <div className="shrink-0 self-stretch flex items-stretch">
+              <DgaBrandButton
+                label={t("projects.messages.sendButton")}
+                disabled={!body.trim() || createMutation.isPending}
+                onOnClick={handleSend}
+              />
+            </div>
           </div>
         </div>
       )}

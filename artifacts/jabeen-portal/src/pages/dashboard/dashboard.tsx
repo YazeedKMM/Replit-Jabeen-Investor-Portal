@@ -14,25 +14,24 @@ import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
   Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
 } from "@/components/ui/form";
+import { DgaContentCard } from "@/components/ui/dga-card";
+import { DgaModal } from "@/components/ui/dga-modal";
+import { DgaBrandButton, DgaSubmitButton } from "@/components/ui/dga-brand-button";
+import { DgaTag, DgaStatusTag, DgaButton } from "platformscode-new-react";
+import { dgaStatusColor } from "@/lib/dga-status";
 import {
   Building2, Search, Download, AlertTriangle, CheckCircle2, Activity,
   Plus, Loader2, FolderOpen,
@@ -133,17 +132,24 @@ function NewProjectDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-primary" /> {t("projects.newDialog.title")}
-          </DialogTitle>
-          <DialogDescription>
-            {t("projects.newDialog.description")}
-          </DialogDescription>
-        </DialogHeader>
-
+    <DgaModal
+      open={open}
+      onOpenChange={handleClose}
+      title={t("projects.newDialog.title")}
+      footer={
+        <div className="flex gap-3 justify-end">
+          <DgaButton variant="secondary-outline" label={t("common.cancel")} onOnClick={handleClose} />
+          <DgaSubmitButton
+            onSubmit={form.handleSubmit(onSubmit)}
+            loading={createMutation.isPending}
+            loadingLabel={t("projects.newDialog.submitCreating")}
+            label={t("projects.newDialog.submitCreate")}
+          />
+        </div>
+      }
+    >
+      <p className="text-sm text-muted-foreground mb-4">{t("projects.newDialog.description")}</p>
+      <div className="max-h-[65vh] overflow-y-auto pe-1">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             {/* ── Section: Project Identity ── */}
@@ -309,32 +315,11 @@ function NewProjectDialog({
               )} />
             </div>
 
-            <DialogFooter className="pt-2">
-              <Button type="button" variant="outline" onClick={handleClose}>
-                {t("common.cancel")}
-              </Button>
-              <Button type="submit" disabled={createMutation.isPending}>
-                {createMutation.isPending
-                  ? <><Loader2 className="me-2 h-4 w-4 animate-spin" /> {t("projects.newDialog.submitCreating")}</>
-                  : <><Plus className="me-2 h-4 w-4" /> {t("projects.newDialog.submitCreate")}</>}
-              </Button>
-            </DialogFooter>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </DgaModal>
   );
-}
-
-// ── Status helpers ──────────────────────────────────────────────────────────
-function getStatusColor(status: string) {
-  switch (status) {
-    case "on-track": return "bg-sky-500/15 text-sky-700 border-sky-200";
-    case "delayed": return "bg-amber-500/15 text-amber-700 border-amber-200";
-    case "stalled": return "bg-destructive/15 text-destructive border-destructive/30";
-    case "complete": return "bg-blue-500/15 text-blue-700 border-blue-200";
-    default: return "bg-muted text-muted-foreground border-border";
-  }
 }
 
 // ── Main Dashboard Page ─────────────────────────────────────────────────────
@@ -385,9 +370,7 @@ export default function DashboardPage() {
             <Download className="me-2 h-4 w-4" /> {t("dashboard.exportCsv")}
           </Button>
           {canCreate && (
-            <Button size="sm" onClick={() => setNewProjectOpen(true)}>
-              <Plus className="me-2 h-4 w-4" /> {t("dashboard.newProject")}
-            </Button>
+            <DgaBrandButton label={t("dashboard.newProject")} onOnClick={() => setNewProjectOpen(true)} />
           )}
         </div>
       </div>
@@ -400,17 +383,15 @@ export default function DashboardPage() {
           { label: t("dashboard.kpi.needsAttention"), value: stats?.needsAttention, icon: AlertTriangle, color: "text-amber-500" },
           { label: t("dashboard.kpi.completed"), value: stats?.complete, icon: CheckCircle2, color: "text-blue-500" },
         ].map(({ label, value, icon: Icon, color }) => (
-          <Card key={label} className="shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
+          <DgaContentCard key={label} className="space-y-2">
+            <div className="flex flex-row items-center justify-between">
+              <span className="text-sm font-medium text-muted-foreground">{label}</span>
               <Icon className={cn("h-4 w-4", color)} />
-            </CardHeader>
-            <CardContent>
-              <div className={cn("text-3xl font-bold", color !== "text-muted-foreground" && color)}>
-                {statsLoading ? "—" : (value ?? 0)}
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+            <div className={cn("text-3xl font-bold", color !== "text-muted-foreground" && color)}>
+              {statsLoading ? "—" : (value ?? 0)}
+            </div>
+          </DgaContentCard>
         ))}
       </div>
 
@@ -418,57 +399,46 @@ export default function DashboardPage() {
       {!statsLoading && ((stats?.byCategory?.length ?? 0) > 0 || (stats?.byCity?.length ?? 0) > 0) && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {(stats?.byCategory?.length ?? 0) > 0 && (
-            <Card className="shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{t("dashboard.breakdown.byCategory")}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {stats!.byCategory.map(({ category, count }) => (
-                  <div key={category} className="flex items-center justify-between text-sm">
-                    <span className="truncate text-foreground">{category}</span>
-                    <Badge variant="outline" className="ms-2 shrink-0 tabular-nums">{count}</Badge>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+            <DgaContentCard className="space-y-2">
+              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{t("dashboard.breakdown.byCategory")}</h3>
+              {stats!.byCategory.map(({ category, count }) => (
+                <div key={category} className="flex items-center justify-between text-sm">
+                  <span className="truncate text-foreground">{category}</span>
+                  <DgaTag variant="neutral" size="sm" outlined label={String(count)} />
+                </div>
+              ))}
+            </DgaContentCard>
           )}
           {(stats?.byCity?.length ?? 0) > 0 && (
-            <Card className="shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{t("dashboard.breakdown.byCity")}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {stats!.byCity.map(({ city, count }) => (
-                  <div key={city} className="flex items-center justify-between text-sm">
-                    <span className="truncate text-foreground">{city}</span>
-                    <Badge variant="outline" className="ms-2 shrink-0 tabular-nums">{count}</Badge>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+            <DgaContentCard className="space-y-2">
+              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{t("dashboard.breakdown.byCity")}</h3>
+              {stats!.byCity.map(({ city, count }) => (
+                <div key={city} className="flex items-center justify-between text-sm">
+                  <span className="truncate text-foreground">{city}</span>
+                  <DgaTag variant="neutral" size="sm" outlined label={String(count)} />
+                </div>
+              ))}
+            </DgaContentCard>
           )}
         </div>
       )}
 
       {/* ── Projects Table ── */}
-      <Card className="shadow-sm border-border/50">
-        <CardHeader className="pb-4 border-b bg-muted/10">
-          <div className="flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center">
-            <CardTitle className="text-lg">{t("dashboard.table.title")}</CardTitle>
-            <div className="relative w-full sm:w-72">
-              <Search className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder={t("dashboard.table.searchPlaceholder")}
-                className="ps-8 bg-background"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
+      <DgaContentCard className="space-y-4">
+        <div className="flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center pb-4 border-b border-border">
+          <h2 className="text-lg font-semibold text-foreground">{t("dashboard.table.title")}</h2>
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder={t("dashboard.table.searchPlaceholder")}
+              className="ps-8 bg-background"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <Table>
+        </div>
+        <Table>
             <TableHeader className="bg-muted/30">
               <TableRow>
                 <TableHead className="w-[300px]">{t("dashboard.table.colName")}</TableHead>
@@ -525,14 +495,10 @@ export default function DashboardPage() {
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {project.city?.shortName && (
-                          <Badge variant="outline" className="text-[10px] font-medium px-1.5 py-0 bg-blue-500/10 text-blue-700 border-blue-200">
-                            {project.city.shortName}
-                          </Badge>
+                          <DgaTag variant="info" size="sm" label={project.city.shortName} />
                         )}
                         {project.category?.name && (
-                          <Badge variant="outline" className="text-[10px] font-medium px-1.5 py-0 bg-muted text-muted-foreground">
-                            {project.category.name}
-                          </Badge>
+                          <DgaTag variant="neutral" size="sm" outlined label={project.category.name} />
                         )}
                       </div>
                     </TableCell>
@@ -542,15 +508,7 @@ export default function DashboardPage() {
                       </span>
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "uppercase tracking-wider text-[10px] font-bold px-2 py-0.5",
-                          getStatusColor(project.derivedStatus),
-                        )}
-                      >
-                        {t(`status.${project.derivedStatus}`)}
-                      </Badge>
+                      <DgaStatusTag color={dgaStatusColor(project.derivedStatus)} status="subtle" size="sm" label={t(`status.${project.derivedStatus}`)} />
                     </TableCell>
                     <TableCell className="text-end font-medium tabular-nums">
                       {project.constructionPct}%
@@ -560,8 +518,7 @@ export default function DashboardPage() {
               )}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
+      </DgaContentCard>
 
       {/* ── Dialog ── */}
       <NewProjectDialog open={newProjectOpen} onOpenChange={setNewProjectOpen} />
