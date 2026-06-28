@@ -162,6 +162,21 @@ button.text-white {
 
 
 /* ---------------------------------------------------------------------------
+   4e. FOCUS VISIBILITY (WCAG 2.4.7). The DGA reset (now demoted to @layer dga by
+   the runtime layer guard) used to zero outlines app-wide while shadcn's ring
+   resolved transparent, leaving keyboard focus invisible on links, selects, and
+   the header toggles. Guarantee a visible gold focus ring on every interactive
+   element in both themes. Unlayered + the :focus-visible pseudo (0,1,0) so it
+   wins where a component ships no visible ring of its own.
+   --------------------------------------------------------------------------- */
+:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+
+/* ---------------------------------------------------------------------------
    5. OPTIONAL: exact JABEEN darkest surface (#0E0E0B) in dark mode.
    DGA's darkest neutral #0c111b is already nearly identical. Uncomment to match.
    --------------------------------------------------------------------------- */
