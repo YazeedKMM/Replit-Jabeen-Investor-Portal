@@ -41,6 +41,11 @@ Post-fix verification screenshots: [`shots-after/`](shots-after/) (`V08` 404, `V
 - **44px touch targets**: a `@media (pointer: coarse)` rule enforces a 44×44 minimum hit area on interactive controls (WCAG 2.5.8). Scoped to touch so mouse/desktop density is unchanged; icon-only controls (single svg child) also get min-width. Verified: under coarse emulation all 21 icon buttons ≥44px; desktop unchanged (36px).
 - **aria-labels on admin table actions**: added `aria-label` alongside the existing `title` on cities/categories edit+delete, templates archive+delete, and the users row actions (manage-cities / reset-MFA / reset-password / activate-deactivate); icons marked `aria-hidden`. Verified live (e.g. "Edit City" / "Delete City").
 
+## Review-driven fixes (after manual screenshot review)
+
+- **Double border on focused text fields** (`0a74d10`): the global `:focus-visible` outline matched text inputs on mouse click too, stacking on top of each field's own focus treatment (DGA gold `:focus-within` border / shadcn ring). Scoped the outline to skip `input/textarea/select`; they keep their single indicator, buttons/links keep the outline.
+- **Email field markup** (`ae0b853`): the login email was a plain text box (no `type=email`/autocomplete/inputmode) — messy browser autofill, no password-manager pairing, wrong mobile keyboard. Extended `DgaTextField` to support email/tel/url + `autoComplete`/`inputMode` (applied to the inner native input via the ref), and set proper tokens on the auth fields (email `username`/`email`, passwords `current/new-password`, phone `tel`). This closes the audit's open **Forms** finding.
+
 ## Not a defect
 
 - The data-table "clipping" finding was re-checked and is actually horizontal scroll via shadcn's `overflow-auto` wrapper — acceptable.
