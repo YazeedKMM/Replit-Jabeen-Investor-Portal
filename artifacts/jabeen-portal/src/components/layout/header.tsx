@@ -39,8 +39,8 @@ export function Header() {
 
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative" data-testid="button-notifications">
-              <Bell className="h-5 w-5" />
+            <Button variant="ghost" size="icon" className="relative" data-testid="button-notifications" aria-label={t("notifications.title")}>
+              <Bell className="h-5 w-5" aria-hidden="true" />
               {unreadCount > 0 && (
                 <span className="absolute top-1.5 end-1.5 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-destructive text-[10px] text-destructive-foreground ring-2 ring-background">
                   <span className="sr-only">{t("notifications.newNotifications")}</span>

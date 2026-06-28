@@ -91,13 +91,13 @@ export default function ProjectDocumentsTab({ project }: Props) {
                 <p className="text-xs text-muted-foreground mt-0.5">{t("projects.documents.uploadedBy", { name: doc.uploader?.fullName || t("projects.documents.unknownUploader") })}</p>
               </div>
               <div className="flex flex-col gap-2 shrink-0">
-                <a href={`/api/projects/${project.id}/documents/${doc.id}/download`} download>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <Download className="h-4 w-4" />
+                <a href={`/api/projects/${project.id}/documents/${doc.id}/download`} download aria-label={t("projects.documents.downloadFile")}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={t("projects.documents.downloadFile")}>
+                    <Download className="h-4 w-4" aria-hidden="true" />
                   </Button>
                 </a>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDelete(doc.id)}>
-                  <Trash2 className="h-4 w-4" />
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDelete(doc.id)} aria-label={t("projects.documents.deleteFile")}>
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </div>
             </DgaContentCard>

@@ -208,8 +208,8 @@ export function MfaSetupFlow({ mfaToken, onComplete, isRequired }: MfaSetupProps
             <p className="text-xs text-muted-foreground text-center">{t("auth.mfa.orEnterManually")}</p>
             <div className="flex items-center gap-2 bg-muted rounded-md px-3 py-2">
               <code className="flex-1 text-xs font-mono tracking-wider break-all">{setupData.secret}</code>
-              <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={() => copyToClipboard(setupData.secret, "secret")}>
-                {copied === "secret" ? <Check className="h-3.5 w-3.5 text-blue-500" /> : <Copy className="h-3.5 w-3.5" />}
+              <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={() => copyToClipboard(setupData.secret, "secret")} aria-label={t("auth.mfa.copySecret")}>
+                {copied === "secret" ? <Check className="h-3.5 w-3.5 text-blue-500" aria-hidden="true" /> : <Copy className="h-3.5 w-3.5" aria-hidden="true" />}
               </Button>
             </div>
           </div>

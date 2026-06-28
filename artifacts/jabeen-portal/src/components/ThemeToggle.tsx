@@ -18,6 +18,7 @@
    ============================================================================ */
 
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type Theme = 'light' | 'dark';
 const STORAGE_KEY = 'jabeen-theme';
@@ -66,15 +67,16 @@ export function useTheme() {
 
 export function ThemeToggle() {
   const { theme, toggle } = useTheme();
+  const { t } = useTranslation();
   const isDark = theme === 'dark';
 
   return (
     <button
       type="button"
       onClick={toggle}
-      aria-label={isDark ? 'تفعيل الوضع الفاتح' : 'تفعيل الوضع الداكن'}
+      aria-label={isDark ? t('theme.switchToLight') : t('theme.switchToDark')}
       aria-pressed={isDark}
-      title={isDark ? 'الوضع الفاتح' : 'الوضع الداكن'}
+      title={isDark ? t('theme.light') : t('theme.dark')}
       style={{
         display: 'inline-flex',
         alignItems: 'center',

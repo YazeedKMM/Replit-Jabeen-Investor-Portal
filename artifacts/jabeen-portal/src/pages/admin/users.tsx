@@ -271,8 +271,8 @@ export default function UsersPage() {
   const PasswordReveal = ({ pass }: { pass: string }) => (
     <div className="bg-muted p-4 rounded-md flex items-center justify-between border">
       <code className="font-mono text-lg font-medium">{pass}</code>
-      <Button variant="ghost" size="icon" onClick={() => copyToClipboard(pass)}>
-        {copied ? <Check className="h-4 w-4 text-blue-500" /> : <Copy className="h-4 w-4" />}
+      <Button variant="ghost" size="icon" onClick={() => copyToClipboard(pass)} aria-label={t("admin.users.copyPassword")}>
+        {copied ? <Check className="h-4 w-4 text-blue-500" aria-hidden="true" /> : <Copy className="h-4 w-4" aria-hidden="true" />}
       </Button>
     </div>
   );

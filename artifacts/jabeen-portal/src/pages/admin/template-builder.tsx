@@ -307,8 +307,8 @@ export default function TemplateBuilderPage() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-24">
       <div className="flex items-center gap-4 border-b pb-4">
-        <Button variant="ghost" size="icon" onClick={() => setLocation("/templates")}>
-          <ArrowLeft className="h-4 w-4 rtl-flip" />
+        <Button variant="ghost" size="icon" onClick={() => setLocation("/templates")} aria-label={t("common.back")}>
+          <ArrowLeft className="h-4 w-4 rtl-flip" aria-hidden="true" />
         </Button>
         <div className="flex-1">
           <h1 className="text-2xl font-bold">
@@ -398,8 +398,8 @@ export default function TemplateBuilderPage() {
                 <div className="flex items-center w-full gap-2">
                   {!isArchived && (
                     <div className="flex flex-col gap-1 px-1">
-                      <Button variant="ghost" size="icon" className="h-6 w-6" disabled={index === 0} onClick={(e) => { e.preventDefault(); moveStage(index, -1); }}>
-                        <GripVertical className="h-4 w-4 rotate-90" />
+                      <Button variant="ghost" size="icon" className="h-6 w-6" disabled={index === 0} onClick={(e) => { e.preventDefault(); moveStage(index, -1); }} aria-label={t("common.moveUp")}>
+                        <GripVertical className="h-4 w-4 rotate-90" aria-hidden="true" />
                       </Button>
                     </div>
                   )}
@@ -413,8 +413,8 @@ export default function TemplateBuilderPage() {
                     </div>
                   </AccordionTrigger>
                   {!isArchived && (
-                    <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => removeStage(stage.id)}>
-                      <Trash2 className="h-4 w-4" />
+                    <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => removeStage(stage.id)} aria-label={t("admin.templateBuilder.stages.removeStage")}>
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
                     </Button>
                   )}
                 </div>
@@ -510,8 +510,8 @@ export default function TemplateBuilderPage() {
                                 </div>
 
                                 {!isArchived && (
-                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0 self-end md:self-center" onClick={() => removeField(stage.id, field.id)}>
-                                    <Trash2 className="h-4 w-4" />
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0 self-end md:self-center" onClick={() => removeField(stage.id, field.id)} aria-label={t("admin.templateBuilder.stages.removeField")}>
+                                    <Trash2 className="h-4 w-4" aria-hidden="true" />
                                   </Button>
                                 )}
                               </div>

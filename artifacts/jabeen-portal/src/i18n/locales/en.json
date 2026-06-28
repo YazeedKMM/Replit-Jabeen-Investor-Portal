@@ -10,6 +10,7 @@
     "confirm": "Confirm",
     "close": "Close",
     "back": "Back",
+    "moveUp": "Move up",
     "next": "Next",
     "yes": "Yes",
     "no": "No",
@@ -34,6 +35,12 @@
   "language": {
     "switchTo": "العربية",
     "current": "EN"
+  },
+  "theme": {
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode",
+    "light": "Light mode",
+    "dark": "Dark mode"
   },
   "status": {
     "on-track": "On Track",
@@ -266,6 +273,8 @@
     "documents": {
       "title": "Project Documents",
       "uploadButton": "Upload File",
+      "downloadFile": "Download file",
+      "deleteFile": "Delete file",
       "emptyDesc": "No documents uploaded yet.",
       "uploadedBy": "By {{name}}",
       "unknownUploader": "Unknown",
@@ -300,6 +309,7 @@
       "title": "User Administration",
       "subtitle": "Manage portal access and roles.",
       "createUser": "Create User",
+      "copyPassword": "Copy password",
       "searchPlaceholder": "Search by name, email, company...",
       "filterByRole": "Filter by role",
       "allRoles": "All Roles",
@@ -424,7 +434,7 @@
       "archivedLabel": "(archived)",
       "saveTemplate": "Save Template",
       "archivedAlert": "This template version is archived and cannot be edited. Projects currently using it remain unaffected. To make changes, create a new template.",
-      "inUseAlert": "This template is currently assigned to <1>{{count}} project</1>. Saving will create a new version — existing projects remain on version {{version}}.",
+      "inUseAlert": "This template is currently assigned to <1>{{count}} project(s)</1>. Saving will create a new version; existing projects remain on version {{version}}.",
       "inUseConfirm": "This template is currently assigned to {{count}} project{{plural}}.\n\nSaving will create a new version (v{{newVersion}}). Existing projects will remain on their current version — your changes apply only to new assignments.",
       "detailsCard": {
         "title": "Template Details",
@@ -438,9 +448,11 @@
         "title": "Pipeline Stages",
         "subtitle": "Define the steps a project moves through, in order.",
         "addStage": "Add Stage",
+        "removeStage": "Remove stage",
+        "removeField": "Remove field",
         "noStages": "No stages defined yet.",
         "noStagesHint": " Click Add Stage to begin.",
-        "baselineLabel": "% baseline",
+        "baselineLabel": "baseline",
         "fieldStageName": "Stage Name",
         "fieldCategory": "Category",
         "fieldProgressBaseline": "Progress Baseline (%)",
@@ -684,9 +696,9 @@
     "shortNameRequired": "Short name is required"
   },
   "notFound": {
-    "heading": "404 Page Not Found",
-    "message": "Did you forget to add the page to the router?",
-    "backHome": "Back to Home"
+    "heading": "Page not found",
+    "message": "The page you're looking for doesn't exist or may have moved.",
+    "backHome": "Back to home"
   },
   "auth": {
     "brandChip": "Royal Commission Industrial Cities",
@@ -734,6 +746,7 @@
       "enterRecoveryCode": "Enter one of your recovery codes.",
       "authenticatorCode": "Authenticator Code",
       "recoveryCode": "Recovery Code",
+      "copySecret": "Copy secret key",
       "verify": "Verify",
       "verifying": "Verifying...",
       "backToSignIn": "Back to Sign In",
