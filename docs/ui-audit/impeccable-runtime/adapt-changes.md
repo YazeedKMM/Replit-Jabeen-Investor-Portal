@@ -36,8 +36,11 @@ All verified live (light/dark/RTL where relevant), each its own commit:
 
 Post-fix verification screenshots: [`shots-after/`](shots-after/) (`V08` 404, `V09` template-builder, `V10` users role tags/tabs).
 
-## Still open (smaller, scoped follow-ups)
+## Scoped follow-ups (done, `25328d3`)
 
-- Per-component 44px touch targets on coarse pointers (a blanket `min-height` rule risks distorting dense layouts; do it per icon-button group) → scoped `adapt`.
-- Title-only icon buttons in admin tables (cities/categories/templates and the users row actions) are named via `title` (announced inconsistently by some AT); add `aria-label` alongside → `clarify`.
-- The data-table "clipping" finding was re-checked and is actually horizontal scroll via shadcn's `overflow-auto` wrapper — acceptable, not a defect.
+- **44px touch targets**: a `@media (pointer: coarse)` rule enforces a 44×44 minimum hit area on interactive controls (WCAG 2.5.8). Scoped to touch so mouse/desktop density is unchanged; icon-only controls (single svg child) also get min-width. Verified: under coarse emulation all 21 icon buttons ≥44px; desktop unchanged (36px).
+- **aria-labels on admin table actions**: added `aria-label` alongside the existing `title` on cities/categories edit+delete, templates archive+delete, and the users row actions (manage-cities / reset-MFA / reset-password / activate-deactivate); icons marked `aria-hidden`. Verified live (e.g. "Edit City" / "Delete City").
+
+## Not a defect
+
+- The data-table "clipping" finding was re-checked and is actually horizontal scroll via shadcn's `overflow-auto` wrapper — acceptable.
