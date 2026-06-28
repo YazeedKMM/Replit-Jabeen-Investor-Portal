@@ -57,10 +57,13 @@ const makeActivateSchemaPM = (t: TFunction) => z.object({
   projectId: z.string().min(1, t("validation.projectRequiredForPM")),
 });
 
-/** Role → DgaTag variant (DGA has no purple, so map to the closest semantic chip). */
-function roleTagVariant(role: string): "neutral" | "info" | "warning" {
-  if (role === "investor") return "warning";
-  if (role === "administrator") return "neutral";
+/**
+ * Role → DgaTag variant. Roles are categorical, not severity, so don't borrow
+ * warning/error chips. External party (investor) = neutral; internal staff
+ * (administrator, project-manager, top-management) = info.
+ */
+function roleTagVariant(role: string): "neutral" | "info" {
+  if (role === "investor") return "neutral";
   return "info";
 }
 
