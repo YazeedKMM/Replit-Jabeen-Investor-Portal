@@ -180,6 +180,7 @@ export default function LoginPage() {
           width={1920}
           height={1080}
           decoding="async"
+          fetchPriority="high"
           className="absolute inset-0 h-full w-full object-cover object-[60%_center]"
         />
         {/* Legibility scrim — darken left + bottom where text sits, so it holds AA contrast over the photo */}

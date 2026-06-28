@@ -23,10 +23,13 @@
 
 
 /* ---------------------------------------------------------------------------
-   1. FONT (IBM Plex Sans Arabic). Package points to /assets/fonts/... which is
-   absent in your app, so load it here. Self-host for offline/gov hosting.
+   1. FONT (IBM Plex Sans Arabic). Loaded via the preconnected <link> in
+   index.html. Do NOT re-add a CSS `@import url(...)` here: a CSS @import is
+   render-blocking and serialized after this stylesheet downloads, and it
+   duplicated the index.html <link> (the font was fetched twice). For
+   offline/gov hosting, self-host the font files and swap the <link> for a
+   local @font-face instead.
    --------------------------------------------------------------------------- */
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap');
 
 
 /* ---------------------------------------------------------------------------
