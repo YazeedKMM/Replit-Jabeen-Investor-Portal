@@ -169,10 +169,15 @@ button.text-white {
    the runtime layer guard) used to zero outlines app-wide while shadcn's ring
    resolved transparent, leaving keyboard focus invisible on links, selects, and
    the header toggles. Guarantee a visible gold focus ring on every interactive
-   element in both themes. Unlayered + the :focus-visible pseudo (0,1,0) so it
-   wins where a component ships no visible ring of its own.
+   element in both themes. Unlayered + the :focus-visible pseudo so it wins where
+   a component ships no visible ring of its own.
+
+   Exclude native form controls: text inputs match :focus-visible on mouse click
+   too, and they ALREADY show a focus treatment (DGA gold :focus-within border in
+   §4c, shadcn gold ring via --ring). Adding this outline on top produced a
+   double border on focus. They keep their own single indicator.
    --------------------------------------------------------------------------- */
-:focus-visible {
+:focus-visible:not(input):not(textarea):not(select) {
   outline: 2px solid var(--text-primary);
   outline-offset: 2px;
   border-radius: 2px;
