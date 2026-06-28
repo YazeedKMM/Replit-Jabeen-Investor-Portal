@@ -23,12 +23,19 @@ import { DgaTextInput } from "platformscode-new-react";
  * imperatively, and only when the field is NOT focused — so RHF resets/programmatic
  * changes flow in, but active typing is never clobbered.
  */
+type FieldType = "text" | "number" | "password" | "email" | "tel" | "url";
+type FieldInputMode =
+  | "text" | "email" | "tel" | "url" | "numeric" | "decimal" | "search" | "none";
+
 interface DgaTextFieldProps<T extends FieldValues> {
   control: Control<T>;
   name: Path<T>;
   label?: string;
   placeholder?: string;
-  type?: "text" | "number" | "password";
+  type?: FieldType;
+  /** HTML autocomplete token, e.g. "username", "current-password", "tel". */
+  autoComplete?: string;
+  inputMode?: FieldInputMode;
   required?: boolean;
   disabled?: boolean;
 }
@@ -39,6 +46,8 @@ export function DgaTextField<T extends FieldValues>({
   label,
   placeholder,
   type = "text",
+  autoComplete,
+  inputMode,
   required,
   disabled,
 }: DgaTextFieldProps<T>) {
@@ -55,6 +64,8 @@ export function DgaTextField<T extends FieldValues>({
           label={label}
           placeholder={placeholder}
           type={type}
+          autoComplete={autoComplete}
+          inputMode={inputMode}
           required={required}
           disabled={disabled}
           error={!!fieldState.error}
@@ -72,7 +83,9 @@ type ControlledProps = {
   name: string;
   label?: string;
   placeholder?: string;
-  type: "text" | "number" | "password";
+  type: FieldType;
+  autoComplete?: string;
+  inputMode?: FieldInputMode;
   required?: boolean;
   disabled?: boolean;
   error: boolean;
@@ -83,10 +96,43 @@ function DgaTextInputControlled({
   value,
   onValueChange,
   onFieldBlur,
+  type,
+  autoComplete,
+  inputMode,
   ...rest
 }: ControlledProps) {
   // @lit/react forwards `ref` to the host element.
   const ref = useRef<(HTMLElement & { value?: string }) | null>(null);
+
+  // The DGA component's `type` prop only models text/number/password. For
+  // email/tel/url we render it as text and set the real type (plus autocomplete /
+  // inputmode, which the component has no props for) directly on the inner native
+  // <input> via the ref — so the browser offers the right keyboard on mobile and
+  // password managers can pair credentials.
+  const componentType: "text" | "number" | "password" =
+    type === "password" || type === "number" ? type : "text";
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const apply = (): boolean => {
+      const inner = el.querySelector("input");
+      if (!inner) return false;
+      inner.type = type;
+      if (autoComplete) inner.setAttribute("autocomplete", autoComplete);
+      else inner.removeAttribute("autocomplete");
+      if (inputMode) inner.setAttribute("inputmode", inputMode);
+      else inner.removeAttribute("inputmode");
+      return true;
+    };
+    // The inner input may not exist until the component hydrates.
+    if (apply()) return;
+    const mo = new MutationObserver(() => {
+      if (apply()) mo.disconnect();
+    });
+    mo.observe(el, { childList: true, subtree: true });
+    return () => mo.disconnect();
+  }, [type, autoComplete, inputMode]);
 
   // Wire native bubbling input for value-out (proven to carry e.target.value).
   useEffect(() => {
@@ -118,6 +164,7 @@ function DgaTextInputControlled({
     <DgaTextInput
       ref={ref as never}
       fullwidth
+      type={componentType}
       {...rest}
       onInput={() => {}}
       onChange={() => {}}

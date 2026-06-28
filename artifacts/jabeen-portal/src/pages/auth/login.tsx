@@ -312,6 +312,9 @@ export default function LoginPage() {
                     <DgaTextField
                       control={loginForm.control}
                       name="email"
+                      type="email"
+                      autoComplete="username"
+                      inputMode="email"
                       label={t("auth.workEmail")}
                       placeholder="name@company.com"
                       required
@@ -320,6 +323,7 @@ export default function LoginPage() {
                       control={loginForm.control}
                       name="password"
                       type="password"
+                      autoComplete="current-password"
                       label={t("auth.password")}
                       placeholder="••••••••"
                       required
@@ -361,6 +365,7 @@ export default function LoginPage() {
                       <DgaTextField
                         control={registerForm.control}
                         name="fullName"
+                        autoComplete="name"
                         label={t("auth.fullName")}
                         placeholder="John Doe"
                         required
@@ -368,6 +373,7 @@ export default function LoginPage() {
                       <DgaTextField
                         control={registerForm.control}
                         name="companyName"
+                        autoComplete="organization"
                         label={t("auth.company")}
                         placeholder="Acme Corp"
                         required
@@ -377,6 +383,9 @@ export default function LoginPage() {
                     <DgaTextField
                       control={registerForm.control}
                       name="email"
+                      type="email"
+                      autoComplete="email"
+                      inputMode="email"
                       label={t("auth.workEmail")}
                       placeholder="name@company.com"
                       required
@@ -386,6 +395,7 @@ export default function LoginPage() {
                       control={registerForm.control}
                       name="password"
                       type="password"
+                      autoComplete="new-password"
                       label={t("auth.password")}
                       placeholder="••••••••"
                       required
@@ -395,12 +405,16 @@ export default function LoginPage() {
                       <DgaTextField
                         control={registerForm.control}
                         name="title"
+                        autoComplete="organization-title"
                         label={`${t("auth.jobTitle")} ${t("auth.optional")}`}
                         placeholder="Project Manager"
                       />
                       <DgaTextField
                         control={registerForm.control}
                         name="phone"
+                        type="tel"
+                        autoComplete="tel"
+                        inputMode="tel"
                         label={`${t("auth.phone")} ${t("auth.optional")}`}
                         placeholder="+966…"
                       />
