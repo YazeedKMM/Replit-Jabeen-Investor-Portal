@@ -199,18 +199,20 @@ export default function CategoriesPage() {
                       size="icon"
                       onClick={() => openEditDialog(category)}
                       title={t("admin.categories.tooltipEdit")}
+                      aria-label={t("admin.categories.tooltipEdit")}
                       data-testid={`button-edit-category-${category.id}`}
                     >
-                      <Pencil className="h-4 w-4" />
+                      <Pencil className="h-4 w-4" aria-hidden="true" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
                       title={t("admin.categories.tooltipDelete")}
+                      aria-label={t("admin.categories.tooltipDelete")}
                       data-testid={`button-delete-category-${category.id}`}
                       onClick={() => setDeleteTarget(category)}
                     >
-                      <Trash2 className="h-4 w-4 text-destructive" />
+                      <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
                     </Button>
                   </TableCell>
                 </TableRow>

@@ -203,18 +203,20 @@ export default function CitiesPage() {
                       size="icon"
                       onClick={() => openEditDialog(city)}
                       title={t("admin.cities.tooltipEdit")}
+                      aria-label={t("admin.cities.tooltipEdit")}
                       data-testid={`button-edit-city-${city.id}`}
                     >
-                      <Pencil className="h-4 w-4" />
+                      <Pencil className="h-4 w-4" aria-hidden="true" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
                       title={t("admin.cities.tooltipDelete")}
+                      aria-label={t("admin.cities.tooltipDelete")}
                       data-testid={`button-delete-city-${city.id}`}
                       onClick={() => setDeleteTarget(city)}
                     >
-                      <Trash2 className="h-4 w-4 text-destructive" />
+                      <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
                     </Button>
                   </TableCell>
                 </TableRow>

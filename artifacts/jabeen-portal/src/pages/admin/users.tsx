@@ -372,9 +372,10 @@ export default function UsersPage() {
                               size="icon"
                               onClick={() => { setManageCitiesTarget(u); setManageCityIds([]); }}
                               title={t("admin.users.tooltipManageCities")}
+                              aria-label={t("admin.users.tooltipManageCities")}
                               className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                             >
-                              <MapPin className="h-4 w-4" />
+                              <MapPin className="h-4 w-4" aria-hidden="true" />
                             </Button>
                           )}
                           <Button
@@ -382,15 +383,16 @@ export default function UsersPage() {
                             size="icon"
                             onClick={() => handleResetMfa(u)}
                             title={u.mfaEnabled ? t("admin.users.tooltipResetMfa") : t("admin.users.tooltipMfaNotEnabled")}
+                            aria-label={u.mfaEnabled ? t("admin.users.tooltipResetMfa") : t("admin.users.tooltipMfaNotEnabled")}
                             className={u.mfaEnabled ? "text-amber-600 hover:text-amber-700 hover:bg-amber-50" : "text-muted-foreground/40 cursor-default"}
                           >
-                            <ShieldOff className="h-4 w-4" />
+                            <ShieldOff className="h-4 w-4" aria-hidden="true" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleResetPassword(u)} title={t("admin.users.tooltipResetPassword")}>
-                            <KeyRound className="h-4 w-4" />
+                          <Button variant="ghost" size="icon" onClick={() => handleResetPassword(u)} title={t("admin.users.tooltipResetPassword")} aria-label={t("admin.users.tooltipResetPassword")}>
+                            <KeyRound className="h-4 w-4" aria-hidden="true" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleToggleStatus(u)} title={u.status === "active" ? t("admin.users.tooltipDeactivate") : t("admin.users.tooltipActivate")}>
-                            {u.status === "active" ? <UserX className="h-4 w-4 text-destructive" /> : <UserCheck className="h-4 w-4 text-blue-600" />}
+                          <Button variant="ghost" size="icon" onClick={() => handleToggleStatus(u)} title={u.status === "active" ? t("admin.users.tooltipDeactivate") : t("admin.users.tooltipActivate")} aria-label={u.status === "active" ? t("admin.users.tooltipDeactivate") : t("admin.users.tooltipActivate")}>
+                            {u.status === "active" ? <UserX className="h-4 w-4 text-destructive" aria-hidden="true" /> : <UserCheck className="h-4 w-4 text-blue-600" aria-hidden="true" />}
                           </Button>
                         </TableCell>
                       )}

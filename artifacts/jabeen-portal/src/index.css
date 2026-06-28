@@ -307,6 +307,27 @@ html {
   }
 }
 
+/* Touch devices: enforce a 44x44 minimum hit area on interactive controls
+   (WCAG 2.5.8 Target Size). Scoped to coarse pointers so mouse/desktop density
+   is unchanged — on touch, larger targets are desirable, not distorting. Targets
+   light-DOM controls only; DGA web components size themselves in shadow DOM. */
+@media (pointer: coarse) {
+  button,
+  [role="button"],
+  [role="tab"],
+  [role="menuitem"],
+  summary {
+    min-height: 44px;
+  }
+  /* Icon-only controls also need the 44px width (a single svg child). */
+  button:has(> svg:only-child),
+  a:has(> svg:only-child),
+  [role="button"]:has(> svg:only-child) {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
 @keyframes login-fade {
   from {
     opacity: 0;
