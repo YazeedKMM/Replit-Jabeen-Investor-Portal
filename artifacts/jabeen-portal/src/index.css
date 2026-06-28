@@ -293,6 +293,18 @@ html {
   .login-press:active {
     transform: none;
   }
+  /* Decorative page-entrance reveals (tailwindcss-animate `animate-in fade-in
+     duration-500` on page roots) are non-essential motion: show instantly so the
+     content still appears (it animates from opacity 0). Essential loading
+     feedback (animate-spin / animate-pulse skeletons) is intentionally left
+     running. */
+  .animate-in {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+  }
+  html {
+    scroll-behavior: auto !important;
+  }
 }
 
 @keyframes login-fade {
