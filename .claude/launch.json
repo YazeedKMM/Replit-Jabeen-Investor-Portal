@@ -1,0 +1,29 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "jabeen-portal",
+      "runtimeExecutable": "docker",
+      "runtimeArgs": ["compose", "-f", ".docker-run/docker-compose.yml", "up"],
+      "port": 5173
+    },
+    {
+      "name": "mockup-sandbox",
+      "runtimeExecutable": "docker",
+      "runtimeArgs": [
+        "compose",
+        "-f",
+        ".docker-run/docker-compose.yml",
+        "run",
+        "--rm",
+        "--publish",
+        "5174:5174",
+        "app",
+        "bash",
+        "-lc",
+        "cd /app/artifacts/mockup-sandbox && PORT=5174 pnpm exec vite --host 0.0.0.0"
+      ],
+      "port": 5174
+    }
+  ]
+}
