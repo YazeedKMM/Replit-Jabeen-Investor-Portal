@@ -1667,23 +1667,41 @@ export const UpdateSettingsResponse = zod.object({
 /**
  * @summary Get the active branding config (public, pre-auth)
  */
-export const getBrandingResponseColorsPrimaryRegExp = new RegExp('^oklch\\(');
-export const getBrandingResponseColorsSecondaryRegExp = new RegExp('^oklch\\(');
-export const getBrandingResponseColorsAccentRegExp = new RegExp('^oklch\\(');
-export const getBrandingResponseColorsSuccessRegExp = new RegExp('^oklch\\(');
-export const getBrandingResponseColorsWarningRegExp = new RegExp('^oklch\\(');
-export const getBrandingResponseColorsErrorRegExp = new RegExp('^oklch\\(');
+export const getBrandingResponseColorsPrimaryMax = 60;
+
+
+export const getBrandingResponseColorsPrimaryRegExp = new RegExp('^oklch\\([^)]+\\)$');
+export const getBrandingResponseColorsSecondaryMax = 60;
+
+
+export const getBrandingResponseColorsSecondaryRegExp = new RegExp('^oklch\\([^)]+\\)$');
+export const getBrandingResponseColorsAccentMax = 60;
+
+
+export const getBrandingResponseColorsAccentRegExp = new RegExp('^oklch\\([^)]+\\)$');
+export const getBrandingResponseColorsSuccessMax = 60;
+
+
+export const getBrandingResponseColorsSuccessRegExp = new RegExp('^oklch\\([^)]+\\)$');
+export const getBrandingResponseColorsWarningMax = 60;
+
+
+export const getBrandingResponseColorsWarningRegExp = new RegExp('^oklch\\([^)]+\\)$');
+export const getBrandingResponseColorsErrorMax = 60;
+
+
+export const getBrandingResponseColorsErrorRegExp = new RegExp('^oklch\\([^)]+\\)$');
 
 
 export const GetBrandingResponse = zod.object({
   "name": zod.string(),
   "colors": zod.object({
-  "primary": zod.string().regex(getBrandingResponseColorsPrimaryRegExp),
-  "secondary": zod.string().regex(getBrandingResponseColorsSecondaryRegExp),
-  "accent": zod.string().regex(getBrandingResponseColorsAccentRegExp),
-  "success": zod.string().regex(getBrandingResponseColorsSuccessRegExp),
-  "warning": zod.string().regex(getBrandingResponseColorsWarningRegExp),
-  "error": zod.string().regex(getBrandingResponseColorsErrorRegExp)
+  "primary": zod.string().max(getBrandingResponseColorsPrimaryMax).regex(getBrandingResponseColorsPrimaryRegExp),
+  "secondary": zod.string().max(getBrandingResponseColorsSecondaryMax).regex(getBrandingResponseColorsSecondaryRegExp),
+  "accent": zod.string().max(getBrandingResponseColorsAccentMax).regex(getBrandingResponseColorsAccentRegExp),
+  "success": zod.string().max(getBrandingResponseColorsSuccessMax).regex(getBrandingResponseColorsSuccessRegExp),
+  "warning": zod.string().max(getBrandingResponseColorsWarningMax).regex(getBrandingResponseColorsWarningRegExp),
+  "error": zod.string().max(getBrandingResponseColorsErrorMax).regex(getBrandingResponseColorsErrorRegExp)
 }),
   "logos": zod.object({
   "light": zod.string().nullish(),
@@ -1698,23 +1716,41 @@ export const GetBrandingResponse = zod.object({
  */
 export const updateBrandingBodyNameMax = 120;
 
-export const updateBrandingBodyColorsPrimaryRegExp = new RegExp('^oklch\\(');
-export const updateBrandingBodyColorsSecondaryRegExp = new RegExp('^oklch\\(');
-export const updateBrandingBodyColorsAccentRegExp = new RegExp('^oklch\\(');
-export const updateBrandingBodyColorsSuccessRegExp = new RegExp('^oklch\\(');
-export const updateBrandingBodyColorsWarningRegExp = new RegExp('^oklch\\(');
-export const updateBrandingBodyColorsErrorRegExp = new RegExp('^oklch\\(');
+export const updateBrandingBodyColorsPrimaryMax = 60;
+
+
+export const updateBrandingBodyColorsPrimaryRegExp = new RegExp('^oklch\\([^)]+\\)$');
+export const updateBrandingBodyColorsSecondaryMax = 60;
+
+
+export const updateBrandingBodyColorsSecondaryRegExp = new RegExp('^oklch\\([^)]+\\)$');
+export const updateBrandingBodyColorsAccentMax = 60;
+
+
+export const updateBrandingBodyColorsAccentRegExp = new RegExp('^oklch\\([^)]+\\)$');
+export const updateBrandingBodyColorsSuccessMax = 60;
+
+
+export const updateBrandingBodyColorsSuccessRegExp = new RegExp('^oklch\\([^)]+\\)$');
+export const updateBrandingBodyColorsWarningMax = 60;
+
+
+export const updateBrandingBodyColorsWarningRegExp = new RegExp('^oklch\\([^)]+\\)$');
+export const updateBrandingBodyColorsErrorMax = 60;
+
+
+export const updateBrandingBodyColorsErrorRegExp = new RegExp('^oklch\\([^)]+\\)$');
 
 
 export const UpdateBrandingBody = zod.object({
   "name": zod.string().min(1).max(updateBrandingBodyNameMax),
   "colors": zod.object({
-  "primary": zod.string().regex(updateBrandingBodyColorsPrimaryRegExp),
-  "secondary": zod.string().regex(updateBrandingBodyColorsSecondaryRegExp),
-  "accent": zod.string().regex(updateBrandingBodyColorsAccentRegExp),
-  "success": zod.string().regex(updateBrandingBodyColorsSuccessRegExp),
-  "warning": zod.string().regex(updateBrandingBodyColorsWarningRegExp),
-  "error": zod.string().regex(updateBrandingBodyColorsErrorRegExp)
+  "primary": zod.string().max(updateBrandingBodyColorsPrimaryMax).regex(updateBrandingBodyColorsPrimaryRegExp),
+  "secondary": zod.string().max(updateBrandingBodyColorsSecondaryMax).regex(updateBrandingBodyColorsSecondaryRegExp),
+  "accent": zod.string().max(updateBrandingBodyColorsAccentMax).regex(updateBrandingBodyColorsAccentRegExp),
+  "success": zod.string().max(updateBrandingBodyColorsSuccessMax).regex(updateBrandingBodyColorsSuccessRegExp),
+  "warning": zod.string().max(updateBrandingBodyColorsWarningMax).regex(updateBrandingBodyColorsWarningRegExp),
+  "error": zod.string().max(updateBrandingBodyColorsErrorMax).regex(updateBrandingBodyColorsErrorRegExp)
 }),
   "logos": zod.object({
   "light": zod.string().nullish(),
@@ -1723,23 +1759,41 @@ export const UpdateBrandingBody = zod.object({
 })
 })
 
-export const updateBrandingResponseColorsPrimaryRegExp = new RegExp('^oklch\\(');
-export const updateBrandingResponseColorsSecondaryRegExp = new RegExp('^oklch\\(');
-export const updateBrandingResponseColorsAccentRegExp = new RegExp('^oklch\\(');
-export const updateBrandingResponseColorsSuccessRegExp = new RegExp('^oklch\\(');
-export const updateBrandingResponseColorsWarningRegExp = new RegExp('^oklch\\(');
-export const updateBrandingResponseColorsErrorRegExp = new RegExp('^oklch\\(');
+export const updateBrandingResponseColorsPrimaryMax = 60;
+
+
+export const updateBrandingResponseColorsPrimaryRegExp = new RegExp('^oklch\\([^)]+\\)$');
+export const updateBrandingResponseColorsSecondaryMax = 60;
+
+
+export const updateBrandingResponseColorsSecondaryRegExp = new RegExp('^oklch\\([^)]+\\)$');
+export const updateBrandingResponseColorsAccentMax = 60;
+
+
+export const updateBrandingResponseColorsAccentRegExp = new RegExp('^oklch\\([^)]+\\)$');
+export const updateBrandingResponseColorsSuccessMax = 60;
+
+
+export const updateBrandingResponseColorsSuccessRegExp = new RegExp('^oklch\\([^)]+\\)$');
+export const updateBrandingResponseColorsWarningMax = 60;
+
+
+export const updateBrandingResponseColorsWarningRegExp = new RegExp('^oklch\\([^)]+\\)$');
+export const updateBrandingResponseColorsErrorMax = 60;
+
+
+export const updateBrandingResponseColorsErrorRegExp = new RegExp('^oklch\\([^)]+\\)$');
 
 
 export const UpdateBrandingResponse = zod.object({
   "name": zod.string(),
   "colors": zod.object({
-  "primary": zod.string().regex(updateBrandingResponseColorsPrimaryRegExp),
-  "secondary": zod.string().regex(updateBrandingResponseColorsSecondaryRegExp),
-  "accent": zod.string().regex(updateBrandingResponseColorsAccentRegExp),
-  "success": zod.string().regex(updateBrandingResponseColorsSuccessRegExp),
-  "warning": zod.string().regex(updateBrandingResponseColorsWarningRegExp),
-  "error": zod.string().regex(updateBrandingResponseColorsErrorRegExp)
+  "primary": zod.string().max(updateBrandingResponseColorsPrimaryMax).regex(updateBrandingResponseColorsPrimaryRegExp),
+  "secondary": zod.string().max(updateBrandingResponseColorsSecondaryMax).regex(updateBrandingResponseColorsSecondaryRegExp),
+  "accent": zod.string().max(updateBrandingResponseColorsAccentMax).regex(updateBrandingResponseColorsAccentRegExp),
+  "success": zod.string().max(updateBrandingResponseColorsSuccessMax).regex(updateBrandingResponseColorsSuccessRegExp),
+  "warning": zod.string().max(updateBrandingResponseColorsWarningMax).regex(updateBrandingResponseColorsWarningRegExp),
+  "error": zod.string().max(updateBrandingResponseColorsErrorMax).regex(updateBrandingResponseColorsErrorRegExp)
 }),
   "logos": zod.object({
   "light": zod.string().nullish(),

@@ -888,17 +888,35 @@ export interface SettingsUpdate {
 }
 
 export interface BrandingColors {
-  /** @pattern ^oklch\( */
+  /**
+     * @maxLength 60
+     * @pattern ^oklch\([^)]+\)$
+     */
   primary: string;
-  /** @pattern ^oklch\( */
+  /**
+     * @maxLength 60
+     * @pattern ^oklch\([^)]+\)$
+     */
   secondary: string;
-  /** @pattern ^oklch\( */
+  /**
+     * @maxLength 60
+     * @pattern ^oklch\([^)]+\)$
+     */
   accent: string;
-  /** @pattern ^oklch\( */
+  /**
+     * @maxLength 60
+     * @pattern ^oklch\([^)]+\)$
+     */
   success: string;
-  /** @pattern ^oklch\( */
+  /**
+     * @maxLength 60
+     * @pattern ^oklch\([^)]+\)$
+     */
   warning: string;
-  /** @pattern ^oklch\( */
+  /**
+     * @maxLength 60
+     * @pattern ^oklch\([^)]+\)$
+     */
   error: string;
 }
 

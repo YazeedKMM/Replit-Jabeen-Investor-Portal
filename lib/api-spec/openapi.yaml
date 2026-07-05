@@ -2321,12 +2321,12 @@ components:
       type: object
       required: [primary, secondary, accent, success, warning, error]
       properties:
-        primary: { type: string, pattern: '^oklch\(' }
-        secondary: { type: string, pattern: '^oklch\(' }
-        accent: { type: string, pattern: '^oklch\(' }
-        success: { type: string, pattern: '^oklch\(' }
-        warning: { type: string, pattern: '^oklch\(' }
-        error: { type: string, pattern: '^oklch\(' }
+        primary: { type: string, pattern: '^oklch\([^)]+\)$', maxLength: 60 }
+        secondary: { type: string, pattern: '^oklch\([^)]+\)$', maxLength: 60 }
+        accent: { type: string, pattern: '^oklch\([^)]+\)$', maxLength: 60 }
+        success: { type: string, pattern: '^oklch\([^)]+\)$', maxLength: 60 }
+        warning: { type: string, pattern: '^oklch\([^)]+\)$', maxLength: 60 }
+        error: { type: string, pattern: '^oklch\([^)]+\)$', maxLength: 60 }
     BrandingLogos:
       type: object
       properties:
