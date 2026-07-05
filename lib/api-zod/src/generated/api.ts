@@ -1664,3 +1664,104 @@ export const UpdateSettingsResponse = zod.object({
 })
 
 
+/**
+ * @summary Get the active branding config (public, pre-auth)
+ */
+export const getBrandingResponseColorsPrimaryRegExp = new RegExp('^oklch\\(');
+export const getBrandingResponseColorsSecondaryRegExp = new RegExp('^oklch\\(');
+export const getBrandingResponseColorsAccentRegExp = new RegExp('^oklch\\(');
+export const getBrandingResponseColorsSuccessRegExp = new RegExp('^oklch\\(');
+export const getBrandingResponseColorsWarningRegExp = new RegExp('^oklch\\(');
+export const getBrandingResponseColorsErrorRegExp = new RegExp('^oklch\\(');
+
+
+export const GetBrandingResponse = zod.object({
+  "name": zod.string(),
+  "colors": zod.object({
+  "primary": zod.string().regex(getBrandingResponseColorsPrimaryRegExp),
+  "secondary": zod.string().regex(getBrandingResponseColorsSecondaryRegExp),
+  "accent": zod.string().regex(getBrandingResponseColorsAccentRegExp),
+  "success": zod.string().regex(getBrandingResponseColorsSuccessRegExp),
+  "warning": zod.string().regex(getBrandingResponseColorsWarningRegExp),
+  "error": zod.string().regex(getBrandingResponseColorsErrorRegExp)
+}),
+  "logos": zod.object({
+  "light": zod.string().nullish(),
+  "dark": zod.string().nullish(),
+  "favicon": zod.string().nullish()
+})
+})
+
+
+/**
+ * @summary Replace the branding config (admin/PM only)
+ */
+export const updateBrandingBodyNameMax = 120;
+
+export const updateBrandingBodyColorsPrimaryRegExp = new RegExp('^oklch\\(');
+export const updateBrandingBodyColorsSecondaryRegExp = new RegExp('^oklch\\(');
+export const updateBrandingBodyColorsAccentRegExp = new RegExp('^oklch\\(');
+export const updateBrandingBodyColorsSuccessRegExp = new RegExp('^oklch\\(');
+export const updateBrandingBodyColorsWarningRegExp = new RegExp('^oklch\\(');
+export const updateBrandingBodyColorsErrorRegExp = new RegExp('^oklch\\(');
+
+
+export const UpdateBrandingBody = zod.object({
+  "name": zod.string().min(1).max(updateBrandingBodyNameMax),
+  "colors": zod.object({
+  "primary": zod.string().regex(updateBrandingBodyColorsPrimaryRegExp),
+  "secondary": zod.string().regex(updateBrandingBodyColorsSecondaryRegExp),
+  "accent": zod.string().regex(updateBrandingBodyColorsAccentRegExp),
+  "success": zod.string().regex(updateBrandingBodyColorsSuccessRegExp),
+  "warning": zod.string().regex(updateBrandingBodyColorsWarningRegExp),
+  "error": zod.string().regex(updateBrandingBodyColorsErrorRegExp)
+}),
+  "logos": zod.object({
+  "light": zod.string().nullish(),
+  "dark": zod.string().nullish(),
+  "favicon": zod.string().nullish()
+})
+})
+
+export const updateBrandingResponseColorsPrimaryRegExp = new RegExp('^oklch\\(');
+export const updateBrandingResponseColorsSecondaryRegExp = new RegExp('^oklch\\(');
+export const updateBrandingResponseColorsAccentRegExp = new RegExp('^oklch\\(');
+export const updateBrandingResponseColorsSuccessRegExp = new RegExp('^oklch\\(');
+export const updateBrandingResponseColorsWarningRegExp = new RegExp('^oklch\\(');
+export const updateBrandingResponseColorsErrorRegExp = new RegExp('^oklch\\(');
+
+
+export const UpdateBrandingResponse = zod.object({
+  "name": zod.string(),
+  "colors": zod.object({
+  "primary": zod.string().regex(updateBrandingResponseColorsPrimaryRegExp),
+  "secondary": zod.string().regex(updateBrandingResponseColorsSecondaryRegExp),
+  "accent": zod.string().regex(updateBrandingResponseColorsAccentRegExp),
+  "success": zod.string().regex(updateBrandingResponseColorsSuccessRegExp),
+  "warning": zod.string().regex(updateBrandingResponseColorsWarningRegExp),
+  "error": zod.string().regex(updateBrandingResponseColorsErrorRegExp)
+}),
+  "logos": zod.object({
+  "light": zod.string().nullish(),
+  "dark": zod.string().nullish(),
+  "favicon": zod.string().nullish()
+})
+})
+
+
+/**
+ * @summary Upload a logo asset (admin/PM only). Returns a storage key.
+ */
+export const UploadBrandingLogoBody = zod.object({
+  "file": zod.instanceof(File)
+})
+
+
+/**
+ * @summary Serve an uploaded logo asset (public)
+ */
+export const GetBrandingLogoParams = zod.object({
+  "key": zod.coerce.string()
+})
+
+

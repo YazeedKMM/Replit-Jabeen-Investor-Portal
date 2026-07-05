@@ -887,6 +887,54 @@ export interface SettingsUpdate {
   loginThrottleWindowSeconds?: number;
 }
 
+export interface BrandingColors {
+  /** @pattern ^oklch\( */
+  primary: string;
+  /** @pattern ^oklch\( */
+  secondary: string;
+  /** @pattern ^oklch\( */
+  accent: string;
+  /** @pattern ^oklch\( */
+  success: string;
+  /** @pattern ^oklch\( */
+  warning: string;
+  /** @pattern ^oklch\( */
+  error: string;
+}
+
+export interface BrandingLogos {
+  /** @nullable */
+  light?: string | null;
+  /** @nullable */
+  dark?: string | null;
+  /** @nullable */
+  favicon?: string | null;
+}
+
+export interface Branding {
+  name: string;
+  colors: BrandingColors;
+  logos: BrandingLogos;
+}
+
+export interface BrandingInput {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  name: string;
+  colors: BrandingColors;
+  logos: BrandingLogos;
+}
+
+export interface BrandingLogoUpload {
+  file: Blob;
+}
+
+export interface BrandingLogoUploadResult {
+  key: string;
+}
+
 export type ListProjectsParams = {
 /**
  * Search by name, agreement number, category, investor name/company
