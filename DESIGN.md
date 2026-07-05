@@ -27,7 +27,8 @@ are re-tuned per role.
 | Token | OKLCH value | Usage |
 |---|---|---|
 | bg | oklch(1 0 0) | Page background (pure white) |
-| surface | oklch(0.972 0.007 120) | Cards, panels, table headers, inputs |
+| surface | oklch(0.972 0.007 120) | Cards, panels, table headers, inputs, popovers/menus, sidebar surface |
+| muted-surface | oklch(0.955 0.008 120) | Subdued surface: table stripes, skeleton loaders, disabled fills — a touch more tint than `surface`, still near-`bg` |
 | ink | oklch(0.24 0.02 135) | Body and heading text (green-cast near-black) |
 | muted | oklch(0.46 0.025 135) | Secondary text, captions, placeholders |
 | primary | oklch(0.46 0.09 118) | Palm olive — primary buttons, active nav, key indicators |
@@ -47,7 +48,8 @@ are re-tuned per role.
 | Token | OKLCH value | Usage |
 |---|---|---|
 | bg | oklch(0.165 0.012 140) | Page background (green-cast near-black, not warm charcoal) |
-| surface | oklch(0.215 0.014 140) | Cards, panels, table headers, inputs |
+| surface | oklch(0.215 0.014 140) | Cards, panels, table headers, inputs, popovers/menus, sidebar surface |
+| muted-surface | oklch(0.19 0.013 140) | Subdued surface: table stripes, skeleton loaders, disabled fills — slightly lighter than `bg`, darker than `surface` |
 | ink | oklch(0.93 0.012 120) | Body and heading text (off-white, never pure white) |
 | muted | oklch(0.71 0.02 125) | Secondary text, captions, placeholders |
 | primary | oklch(0.83 0.11 120) | Pale pistachio — primary buttons, active nav |
@@ -57,10 +59,33 @@ are re-tuned per role.
 | accent | oklch(0.50 0.12 45) | Ember clay — badges, selected states, emphasis |
 | accent-foreground | oklch(1 0 0) | White text/icons on the deep accent fill |
 | success | oklch(0.72 0.13 155) | Positive status |
-| warning | oklch(0.80 0.13 80) | Caution status; pair with dark text on tinted fills |
+| warning | oklch(0.80 0.13 80) | Caution status; pair with dark-mode `bg` (oklch(0.165 0.012 140)) text on tinted fills |
 | error | oklch(0.68 0.17 25) | Destructive actions, validation errors |
 | border | oklch(0.30 0.015 140) | Hairlines, card borders, dividers |
 | ring | oklch(0.78 0.10 120) | Focus rings (visible on the dark ground) |
+
+**Success/warning foreground policy.** Unlike `primary`/`secondary`/`accent`, `success` and
+`warning` do not get dedicated `-foreground` tokens. Both are used as **tinted fills** (a
+low-opacity or lightened background) with the mode's body-text color laid over them, never as a
+solid fill requiring a contrast-matched foreground:
+
+- Light mode: `success`/`warning` tinted fills pair with `ink` (oklch(0.24 0.02 135)).
+- Dark mode: `success`/`warning` tinted fills pair with `bg` (oklch(0.165 0.012 140)) — a dark
+  wash of text on the pale tint, matching how `warning`'s tinted-fill note above is now stated
+  explicitly instead of the vague "dark text."
+
+**Sidebar and chart token policy.** The sidebar consumes the same `surface` / `ink` / `primary` /
+`accent` tokens as the rest of the app — there is no separate sidebar sub-palette. The retired
+gold-on-charcoal DGA sidebar look (a bespoke charcoal+gold pairing) is fully retired; the sidebar
+is just another `surface` panel with `ink` text and `primary`/`accent` for active/selected states.
+For data visualization, `chart-1` through `chart-5` map onto the existing semantic tokens in this
+order: `chart-1` = `primary`, `chart-2` = `secondary`, `chart-3` = `accent`, `chart-4` = `success`,
+`chart-5` = `warning` — no separate chart palette is introduced.
+
+**Derived borders (out of scope here).** Per-component derived borders (e.g. `--primary-border`,
+`--accent-border`) are out of scope for this document; where they exist, they are computed as a
+lightness-offset from their base token, applied to the OKLCH `L` channel only (`C` and `H` held
+constant), consistent with how `border`/`ring` are already derived above.
 
 ## Typography
 
@@ -78,6 +103,15 @@ are re-tuned per role.
 - IBM Plex Sans Arabic: 400, 500, 600, 700
 - Sora: 500, 600, 700
 - IBM Plex Mono: 400, 500
+
+**Fallback stacks (canonical CSS)**
+
+These are the exact `font-family` stacks the CSS token layer must ship — Sora leads for Latin
+display/UI (falling through to the Arabic face for any mixed-script glyphs, then system UI, then a
+generic sans), and IBM Plex Mono leads for tabular/reference data:
+
+- `--app-font-sans: "Sora", "IBM Plex Sans Arabic", system-ui, sans-serif;`
+- `--app-font-mono: "IBM Plex Mono", ui-monospace, monospace;`
 
 **Type scale** — unchanged from the existing rem baseline in
 `artifacts/jabeen-portal/src/index.css` `@theme` (sizes/line-heights kept; only the faces and
@@ -110,6 +144,7 @@ relative luminance (throwaway Node script; Ottosson reference conversion). All v
 | ink on surface | ≥ 7:1 | 15.12:1 | Pass |
 | muted on surface | ≥ 4.5:1 | 6.51:1 | Pass |
 | muted on bg | ≥ 4.5:1 | 7.05:1 | Pass |
+| muted on muted-surface | ≥ 4.5:1 | 6.20:1 | Pass |
 | primary-foreground on primary | ≥ 4.5:1 | 6.98:1 | Pass |
 | secondary-foreground on secondary | ≥ 4.5:1 | 8.94:1 | Pass |
 | accent-foreground on accent | ≥ 4.5:1 | 12.16:1 | Pass |
@@ -127,6 +162,7 @@ relative luminance (throwaway Node script; Ottosson reference conversion). All v
 | ink on surface | ≥ 7:1 | 14.24:1 | Pass |
 | muted on surface | ≥ 4.5:1 | 6.82:1 | Pass |
 | muted on bg | ≥ 4.5:1 | 7.52:1 | Pass |
+| muted on muted-surface | ≥ 4.5:1 | 7.20:1 | Pass |
 | primary-foreground on primary | ≥ 4.5:1 | 10.91:1 | Pass |
 | secondary-foreground on secondary | ≥ 4.5:1 | 9.61:1 | Pass |
 | accent-foreground on accent | ≥ 4.5:1 | 6.31:1 | Pass |
