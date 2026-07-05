@@ -31,6 +31,14 @@ services:
       # Mount entrypoint + api-server source so edits don't require an image rebuild.
       - ./entrypoint.sh:/app/.docker-run/entrypoint.sh:ro
       - ../artifacts/api-server/src:/app/artifacts/api-server/src
+      # Frontend source + entry HTML for Vite HMR without rebuilds.
+      - ../artifacts/jabeen-portal/src:/app/artifacts/jabeen-portal/src
+      - ../artifacts/jabeen-portal/index.html:/app/artifacts/jabeen-portal/index.html
+      # API spec + generated client/zod sources so orval codegen run inside the
+      # container (docker exec ... pnpm exec orval) lands directly on the host.
+      - ../lib/api-spec/openapi.yaml:/app/lib/api-spec/openapi.yaml
+      - ../lib/api-client-react/src:/app/lib/api-client-react/src
+      - ../lib/api-zod/src:/app/lib/api-zod/src
     ports:
       - "5173:5173"   # frontend (open this)
       - "8080:8080"   # API

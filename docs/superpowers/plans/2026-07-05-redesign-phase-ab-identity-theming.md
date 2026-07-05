@@ -20,15 +20,12 @@ This is a Linux-only pnpm workspace — it runs in Docker, never natively on Win
 
 - **Run the app:** `docker compose -f .docker-run/docker-compose.yml up -d` → SPA on http://localhost:5173, API on :8080. `artifacts/api-server/src` is bind-mounted; API edits go live on container restart (`docker compose -f .docker-run/docker-compose.yml restart app`). Frontend src is bind-mounted with Vite HMR.
 - **Fresh DB (needed before test runs):** `docker compose -f .docker-run/docker-compose.yml down -v` then `up -d` (reseeds).
-- **Codegen after editing `openapi.yaml`** (run inside the image — `pnpm install` on a Windows bind-mount is unusably slow). In Git Bash, prefix docker commands with `MSYS_NO_PATHCONV=1`:
+- **Codegen after editing `openapi.yaml`:** `openapi.yaml`, `lib/api-client-react/src`, and `lib/api-zod/src` are bind-mounted into the running app container, so run orval in place and outputs land on the host directly:
   ```bash
-  docker run -d --name codegen jabeen-run-app:latest sleep 3600
-  docker cp lib/api-spec/openapi.yaml codegen:/app/lib/api-spec/
-  docker exec codegen bash -lc "cd /app/lib/api-spec && pnpm exec orval --config ./orval.config.ts"
-  docker cp codegen:/app/lib/api-client-react/src/generated lib/api-client-react/src/
-  docker cp codegen:/app/lib/api-zod/src/generated lib/api-zod/src/
-  docker rm -f codegen
+  docker exec jabeen-run-app-1 bash -lc "cd /app/lib/api-spec && pnpm exec orval --config ./orval.config.ts"
   ```
+- **The spec is OpenAPI 3.1.0** — `nullable: true` is invalid; use `type: ["string", "null"]` (matches existing schemas).
+- **Frontend HMR:** `artifacts/jabeen-portal/src` and `index.html` are bind-mounted; Vite hot-reloads. If HMR doesn't fire on Windows, restart the app container.
 - **Typecheck:** inside the container: `docker exec <app-container> bash -lc "cd /app && pnpm exec tsc --build --force && pnpm run typecheck"`.
 - **Seeded credentials** (for tests): admin `admin@jabeen.sa` / `Admin@2026!`, PM `pm1@jabeen.sa` / `Manager@2026!`, investor `investor1@acmecorp.com` / `Investor@2026!`. Admin/PM require MFA (TOTP computed in-process — copy the `totp`/`loginWithMfaSetup` helpers from `.docker-run/test-suite.mjs`).
 - **Google Fonts** must be `<link>` tags in `artifacts/jabeen-portal/index.html` — never `@import url()` in CSS (Tailwind v4 breaks it).
@@ -199,9 +196,9 @@ git commit -m "docs: DESIGN.md — new visual identity (OKLCH palette, typograph
     BrandingLogos:
       type: object
       properties:
-        light: { type: string, nullable: true }
-        dark: { type: string, nullable: true }
-        favicon: { type: string, nullable: true }
+        light: { type: ["string", "null"] }
+        dark: { type: ["string", "null"] }
+        favicon: { type: ["string", "null"] }
     Branding:
       type: object
       required: [name, colors, logos]
