@@ -12,6 +12,7 @@ import {
 } from "@workspace/db";
 import bcrypt from "bcryptjs";
 import { eq, and } from "drizzle-orm";
+import { DEFAULT_BRANDING } from "./routes/branding";
 
 function hash(pw: string) {
   return bcrypt.hashSync(pw, 12);
@@ -334,6 +335,15 @@ async function seed() {
       lastUpdateAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
     });
     console.log(`  Created project: ${p.name}`);
+  }
+
+  // ── Branding ───────────────────────────────────────────────────────
+  const [existingBranding] = await db.select().from(systemSettingsTable).where(eq(systemSettingsTable.key, "branding"));
+  if (!existingBranding) {
+    await db.insert(systemSettingsTable).values({ key: "branding", value: JSON.stringify(DEFAULT_BRANDING) });
+    console.log("  Seeded default branding.");
+  } else {
+    console.log("  Branding already exists, skipping.");
   }
 
   console.log("Seed complete.");

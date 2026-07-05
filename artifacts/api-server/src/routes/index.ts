@@ -14,12 +14,14 @@ import auditRouter from "./audit";
 import settingsRouter from "./settings";
 import citiesRouter from "./cities";
 import categoriesRouter from "./categories";
+import brandingRouter from "./branding";
 import { requireAuth, requireActiveAccount } from "../middlewares/requireAuth";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(authRouter);
+router.use(brandingRouter);
 
 const protectedRouter: IRouter = Router();
 protectedRouter.use(requireAuth);
