@@ -4,6 +4,7 @@ import { db } from "@workspace/db";
 import { systemSettingsTable } from "@workspace/db";
 import { requireAuth, requireActiveAccount, type AuthenticatedRequest, MANAGER_ROLES } from "../middlewares/requireAuth";
 import { UpdateBrandingBody } from "@workspace/api-zod";
+import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
 
@@ -35,6 +36,7 @@ export async function readBranding() {
       logos: { ...DEFAULT_BRANDING.logos, ...(parsed.logos ?? {}) },
     };
   } catch {
+    logger.warn({ key: BRANDING_KEY }, "Corrupted branding row — falling back to defaults");
     return DEFAULT_BRANDING;
   }
 }
@@ -49,12 +51,7 @@ router.put("/branding", requireAuth, requireActiveAccount, async (req: Authentic
   const parsed = UpdateBrandingBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: "Invalid branding payload", detail: parsed.error.issues }); return; }
   const value = JSON.stringify(parsed.data);
-  const [existing] = await db.select().from(systemSettingsTable).where(eq(systemSettingsTable.key, BRANDING_KEY));
-  if (existing) {
-    await db.update(systemSettingsTable).set({ value }).where(eq(systemSettingsTable.key, BRANDING_KEY));
-  } else {
-    await db.insert(systemSettingsTable).values({ key: BRANDING_KEY, value });
-  }
+  await db.insert(systemSettingsTable).values({ key: BRANDING_KEY, value }).onConflictDoUpdate({ target: systemSettingsTable.key, set: { value } });
   res.json(await readBranding());
 });
 
