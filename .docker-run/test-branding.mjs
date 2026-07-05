@@ -1,4 +1,5 @@
 // Integration tests for the branding API on the JABEEN Investor Portal.
+// Requires a freshly seeded DB (docker compose down -v && up -d) — MFA enrollment mutates admin/PM accounts.
 // Hits the API directly on :8080. Node 24 (global fetch/FormData/Blob/crypto).
 import crypto from "node:crypto";
 
@@ -109,7 +110,7 @@ async function main() {
   r = await api("PUT", "/branding", { token: admin.token, body: validBody });
   check("branding: PUT admin 200", r.status === 200, `got ${r.status}`);
   r = await api("GET", "/branding");
-  check("branding: GET returns saved config", r.data?.name === "Test Brand" && r.data?.colors?.primary === "oklch(0.55 0.18 265)", JSON.stringify(r.data)?.slice(0, 200));
+  check("branding: GET returns saved config", r.data?.name === "Test Brand" && JSON.stringify(r.data?.colors) === JSON.stringify(validBody.colors), JSON.stringify(r.data)?.slice(0, 200));
   r = await api("PUT", "/branding", { token: pm.token, body: { ...validBody, name: "PM Brand" } });
   check("branding: PUT project-manager 200", r.status === 200, `got ${r.status}`);
 
