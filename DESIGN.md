@@ -106,12 +106,18 @@ constant), consistent with how `border`/`ring` are already derived above.
 
 **Fallback stacks (canonical CSS)**
 
-These are the exact `font-family` stacks the CSS token layer must ship — Sora leads for Latin
-display/UI (falling through to the Arabic face for any mixed-script glyphs, then system UI, then a
-generic sans), and IBM Plex Mono leads for tabular/reference data:
+These are the exact `font-family` stacks the CSS token layer must ship. Per the Families table
+above, body and UI text in both scripts renders in IBM Plex Sans Arabic; Sora appears only in the
+display stack, never in body/UI text:
 
-- `--app-font-sans: "Sora", "IBM Plex Sans Arabic", system-ui, sans-serif;`
-- `--app-font-mono: "IBM Plex Mono", ui-monospace, monospace;`
+- `--app-font-sans: "IBM Plex Sans Arabic", system-ui, sans-serif;` — body and UI text, both
+  scripts (Latin body text uses Plex's Latin set, per the Families table).
+- `--app-font-display: "Sora", "IBM Plex Sans Arabic", system-ui, sans-serif;` — display contexts
+  only: headings at `text-2xl` and larger, plus dashboard hero numerals (`text-3xl`) and
+  login/display headings (`text-4xl`), matching the Sora annotations in the type-scale table.
+  Sora leads; Arabic glyphs in display contexts fall through to IBM Plex Sans Arabic.
+- `--app-font-mono: "IBM Plex Mono", ui-monospace, monospace;` — IDs, reference numbers,
+  tabular data.
 
 **Type scale** — unchanged from the existing rem baseline in
 `artifacts/jabeen-portal/src/index.css` `@theme` (sizes/line-heights kept; only the faces and
