@@ -729,7 +729,7 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
           {updates.map((update) => (
             <div key={update.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
               {/* Status dot */}
-              <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-background bg-muted shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 absolute left-0 md:left-1/2 md:-translate-x-1/2">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-background bg-muted shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 absolute start-0 md:left-1/2 md:-translate-x-1/2">
                 {update.reviewStatus === "approved" ? <CheckCircle2 className="h-5 w-5 text-blue-500" /> :
                  update.reviewStatus === "rejected" ? <XCircle className="h-5 w-5 text-destructive" /> :
                  <Clock className="h-5 w-5 text-amber-500" />}
