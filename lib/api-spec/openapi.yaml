@@ -34,6 +34,8 @@ tags:
     description: Audit log
   - name: settings
     description: System settings
+  - name: branding
+    description: White-label branding (colors + logos)
 
 paths:
   /healthz:
@@ -1096,6 +1098,79 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SystemSettings"
+
+  /branding:
+    get:
+      operationId: getBranding
+      tags: [branding]
+      summary: Get the active branding config (public, pre-auth)
+      responses:
+        "200":
+          description: Branding config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Branding"
+    put:
+      operationId: updateBranding
+      tags: [branding]
+      summary: Replace the branding config (admin/PM only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BrandingInput"
+      responses:
+        "200":
+          description: Saved branding config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Branding"
+        "400":
+          description: Invalid branding payload
+  /branding/logo:
+    post:
+      operationId: uploadBrandingLogo
+      tags: [branding]
+      summary: Upload a logo asset (admin/PM only). Returns a storage key.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/BrandingLogoUpload"
+      responses:
+        "201":
+          description: Uploaded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrandingLogoUploadResult"
+        "415":
+          description: Unsupported or mismatched file type
+  /branding/logo/{key}:
+    get:
+      operationId: getBrandingLogo
+      tags: [branding]
+      summary: Serve an uploaded logo asset (public)
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Logo file
+          content:
+            image/*:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Not found
 
 components:
   parameters:
@@ -2241,3 +2316,46 @@ components:
         loginThrottleWindowSeconds:
           type: integer
           minimum: 1
+
+    BrandingColors:
+      type: object
+      required: [primary, secondary, accent, success, warning, error]
+      properties:
+        primary: { type: string, pattern: '^oklch\([^)]+\)$', maxLength: 60 }
+        secondary: { type: string, pattern: '^oklch\([^)]+\)$', maxLength: 60 }
+        accent: { type: string, pattern: '^oklch\([^)]+\)$', maxLength: 60 }
+        success: { type: string, pattern: '^oklch\([^)]+\)$', maxLength: 60 }
+        warning: { type: string, pattern: '^oklch\([^)]+\)$', maxLength: 60 }
+        error: { type: string, pattern: '^oklch\([^)]+\)$', maxLength: 60 }
+    BrandingLogos:
+      type: object
+      properties:
+        light: { type: ["string", "null"] }
+        dark: { type: ["string", "null"] }
+        favicon: { type: ["string", "null"] }
+    Branding:
+      type: object
+      required: [name, colors, logos]
+      properties:
+        name: { type: string }
+        colors: { $ref: "#/components/schemas/BrandingColors" }
+        logos: { $ref: "#/components/schemas/BrandingLogos" }
+    BrandingInput:
+      type: object
+      required: [name, colors, logos]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        colors: { $ref: "#/components/schemas/BrandingColors" }
+        logos: { $ref: "#/components/schemas/BrandingLogos" }
+    BrandingLogoUpload:
+      type: object
+      required: [file]
+      properties:
+        file:
+          type: string
+          format: binary
+    BrandingLogoUploadResult:
+      type: object
+      required: [key]
+      properties:
+        key: { type: string }

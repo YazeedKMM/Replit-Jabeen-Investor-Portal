@@ -26,6 +26,26 @@ Demo accounts:
 - `investor1@acmecorp.com` / `Investor@2026!` — Investor (Acme Plastics)
 - `investor2@gulfpetro.com` / `Investor@2026!` — Investor (Gulf Petro Refinery)
 
+## Rebranding a deployment (white-label)
+
+Branding (colors + logos) is stored in the database (`system_settings` key `branding`)
+and edited at runtime — no code changes required.
+
+1. Log in as an administrator or project manager.
+2. Open **Branding** in the sidebar (`/branding`).
+3. Pick the six brand colors (stored as OKLCH; hover, active and disabled shades are
+   derived automatically — dark-mode variants too) and upload logos: light mode,
+   dark mode, favicon (SVG/PNG/ICO, ≤ 2 MB each).
+4. Save. The theme applies immediately, including the pre-auth login page and favicon.
+
+The default identity (used when no config exists or the API is unreachable) is defined
+in `DESIGN.md` and compiled into `artifacts/jabeen-portal/src/theme/default-branding.ts`
+and `artifacts/api-server/src/routes/branding.ts` (`DEFAULT_BRANDING`) — keep the two
+in sync. When the active branding equals the default, the hand-designed palette in
+`index.css` (light and dark) applies untouched; custom brands get an algorithmically
+derived dark mode. Branding API integration tests: `node .docker-run/test-branding.mjs`
+(requires a freshly seeded DB).
+
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9

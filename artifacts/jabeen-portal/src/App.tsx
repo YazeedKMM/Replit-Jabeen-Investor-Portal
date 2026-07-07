@@ -4,6 +4,7 @@ import { DirectionProvider } from "@radix-ui/react-direction";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
+import { ThemeProvider } from "@/theme/theme-provider";
 import { useLanguage } from "@/hooks/use-language";
 import { Router as WouterRouter } from "wouter";
 import { AppRouter } from "./app-router";
@@ -26,16 +27,18 @@ function DirectionRoot({ children }: { children: ReactNode }) {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <DirectionRoot>
-            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-              <AppRouter />
-            </WouterRouter>
-            <Toaster />
-          </DirectionRoot>
-        </TooltipProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <DirectionRoot>
+              <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+                <AppRouter />
+              </WouterRouter>
+              <Toaster />
+            </DirectionRoot>
+          </TooltipProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

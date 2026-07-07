@@ -24,6 +24,10 @@ import type {
   ArchiveResult,
   AuditLogPage,
   AuthResult,
+  Branding,
+  BrandingInput,
+  BrandingLogoUpload,
+  BrandingLogoUploadResult,
   City,
   CityInput,
   CityUpdate,
@@ -4659,4 +4663,302 @@ export const useUpdateSettings = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getUpdateSettingsMutationOptions(options));
     }
+
+export const getGetBrandingUrl = () => {
+
+
+
+
+  return `/api/branding`
+}
+
+/**
+ * @summary Get the active branding config (public, pre-auth)
+ */
+export const getBranding = async ( options?: RequestInit): Promise<Branding> => {
+
+  return customFetch<Branding>(getGetBrandingUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetBrandingQueryKey = () => {
+    return [
+    `/api/branding`
+    ] as const;
+    }
+
+
+export const getGetBrandingQueryOptions = <TData = Awaited<ReturnType<typeof getBranding>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBranding>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetBrandingQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBranding>>> = ({ signal }) => getBranding({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBranding>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetBrandingQueryResult = NonNullable<Awaited<ReturnType<typeof getBranding>>>
+export type GetBrandingQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get the active branding config (public, pre-auth)
+ */
+
+export function useGetBranding<TData = Awaited<ReturnType<typeof getBranding>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBranding>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetBrandingQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpdateBrandingUrl = () => {
+
+
+
+
+  return `/api/branding`
+}
+
+/**
+ * @summary Replace the branding config (admin/PM only)
+ */
+export const updateBranding = async (brandingInput: BrandingInput, options?: RequestInit): Promise<Branding> => {
+
+  return customFetch<Branding>(getUpdateBrandingUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      brandingInput,)
+  }
+);}
+
+
+
+
+export const getUpdateBrandingMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBranding>>, TError,{data: BodyType<BrandingInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateBranding>>, TError,{data: BodyType<BrandingInput>}, TContext> => {
+
+const mutationKey = ['updateBranding'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBranding>>, {data: BodyType<BrandingInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateBranding(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBrandingMutationResult = NonNullable<Awaited<ReturnType<typeof updateBranding>>>
+    export type UpdateBrandingMutationBody = BodyType<BrandingInput>
+    export type UpdateBrandingMutationError = ErrorType<void>
+
+    /**
+ * @summary Replace the branding config (admin/PM only)
+ */
+export const useUpdateBranding = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBranding>>, TError,{data: BodyType<BrandingInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateBranding>>,
+        TError,
+        {data: BodyType<BrandingInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateBrandingMutationOptions(options));
+    }
+
+export const getUploadBrandingLogoUrl = () => {
+
+
+
+
+  return `/api/branding/logo`
+}
+
+/**
+ * @summary Upload a logo asset (admin/PM only). Returns a storage key.
+ */
+export const uploadBrandingLogo = async (brandingLogoUpload: BrandingLogoUpload, options?: RequestInit): Promise<BrandingLogoUploadResult> => {
+    const formData = new FormData();
+formData.append(`file`, brandingLogoUpload.file);
+
+  return customFetch<BrandingLogoUploadResult>(getUploadBrandingLogoUrl(),
+  {
+    ...options,
+    method: 'POST'
+    ,
+    body:
+      formData,
+  }
+);}
+
+
+
+
+export const getUploadBrandingLogoMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadBrandingLogo>>, TError,{data: BodyType<BrandingLogoUpload>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof uploadBrandingLogo>>, TError,{data: BodyType<BrandingLogoUpload>}, TContext> => {
+
+const mutationKey = ['uploadBrandingLogo'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof uploadBrandingLogo>>, {data: BodyType<BrandingLogoUpload>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  uploadBrandingLogo(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UploadBrandingLogoMutationResult = NonNullable<Awaited<ReturnType<typeof uploadBrandingLogo>>>
+    export type UploadBrandingLogoMutationBody = BodyType<BrandingLogoUpload>
+    export type UploadBrandingLogoMutationError = ErrorType<void>
+
+    /**
+ * @summary Upload a logo asset (admin/PM only). Returns a storage key.
+ */
+export const useUploadBrandingLogo = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadBrandingLogo>>, TError,{data: BodyType<BrandingLogoUpload>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof uploadBrandingLogo>>,
+        TError,
+        {data: BodyType<BrandingLogoUpload>},
+        TContext
+      > => {
+      return useMutation(getUploadBrandingLogoMutationOptions(options));
+    }
+
+export const getGetBrandingLogoUrl = (key: string,) => {
+
+
+
+
+  return `/api/branding/logo/${key}`
+}
+
+/**
+ * @summary Serve an uploaded logo asset (public)
+ */
+export const getBrandingLogo = async (key: string, options?: RequestInit): Promise<Blob> => {
+
+  return customFetch<Blob>(getGetBrandingLogoUrl(key),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetBrandingLogoQueryKey = (key: string,) => {
+    return [
+    `/api/branding/logo/${key}`
+    ] as const;
+    }
+
+
+export const getGetBrandingLogoQueryOptions = <TData = Awaited<ReturnType<typeof getBrandingLogo>>, TError = ErrorType<void>>(key: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBrandingLogo>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetBrandingLogoQueryKey(key);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBrandingLogo>>> = ({ signal }) => getBrandingLogo(key, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(key), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBrandingLogo>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetBrandingLogoQueryResult = NonNullable<Awaited<ReturnType<typeof getBrandingLogo>>>
+export type GetBrandingLogoQueryError = ErrorType<void>
+
+
+/**
+ * @summary Serve an uploaded logo asset (public)
+ */
+
+export function useGetBrandingLogo<TData = Awaited<ReturnType<typeof getBrandingLogo>>, TError = ErrorType<void>>(
+ key: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBrandingLogo>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetBrandingLogoQueryOptions(key,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 

@@ -13,6 +13,7 @@ import {
   User as UserIcon,
   MapPin,
   Tags,
+  Palette,
 } from "lucide-react";
 import {
   Sidebar,
@@ -73,6 +74,12 @@ export function SidebarNav() {
       href: "/categories",
       icon: Tags,
       show: role === "administrator",
+    },
+    {
+      title: t("nav.branding"),
+      href: "/branding",
+      icon: Palette,
+      show: ["project-manager", "administrator"].includes(role),
     },
     {
       title: t("nav.auditLog"),
