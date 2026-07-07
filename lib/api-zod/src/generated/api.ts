@@ -275,6 +275,75 @@ export const GetDashboardResponse = zod.object({
 
 
 /**
+ * @summary Project counts by stage, city, and category (managers only)
+ */
+export const GetReportsDistributionResponse = zod.object({
+  "total": zod.number(),
+  "unstaged": zod.number().describe('Projects with no current stage'),
+  "byStage": zod.array(zod.object({
+  "stageId": zod.number(),
+  "stageName": zod.string(),
+  "orderIndex": zod.number(),
+  "count": zod.number()
+})),
+  "byCity": zod.array(zod.object({
+  "cityId": zod.number(),
+  "city": zod.string(),
+  "count": zod.number()
+})),
+  "byCategory": zod.array(zod.object({
+  "categoryId": zod.number(),
+  "category": zod.string(),
+  "count": zod.number()
+}))
+})
+
+
+/**
+ * @summary Pipeline stage conversion funnel (managers only)
+ */
+export const GetReportsStageConversionQueryParams = zod.object({
+  "templateId": zod.coerce.number().optional().describe('Stage template to report on; defaults to the default template')
+})
+
+export const GetReportsStageConversionResponse = zod.object({
+  "templateId": zod.number(),
+  "templateName": zod.string(),
+  "totalProjects": zod.number().describe('Projects assigned to this template'),
+  "stages": zod.array(zod.object({
+  "stageId": zod.number(),
+  "name": zod.string(),
+  "orderIndex": zod.number(),
+  "atStage": zod.number().describe('Projects currently at this stage'),
+  "reached": zod.number().describe('Projects at or past this stage'),
+  "reachedPct": zod.number()
+}))
+})
+
+
+/**
+ * @summary Monthly activity time series (managers only)
+ */
+export const getReportsActivityQueryMonthsDefault = 6;
+export const getReportsActivityQueryMonthsMax = 24;
+
+
+
+export const GetReportsActivityQueryParams = zod.object({
+  "months": zod.coerce.number().min(1).max(getReportsActivityQueryMonthsMax).default(getReportsActivityQueryMonthsDefault).describe('How many trailing months to include (1-24, default 6)')
+})
+
+export const GetReportsActivityResponse = zod.object({
+  "months": zod.array(zod.object({
+  "month": zod.string().describe('Calendar month as YYYY-MM (UTC)'),
+  "projectsCreated": zod.number(),
+  "updatesSubmitted": zod.number(),
+  "updatesApproved": zod.number()
+}))
+})
+
+
+/**
  * @summary List projects (scoped by role)
  */
 export const ListProjectsQueryParams = zod.object({

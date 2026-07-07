@@ -730,6 +730,65 @@ export interface DashboardStats {
   recentUpdates?: ProjectSummary[];
 }
 
+export type ReportDistributionByStageItem = {
+  stageId: number;
+  stageName: string;
+  orderIndex: number;
+  count: number;
+};
+
+export type ReportDistributionByCityItem = {
+  cityId: number;
+  city: string;
+  count: number;
+};
+
+export type ReportDistributionByCategoryItem = {
+  categoryId: number;
+  category: string;
+  count: number;
+};
+
+export interface ReportDistribution {
+  total: number;
+  /** Projects with no current stage */
+  unstaged: number;
+  byStage: ReportDistributionByStageItem[];
+  byCity: ReportDistributionByCityItem[];
+  byCategory: ReportDistributionByCategoryItem[];
+}
+
+export type ReportStageConversionStagesItem = {
+  stageId: number;
+  name: string;
+  orderIndex: number;
+  /** Projects currently at this stage */
+  atStage: number;
+  /** Projects at or past this stage */
+  reached: number;
+  reachedPct: number;
+};
+
+export interface ReportStageConversion {
+  templateId: number;
+  templateName: string;
+  /** Projects assigned to this template */
+  totalProjects: number;
+  stages: ReportStageConversionStagesItem[];
+}
+
+export type ReportActivityMonthsItem = {
+  /** Calendar month as YYYY-MM (UTC) */
+  month: string;
+  projectsCreated: number;
+  updatesSubmitted: number;
+  updatesApproved: number;
+};
+
+export interface ReportActivity {
+  months: ReportActivityMonthsItem[];
+}
+
 export interface TemplateSummary {
   id: number;
   name: string;
@@ -952,6 +1011,22 @@ export interface BrandingLogoUpload {
 export interface BrandingLogoUploadResult {
   key: string;
 }
+
+export type GetReportsStageConversionParams = {
+/**
+ * Stage template to report on; defaults to the default template
+ */
+templateId?: number;
+};
+
+export type GetReportsActivityParams = {
+/**
+ * How many trailing months to include (1-24, default 6)
+ * @minimum 1
+ * @maximum 24
+ */
+months?: number;
+};
 
 export type ListProjectsParams = {
 /**
