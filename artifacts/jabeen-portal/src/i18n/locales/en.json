@@ -733,6 +733,7 @@
     "featureMilestones": "Real-time milestones",
     "featureSecure": "Secure investor access",
     "footerCompany": "Jubail and Yanbu Industrial Cities Services Company (JABEEN)",
+    "productHeading": "Investor Portal",
     "tabSignIn": "Sign In",
     "tabRegister": "Register",
     "welcomeBack": "Welcome back",
@@ -806,7 +807,9 @@
       "invalidSetupCodeTitle": "Invalid code",
       "invalidSetupCodeDesc": "Enter the 6-digit code from your authenticator app",
       "invalidSetupCodeVerifyDesc": "The code was incorrect. Try again.",
-      "verifyErrorDesc": "Failed to verify code"
+      "verifyErrorDesc": "Failed to verify code",
+      "sessionExpired": "Your sign-in session has expired. Please sign in again.",
+      "qrAlt": "MFA enrollment QR code"
     }
   }
 }

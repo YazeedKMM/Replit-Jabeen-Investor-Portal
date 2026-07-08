@@ -733,6 +733,7 @@
     "featureMilestones": "متابعة لحظية للمعالم",
     "featureSecure": "وصول آمن للمستثمرين",
     "footerCompany": "شركة الجبيل وينبع لخدمات المدن الصناعية (جبين)",
+    "productHeading": "بوابة المستثمرين",
     "tabSignIn": "تسجيل الدخول",
     "tabRegister": "إنشاء حساب",
     "welcomeBack": "مرحباً بعودتك",
@@ -806,7 +807,9 @@
       "invalidSetupCodeTitle": "الرمز غير صحيح",
       "invalidSetupCodeDesc": "أدخل الرمز المكوّن من 6 أرقام من تطبيق المصادقة",
       "invalidSetupCodeVerifyDesc": "الرمز المدخل غير صحيح. يُرجى المحاولة مجدداً.",
-      "verifyErrorDesc": "فشل التحقق من الرمز"
+      "verifyErrorDesc": "فشل التحقق من الرمز",
+      "sessionExpired": "انتهت صلاحية جلسة تسجيل الدخول. يُرجى تسجيل الدخول مرة أخرى.",
+      "qrAlt": "رمز QR لتسجيل المصادقة الثنائية"
     }
   }
 }

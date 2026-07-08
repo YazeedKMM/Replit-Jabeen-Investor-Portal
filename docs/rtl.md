@@ -32,7 +32,8 @@ equivalent (`start-`/`end-`) or add it here with a reason.
 
 | File | Icon |
 |---|---|
-| `pages/auth/mfa-verify.tsx:103` | `ArrowLeft` (back to login) |
+| `pages/auth/mfa-verify.tsx:146` | `ArrowLeft` (back to login) |
+| `pages/auth/mfa-setup.tsx:366` | `ArrowLeft` (back to sign in, standalone /mfa/setup page) |
 | `pages/investor/my-projects.tsx:148` | `ArrowRight` (view details) |
 | `pages/audit/audit-log.tsx:85,93` | `ChevronLeft`/`ChevronRight` (pagination prev/next) |
 | `pages/admin/template-builder.tsx:311` | `ArrowLeft` (back) |
@@ -44,7 +45,8 @@ equivalent (`start-`/`end-`) or add it here with a reason.
 **Never mirrored** — direction-neutral or brand-fixed:
 - Logos / brand marks (`JABEEN` logo, tenant logos from the branding API)
 - Numerals and Latin `code`/ID strings (wrapped in `dir="ltr"` where embedded, e.g. the
-  OKLCH strings on `/branding`)
+  OKLCH strings on `/branding`, and the OTP inputs / TOTP secret / recovery codes on the
+  auth pages — `pages/auth/mfa-verify.tsx`, `pages/auth/mfa-setup.tsx`)
 - Status icons (`CheckCircle2`, `XCircle`, `Clock`), object icons (`Building2`, `MapPin`,
   `Users`, `Settings`, `Palette`, …)
 - `LogOut` (points out of the container symmetrically; convention is not to flip)
