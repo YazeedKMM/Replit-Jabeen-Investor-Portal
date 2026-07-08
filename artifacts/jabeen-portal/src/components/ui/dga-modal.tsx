@@ -78,7 +78,7 @@ export function DgaModal({
   React.useEffect(() => {
     let d: HTMLDialogElement | null = null;
     const onClose = () => onOpenChange(false);
-    const onClick = (e: MouseEvent) => { if (e.target === d) d.close(); };
+    const onClick = (e: MouseEvent) => { if (d && e.target === d) d.close(); };
     const stop = withDialog((dlg) => {
       d = dlg;
       dlg.addEventListener("close", onClose);

@@ -318,8 +318,10 @@ export function DgaDropdownField<T extends FieldValues>({
             value={(field.value as string) ?? ""}
             disabled={disabled}
             error={!!fieldState.error}
-            // DgaDropdown's onChange receives the selected value directly.
-            onChange={(v: string | string[]) => field.onChange(v)}
+            // DgaDropdown's onChange receives the selected value directly at
+            // runtime; its declared type is a DOM ChangeEventHandler, so the
+            // accurate handler needs a cast to pass the (wrong) declared type.
+            onChange={((v: string | string[]) => field.onChange(v)) as never}
           />
           {fieldState.error?.message && (
             <p

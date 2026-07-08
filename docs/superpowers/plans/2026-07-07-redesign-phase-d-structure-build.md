@@ -26,7 +26,7 @@ Linux-only pnpm workspace — runs in Docker, never natively on Windows.
   docker exec jabeen-run-app-1 bash -lc "cd /app/lib/api-spec && pnpm exec orval --config ./orval.config.ts"
   ```
 - **OpenAPI 3.1.0:** never `nullable: true`; use `type: ["string", "null"]`.
-- **Typecheck:** `docker exec jabeen-run-app-1 bash -lc "cd /app && pnpm exec tsc --build --force && pnpm run typecheck"`.
+- **Typecheck:** `docker exec jabeen-run-app-1 bash -lc "cd /app && pnpm exec tsc --build --force && pnpm --filter @workspace/api-server --filter @workspace/jabeen-portal run typecheck"`. (The workspace-wide `pnpm run typecheck` fails in the unrelated legacy `@workspace/scripts` package — pre-existing on main, flagged for a separate fix, out of Phase D scope.)
 - **Test suites** (each needs a freshly seeded DB — they mutate MFA state):
   `node .docker-run/test-suite.mjs` (expect 148/0) · `node .docker-run/test-branding.mjs` (expect 18/18) · `node .docker-run/test-reports.mjs` (created in Task 2).
 - **Preview tools:** if you `down -v`, the preview server handle orphans — do `docker compose down`, then `preview_start` with name `app` (see `.claude/launch.json`).
