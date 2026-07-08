@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { ArrowLeft, KeyRound, AlertCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import type { User } from "@workspace/api-client-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,8 +14,23 @@ const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 interface MfaVerifyStepProps {
   mfaToken: string;
-  onSuccess: (accessToken: string, user: any) => void;
+  onSuccess: (accessToken: string, user: User) => void;
   onBack: () => void;
+}
+
+/**
+ * True when a 401 response is the short-lived mfaToken being invalid/expired
+ * (requireMfaStepToken: "Invalid or expired token" / "Unauthorized"), as
+ * opposed to a wrong-code 401 ("Invalid code" / "Invalid TOTP code").
+ */
+async function isMfaTokenExpiry(res: Response): Promise<boolean> {
+  try {
+    const data = (await res.json()) as { error?: unknown };
+    const msg = typeof data.error === "string" ? data.error : "";
+    return /expired token|unauthorized/i.test(msg);
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -28,6 +44,8 @@ export function MfaVerifyStep({ mfaToken, onSuccess, onBack }: MfaVerifyStepProp
   const [useRecovery, setUseRecovery] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const otpRef = useRef<HTMLInputElement>(null);
+  const recoveryRef = useRef<HTMLInputElement>(null);
 
   const canSubmit = useRecovery ? recoveryCode.length > 0 : code.length === 6;
 
@@ -44,12 +62,14 @@ export function MfaVerifyStep({ mfaToken, onSuccess, onBack }: MfaVerifyStepProp
         credentials: "include",
       });
       if (!res.ok) {
-        setError(t("auth.mfa.invalidCodeDesc"));
+        const expired = res.status === 401 && (await isMfaTokenExpiry(res));
+        setError(expired ? t("auth.mfa.sessionExpired") : t("auth.mfa.invalidCodeDesc"));
         if (useRecovery) setRecoveryCode("");
         else setCode("");
+        (useRecovery ? recoveryRef : otpRef).current?.focus();
         return;
       }
-      const data = await res.json();
+      const data = (await res.json()) as { accessToken: string; user: User };
       onSuccess(data.accessToken, data.user);
     } catch {
       setError(t("auth.mfa.verificationFailed"));
@@ -96,6 +116,7 @@ export function MfaVerifyStep({ mfaToken, onSuccess, onBack }: MfaVerifyStepProp
           <div dir="ltr" className="flex justify-center">
             <InputOTP
               id="mfa-code"
+              ref={otpRef}
               maxLength={6}
               pattern={REGEXP_ONLY_DIGITS}
               value={code}
@@ -119,6 +140,7 @@ export function MfaVerifyStep({ mfaToken, onSuccess, onBack }: MfaVerifyStepProp
           <Label htmlFor="recovery-code">{t("auth.mfa.recoveryCode")}</Label>
           <Input
             id="recovery-code"
+            ref={recoveryRef}
             dir="ltr"
             placeholder="xxxx-xxxx-xxxx-xxxx"
             value={recoveryCode}

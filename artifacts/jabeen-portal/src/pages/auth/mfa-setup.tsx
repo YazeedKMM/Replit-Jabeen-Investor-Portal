@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation, Link } from "wouter";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { ShieldCheck, Copy, Check, Download, TriangleAlert, AlertCircle, ArrowLeft } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import type { User } from "@workspace/api-client-react";
 import { useBranding } from "@/theme/theme-provider";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,7 @@ const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 interface MfaSetupProps {
   mfaToken: string;
-  onComplete: (accessToken: string, user: any) => void;
+  onComplete: (accessToken: string, user: User) => void;
   isRequired?: boolean;
 }
 
@@ -31,7 +32,22 @@ interface SetupData {
 interface RecoveryData {
   recoveryCodes: string[];
   accessToken: string;
-  user: any;
+  user: User;
+}
+
+/**
+ * True when a 401 response is the short-lived mfaToken being invalid/expired
+ * (requireMfaStepToken: "Invalid or expired token" / "Unauthorized"), as
+ * opposed to a wrong-code 401 ("Invalid TOTP code").
+ */
+async function isMfaTokenExpiry(res: Response): Promise<boolean> {
+  try {
+    const data = (await res.json()) as { error?: unknown };
+    const msg = typeof data.error === "string" ? data.error : "";
+    return /expired token|unauthorized/i.test(msg);
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -50,6 +66,16 @@ export function MfaSetupFlow({ mfaToken, onComplete, isRequired }: MfaSetupProps
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [setupInitiated, setSetupInitiated] = useState(false);
+  const otpRef = useRef<HTMLInputElement>(null);
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clear the pending copied-state reset on unmount.
+  useEffect(
+    () => () => {
+      if (copyTimer.current) clearTimeout(copyTimer.current);
+    },
+    [],
+  );
 
   const initiateSetup = async () => {
     setIsLoading(true);
@@ -64,7 +90,7 @@ export function MfaSetupFlow({ mfaToken, onComplete, isRequired }: MfaSetupProps
         setError(res.status === 401 ? t("auth.mfa.sessionExpired") : t("auth.mfa.setupErrorDesc"));
         return;
       }
-      const data = await res.json();
+      const data = (await res.json()) as SetupData;
       setSetupData(data);
       setSetupInitiated(true);
     } catch {
@@ -85,13 +111,16 @@ export function MfaSetupFlow({ mfaToken, onComplete, isRequired }: MfaSetupProps
         body: JSON.stringify({ code }),
       });
       if (!res.ok) {
-        setError(
-          res.status === 401 ? t("auth.mfa.sessionExpired") : t("auth.mfa.invalidSetupCodeVerifyDesc"),
-        );
+        // 401 can mean either a wrong code ("Invalid TOTP code") or an
+        // expired mfaToken ("Invalid or expired token") — disambiguate via
+        // the body so a mistyped code doesn't read as a dead session.
+        const expired = res.status === 401 && (await isMfaTokenExpiry(res));
+        setError(expired ? t("auth.mfa.sessionExpired") : t("auth.mfa.invalidSetupCodeVerifyDesc"));
         setCode("");
+        otpRef.current?.focus();
         return;
       }
-      const data = await res.json();
+      const data = (await res.json()) as RecoveryData;
       setRecoveryData(data);
       setStep("recovery");
     } catch {
@@ -101,10 +130,15 @@ export function MfaSetupFlow({ mfaToken, onComplete, isRequired }: MfaSetupProps
     }
   };
 
-  const copyToClipboard = (text: string, key: string) => {
-    navigator.clipboard.writeText(text);
+  const copyToClipboard = async (text: string, key: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      return; // clipboard unavailable/denied — don't show a false success
+    }
     setCopied(key);
-    setTimeout(() => setCopied(null), 2000);
+    if (copyTimer.current) clearTimeout(copyTimer.current);
+    copyTimer.current = setTimeout(() => setCopied(null), 2000);
   };
 
   const downloadRecoveryCodes = () => {
@@ -212,6 +246,7 @@ export function MfaSetupFlow({ mfaToken, onComplete, isRequired }: MfaSetupProps
           <div dir="ltr" className="flex justify-center">
             <InputOTP
               id="totp-code"
+              ref={otpRef}
               maxLength={6}
               pattern={REGEXP_ONLY_DIGITS}
               value={code}
@@ -338,7 +373,7 @@ export default function MfaSetupPage() {
     return null;
   }
 
-  const handleComplete = (accessToken: string, user: any) => {
+  const handleComplete = (accessToken: string, user: User) => {
     localStorage.setItem("jabeen_access_token", accessToken);
     window.location.href = user.role === "investor" ? `${BASE}/my-projects` : `${BASE}/dashboard`;
   };

@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { TFunction } from "i18next";
+import type { User } from "@workspace/api-client-react";
 import { AlertCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
@@ -62,10 +63,26 @@ export function BrandMark() {
   );
 }
 
-/** Inline field error (react-hook-form). */
-function FieldError({ message }: { message?: string }) {
+/** Inline field error (react-hook-form), programmatically tied to its input via id. */
+function FieldError({ id, message }: { id: string; message?: string }) {
   if (!message) return null;
-  return <p className="text-sm text-destructive">{message}</p>;
+  return (
+    <p id={id} className="text-sm text-destructive">
+      {message}
+    </p>
+  );
+}
+
+/** Extract the API error message from a thrown mutation error, else fall back. */
+function apiErrorMessage(error: unknown, fallback: string): string {
+  if (error && typeof error === "object" && "data" in error) {
+    const data = (error as { data?: unknown }).data;
+    if (data && typeof data === "object" && "message" in data) {
+      const message = (data as { message?: unknown }).message;
+      if (typeof message === "string" && message) return message;
+    }
+  }
+  return fallback;
 }
 
 export default function LoginPage() {
@@ -140,9 +157,12 @@ export default function LoginPage() {
       if (result.accessToken && result.user) {
         toast({ title: t("auth.toast.welcomeBackTitle"), description: t("auth.toast.welcomeBackDesc") });
         navigateAfterLogin(result.user.role);
+      } else {
+        // Defensive: the server returned 200 with none of the known outcomes.
+        setLoginError(t("auth.toast.signInFailedTitle"));
       }
-    } catch (error: any) {
-      setLoginError(error.data?.message || t("auth.toast.invalidCredentials"));
+    } catch (error: unknown) {
+      setLoginError(apiErrorMessage(error, t("auth.toast.invalidCredentials")));
     }
   };
 
@@ -158,7 +178,7 @@ export default function LoginPage() {
     });
   };
 
-  const onMfaVerifySuccess = (accessToken: string, mfaUser: any) => {
+  const onMfaVerifySuccess = (accessToken: string, mfaUser: User) => {
     handleAuthResult({ accessToken, user: mfaUser });
     toast({ title: t("auth.toast.welcomeBackTitle"), description: t("auth.toast.welcomeBackMfaDesc") });
     navigateAfterLogin(mfaUser.role);
@@ -170,8 +190,8 @@ export default function LoginPage() {
       await register(data);
       toast({ title: t("auth.toast.accountCreatedTitle"), description: t("auth.toast.accountCreatedDesc") });
       setLocation("/my-projects");
-    } catch (error: any) {
-      setRegisterError(error.data?.message || t("auth.toast.couldNotCreateAccount"));
+    } catch (error: unknown) {
+      setRegisterError(apiErrorMessage(error, t("auth.toast.couldNotCreateAccount")));
     }
   };
 
@@ -236,9 +256,10 @@ export default function LoginPage() {
                         inputMode="email"
                         placeholder="name@company.com"
                         aria-invalid={!!loginErrors.email}
+                        aria-describedby={loginErrors.email ? "login-email-error" : undefined}
                         {...loginForm.register("email")}
                       />
-                      <FieldError message={loginErrors.email?.message} />
+                      <FieldError id="login-email-error" message={loginErrors.email?.message} />
                     </div>
 
                     <div className="space-y-2">
@@ -249,9 +270,10 @@ export default function LoginPage() {
                         autoComplete="current-password"
                         placeholder="••••••••"
                         aria-invalid={!!loginErrors.password}
+                        aria-describedby={loginErrors.password ? "login-password-error" : undefined}
                         {...loginForm.register("password")}
                       />
-                      <FieldError message={loginErrors.password?.message} />
+                      <FieldError id="login-password-error" message={loginErrors.password?.message} />
                     </div>
 
                     <div className="-mt-1 text-end">
@@ -294,9 +316,10 @@ export default function LoginPage() {
                           id="register-fullname"
                           autoComplete="name"
                           aria-invalid={!!registerErrors.fullName}
+                          aria-describedby={registerErrors.fullName ? "register-fullname-error" : undefined}
                           {...registerForm.register("fullName")}
                         />
-                        <FieldError message={registerErrors.fullName?.message} />
+                        <FieldError id="register-fullname-error" message={registerErrors.fullName?.message} />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="register-company">{t("auth.company")}</Label>
@@ -304,9 +327,10 @@ export default function LoginPage() {
                           id="register-company"
                           autoComplete="organization"
                           aria-invalid={!!registerErrors.companyName}
+                          aria-describedby={registerErrors.companyName ? "register-company-error" : undefined}
                           {...registerForm.register("companyName")}
                         />
-                        <FieldError message={registerErrors.companyName?.message} />
+                        <FieldError id="register-company-error" message={registerErrors.companyName?.message} />
                       </div>
                     </div>
 
@@ -319,9 +343,10 @@ export default function LoginPage() {
                         inputMode="email"
                         placeholder="name@company.com"
                         aria-invalid={!!registerErrors.email}
+                        aria-describedby={registerErrors.email ? "register-email-error" : undefined}
                         {...registerForm.register("email")}
                       />
-                      <FieldError message={registerErrors.email?.message} />
+                      <FieldError id="register-email-error" message={registerErrors.email?.message} />
                     </div>
 
                     <div className="space-y-2">
@@ -332,9 +357,10 @@ export default function LoginPage() {
                         autoComplete="new-password"
                         placeholder="••••••••"
                         aria-invalid={!!registerErrors.password}
+                        aria-describedby={registerErrors.password ? "register-password-error" : undefined}
                         {...registerForm.register("password")}
                       />
-                      <FieldError message={registerErrors.password?.message} />
+                      <FieldError id="register-password-error" message={registerErrors.password?.message} />
                     </div>
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
