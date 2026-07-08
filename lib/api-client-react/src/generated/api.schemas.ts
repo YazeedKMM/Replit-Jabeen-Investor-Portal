@@ -735,6 +735,10 @@ export type ReportDistributionByStageItem = {
   stageName: string;
   templateId: number;
   templateName: string;
+  /** Version number of the owning template */
+  templateVersion: number;
+  /** True when the owning template version is archived */
+  templateArchived: boolean;
   orderIndex: number;
   count: number;
 };

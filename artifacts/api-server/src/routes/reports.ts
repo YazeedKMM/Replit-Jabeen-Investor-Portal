@@ -35,7 +35,7 @@ router.get("/reports/distribution", requireAuth, async (req: AuthenticatedReques
   const cityById = new Map(cities.map((c) => [c.id, c]));
   const categoryById = new Map(categories.map((c) => [c.id, c]));
   const stageById = new Map(stages.map((s) => [s.id, s]));
-  const templateNameById = new Map(templates.map((t) => [t.id, t.name]));
+  const templateById = new Map(templates.map((t) => [t.id, t]));
 
   let unstaged = 0;
   const stageCounts = new Map<number, number>();
@@ -55,7 +55,9 @@ router.get("/reports/distribution", requireAuth, async (req: AuthenticatedReques
         stageId,
         stageName: s.name,
         templateId: s.templateId,
-        templateName: templateNameById.get(s.templateId) ?? "Unknown",
+        templateName: templateById.get(s.templateId)?.name ?? "Unknown",
+        templateVersion: templateById.get(s.templateId)?.versionNumber ?? 1,
+        templateArchived: templateById.get(s.templateId)?.archivedAt != null,
         orderIndex: s.orderIndex,
         count,
       };
@@ -91,7 +93,7 @@ router.get("/reports/stage-conversion", requireAuth, async (req: AuthenticatedRe
     [template] = await db.select().from(stageTemplatesTable).where(eq(stageTemplatesTable.isDefault, true));
   }
   if (!template) {
-    res.status(404).json({ error: "Template not found" });
+    res.status(404).json({ error: raw !== undefined ? "Template not found" : "No default template configured" });
     return;
   }
 

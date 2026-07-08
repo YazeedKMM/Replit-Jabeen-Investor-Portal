@@ -2128,7 +2128,7 @@ components:
           description: Spans all templates; group by templateId, sort by orderIndex within a template.
           items:
             type: object
-            required: [stageId, stageName, templateId, templateName, orderIndex, count]
+            required: [stageId, stageName, templateId, templateName, templateVersion, templateArchived, orderIndex, count]
             properties:
               stageId:
                 type: integer
@@ -2138,6 +2138,12 @@ components:
                 type: integer
               templateName:
                 type: string
+              templateVersion:
+                type: integer
+                description: Version number of the owning template
+              templateArchived:
+                type: boolean
+                description: True when the owning template version is archived
               orderIndex:
                 type: integer
               count:

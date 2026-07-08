@@ -285,6 +285,8 @@ export const GetReportsDistributionResponse = zod.object({
   "stageName": zod.string(),
   "templateId": zod.number(),
   "templateName": zod.string(),
+  "templateVersion": zod.number().describe('Version number of the owning template'),
+  "templateArchived": zod.boolean().describe('True when the owning template version is archived'),
   "orderIndex": zod.number(),
   "count": zod.number()
 })).describe('Spans all templates; group by templateId, sort by orderIndex within a template.'),

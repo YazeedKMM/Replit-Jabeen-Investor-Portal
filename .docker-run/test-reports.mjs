@@ -105,7 +105,8 @@ async function main() {
   const catSum = (d.byCategory ?? []).reduce((s, x) => s + x.count, 0);
   check("reports: byCategory sums to total", catSum === d.total, `${catSum} != ${d.total}`);
   check("reports: byStage items carry template linkage", (d.byStage ?? []).every((x) =>
-    Number.isInteger(x.templateId) && typeof x.templateName === "string"),
+    Number.isInteger(x.templateId) && typeof x.templateName === "string" &&
+    Number.isInteger(x.templateVersion) && typeof x.templateArchived === "boolean"),
     JSON.stringify(d.byStage)?.slice(0, 200));
   const dash = await api("GET", "/dashboard", { token: admin.token });
   check("reports: total matches dashboard total", d.total === dash.data?.total,
