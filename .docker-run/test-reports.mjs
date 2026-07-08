@@ -102,6 +102,11 @@ async function main() {
     `${stageSum} + ${d.unstaged} != ${d.total}`);
   const citySum = (d.byCity ?? []).reduce((s, x) => s + x.count, 0);
   check("reports: byCity sums to total", citySum === d.total, `${citySum} != ${d.total}`);
+  const catSum = (d.byCategory ?? []).reduce((s, x) => s + x.count, 0);
+  check("reports: byCategory sums to total", catSum === d.total, `${catSum} != ${d.total}`);
+  check("reports: byStage items carry template linkage", (d.byStage ?? []).every((x) =>
+    Number.isInteger(x.templateId) && typeof x.templateName === "string"),
+    JSON.stringify(d.byStage)?.slice(0, 200));
   const dash = await api("GET", "/dashboard", { token: admin.token });
   check("reports: total matches dashboard total", d.total === dash.data?.total,
     `${d.total} != ${dash.data?.total}`);
@@ -127,6 +132,10 @@ async function main() {
   const atSum = (c.stages ?? []).reduce((s, x) => s + x.atStage, 0);
   check("reports: conversion atStage sums <= totalProjects", atSum <= c.totalProjects,
     `${atSum} > ${c.totalProjects}`);
+  check("reports: conversion reachedPct sane", (c.stages ?? []).every((s) =>
+    Number.isInteger(s.reachedPct) && s.reachedPct >= 0 && s.reachedPct <= 100 &&
+    (c.totalProjects === 0 ? s.reachedPct === 0 : s.reachedPct === Math.round((s.reached / c.totalProjects) * 100))),
+    JSON.stringify((c.stages ?? []).map((s) => [s.reached, s.reachedPct])));
 
   // Stage conversion — param validation
   r = await api("GET", "/reports/stage-conversion?templateId=999999", { token: admin.token });

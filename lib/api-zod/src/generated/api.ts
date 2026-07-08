@@ -283,9 +283,11 @@ export const GetReportsDistributionResponse = zod.object({
   "byStage": zod.array(zod.object({
   "stageId": zod.number(),
   "stageName": zod.string(),
+  "templateId": zod.number(),
+  "templateName": zod.string(),
   "orderIndex": zod.number(),
   "count": zod.number()
-})),
+})).describe('Spans all templates; group by templateId, sort by orderIndex within a template.'),
   "byCity": zod.array(zod.object({
   "cityId": zod.number(),
   "city": zod.string(),

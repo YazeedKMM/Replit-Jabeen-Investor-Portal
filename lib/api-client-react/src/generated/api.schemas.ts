@@ -733,6 +733,8 @@ export interface DashboardStats {
 export type ReportDistributionByStageItem = {
   stageId: number;
   stageName: string;
+  templateId: number;
+  templateName: string;
   orderIndex: number;
   count: number;
 };
@@ -753,6 +755,7 @@ export interface ReportDistribution {
   total: number;
   /** Projects with no current stage */
   unstaged: number;
+  /** Spans all templates; group by templateId, sort by orderIndex within a template. */
   byStage: ReportDistributionByStageItem[];
   byCity: ReportDistributionByCityItem[];
   byCategory: ReportDistributionByCategoryItem[];

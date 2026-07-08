@@ -9,6 +9,8 @@
 export type ReportDistributionByStageItem = {
   stageId: number;
   stageName: string;
+  templateId: number;
+  templateName: string;
   orderIndex: number;
   count: number;
 };

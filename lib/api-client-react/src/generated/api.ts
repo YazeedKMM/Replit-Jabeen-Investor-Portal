@@ -1156,7 +1156,7 @@ export const getGetReportsStageConversionQueryKey = (params?: GetReportsStageCon
     }
 
 
-export const getGetReportsStageConversionQueryOptions = <TData = Awaited<ReturnType<typeof getReportsStageConversion>>, TError = ErrorType<unknown>>(params?: GetReportsStageConversionParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getReportsStageConversion>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetReportsStageConversionQueryOptions = <TData = Awaited<ReturnType<typeof getReportsStageConversion>>, TError = ErrorType<void>>(params?: GetReportsStageConversionParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getReportsStageConversion>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -1175,14 +1175,14 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetReportsStageConversionQueryResult = NonNullable<Awaited<ReturnType<typeof getReportsStageConversion>>>
-export type GetReportsStageConversionQueryError = ErrorType<unknown>
+export type GetReportsStageConversionQueryError = ErrorType<void>
 
 
 /**
  * @summary Pipeline stage conversion funnel (managers only)
  */
 
-export function useGetReportsStageConversion<TData = Awaited<ReturnType<typeof getReportsStageConversion>>, TError = ErrorType<unknown>>(
+export function useGetReportsStageConversion<TData = Awaited<ReturnType<typeof getReportsStageConversion>>, TError = ErrorType<void>>(
  params?: GetReportsStageConversionParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getReportsStageConversion>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
@@ -1240,7 +1240,7 @@ export const getGetReportsActivityQueryKey = (params?: GetReportsActivityParams,
     }
 
 
-export const getGetReportsActivityQueryOptions = <TData = Awaited<ReturnType<typeof getReportsActivity>>, TError = ErrorType<unknown>>(params?: GetReportsActivityParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getReportsActivity>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetReportsActivityQueryOptions = <TData = Awaited<ReturnType<typeof getReportsActivity>>, TError = ErrorType<void>>(params?: GetReportsActivityParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getReportsActivity>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -1259,14 +1259,14 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetReportsActivityQueryResult = NonNullable<Awaited<ReturnType<typeof getReportsActivity>>>
-export type GetReportsActivityQueryError = ErrorType<unknown>
+export type GetReportsActivityQueryError = ErrorType<void>
 
 
 /**
  * @summary Monthly activity time series (managers only)
  */
 
-export function useGetReportsActivity<TData = Awaited<ReturnType<typeof getReportsActivity>>, TError = ErrorType<unknown>>(
+export function useGetReportsActivity<TData = Awaited<ReturnType<typeof getReportsActivity>>, TError = ErrorType<void>>(
  params?: GetReportsActivityParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getReportsActivity>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {

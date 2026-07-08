@@ -281,6 +281,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportStageConversion"
+        "400":
+          description: Invalid templateId
+        "404":
+          description: Template not found
 
   /reports/activity:
     get:
@@ -304,6 +308,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportActivity"
+        "400":
+          description: Invalid months parameter
 
   # --- PROJECTS ---
   /projects:
@@ -2119,13 +2125,18 @@ components:
           description: Projects with no current stage
         byStage:
           type: array
+          description: Spans all templates; group by templateId, sort by orderIndex within a template.
           items:
             type: object
-            required: [stageId, stageName, orderIndex, count]
+            required: [stageId, stageName, templateId, templateName, orderIndex, count]
             properties:
               stageId:
                 type: integer
               stageName:
+                type: string
+              templateId:
+                type: integer
+              templateName:
                 type: string
               orderIndex:
                 type: integer
