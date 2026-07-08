@@ -548,15 +548,17 @@ function forbidNonPrivileged(req: AuthenticatedRequest, res: Response): boolean 
 router.get("/reports/distribution", requireAuth, async (req: AuthenticatedRequest, res): Promise<void> => {
   if (forbidNonPrivileged(req, res)) return;
 
-  const [projects, cities, categories, stages] = await Promise.all([
+  const [projects, cities, categories, stages, templates] = await Promise.all([
     db.select().from(projectsTable),
     db.select().from(citiesTable),
     db.select().from(projectCategoriesTable),
     db.select().from(stagesTable),
+    db.select().from(stageTemplatesTable),
   ]);
   const cityById = new Map(cities.map((c) => [c.id, c]));
   const categoryById = new Map(categories.map((c) => [c.id, c]));
   const stageById = new Map(stages.map((s) => [s.id, s]));
+  const templateNameById = new Map(templates.map((t) => [t.id, t.name]));
 
   let unstaged = 0;
   const stageCounts = new Map<number, number>();
@@ -572,9 +574,16 @@ router.get("/reports/distribution", requireAuth, async (req: AuthenticatedReques
   const byStage = [...stageCounts.entries()]
     .map(([stageId, count]) => {
       const s = stageById.get(stageId)!;
-      return { stageId, stageName: s.name, orderIndex: s.orderIndex, count };
+      return {
+        stageId,
+        stageName: s.name,
+        templateId: s.templateId,
+        templateName: templateNameById.get(s.templateId) ?? "Unknown",
+        orderIndex: s.orderIndex,
+        count,
+      };
     })
-    .sort((a, b) => a.orderIndex - b.orderIndex || a.stageId - b.stageId);
+    .sort((a, b) => a.templateId - b.templateId || a.orderIndex - b.orderIndex || a.stageId - b.stageId);
   const byCity = [...cityCounts.entries()].map(([cityId, count]) => ({
     cityId,
     city: cityById.get(cityId)?.shortName ?? "Unknown",
@@ -1044,4 +1053,6 @@ gh pr create --base main --title "Redesign Phase D: structure & build — six pa
 
 - **Spec coverage:** §Planning (init/shape) → Task 1 + the Shape section; §Reports backend first → Tasks 2–3; §Page rebuild in order → Tasks 4–10 (login → dashboard → pipeline → reports → settings → admin); per-page gates → shared gate procedure enforced per task; DGA teardown at end (recorded Phase B amendment) → Tasks 11–12; pass condition → Task 13.
 - **Deliberate deviations:** (a) page tasks carry design briefs + capability contracts instead of full page code — impeccable craft owns visual composition at execution time; data wiring, routes, i18n keys, and gates are pinned here. (b) impeccable live-mode config skipped (preview_* tools are this repo's verification path). (c) "Six lifecycle stages" read as data-driven (seed has seven) — flagged in Shape.
-- **Type consistency:** hook names follow orval's `use<OperationId>` / `get<OperationId>QueryKey` pattern generated from the operationIds defined in Task 2; response field names in tests (Task 2) match the schemas (Task 2) and route payloads (Task 3) exactly: `total/unstaged/byStage/byCity/byCategory`, `templateId/templateName/totalProjects/stages[].{stageId,name,orderIndex,atStage,reached,reachedPct}`, `months[].{month,projectsCreated,updatesSubmitted,updatesApproved}`.
+- **Type consistency:** hook names follow orval's `use<OperationId>` / `get<OperationId>QueryKey` pattern generated from the operationIds defined in Task 2; response field names in tests (Task 2) match the schemas (Task 2) and route payloads (Task 3) exactly: `total/unstaged/byStage/byCity/byCategory` (byStage items: `stageId,stageName,templateId,templateName,orderIndex,count`), `templateId/templateName/totalProjects/stages[].{stageId,name,orderIndex,atStage,reached,reachedPct}`, `months[].{month,projectsCreated,updatesSubmitted,updatesApproved}`.
+
+**Post-review amendment (Task 2 quality review, adopted):** `ReportDistribution.byStage` items carry `templateId`/`templateName` (required) so multi-template deployments don't interleave ambiguously; report paths document 400/404 responses; test suite additionally asserts byCategory sum, byStage template linkage, and reachedPct sanity. Task 3's route code above reflects this. Task 3 must validate `months` integer-ness explicitly (generated zod uses `coerce.number()` without `.int()` — an orval limitation).
