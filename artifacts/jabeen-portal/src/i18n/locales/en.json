@@ -101,7 +101,25 @@
     },
     "breakdown": {
       "byCategory": "By Category",
-      "byCity": "By City"
+      "byCity": "By City",
+      "byStatus": "By Status"
+    },
+    "charts": {
+      "count": "Projects"
+    },
+    "recent": {
+      "title": "Recent Updates",
+      "empty": "No project updates yet."
+    },
+    "empty": {
+      "title": "No projects yet",
+      "desc": "Start building the portfolio by registering the first investment project.",
+      "descReadOnly": "Portfolio projects will appear here once they are registered."
+    },
+    "error": {
+      "title": "Couldn't load the dashboard",
+      "desc": "Something went wrong while fetching portfolio data. Please try again.",
+      "retry": "Try again"
     },
     "table": {
       "title": "Project Directory",
@@ -116,7 +134,8 @@
       "initializing": "Initializing",
       "emptySearch": "No JABEEN projects match your search.",
       "emptyAll": "No JABEEN projects yet.",
-      "createFirst": "Create the first project"
+      "createFirst": "Create the first project",
+      "error": "Couldn't load projects."
     }
   },
   "investor": {
