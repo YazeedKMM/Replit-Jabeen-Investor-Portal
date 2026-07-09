@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { apiErrorMessage } from "@/lib/api-error";
 import { MfaVerifyStep } from "./mfa-verify";
 
 const makeLoginSchema = (t: TFunction) =>
@@ -71,18 +72,6 @@ function FieldError({ id, message }: { id: string; message?: string }) {
       {message}
     </p>
   );
-}
-
-/** Extract the API error message from a thrown mutation error, else fall back. */
-function apiErrorMessage(error: unknown, fallback: string): string {
-  if (error && typeof error === "object" && "data" in error) {
-    const data = (error as { data?: unknown }).data;
-    if (data && typeof data === "object" && "message" in data) {
-      const message = (data as { message?: unknown }).message;
-      if (typeof message === "string" && message) return message;
-    }
-  }
-  return fallback;
 }
 
 export default function LoginPage() {

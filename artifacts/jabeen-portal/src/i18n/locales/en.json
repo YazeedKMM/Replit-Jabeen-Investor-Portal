@@ -92,6 +92,7 @@
     "title": "Portfolio Dashboard",
     "subtitle": "Overview of all JABEEN projects across Royal Commission cities",
     "exportCsv": "Export CSV",
+    "exportFailed": "Could not export the portfolio CSV. Please try again.",
     "newProject": "New Project",
     "kpi": {
       "total": "Total Projects",

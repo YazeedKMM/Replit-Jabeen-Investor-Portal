@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import type { TFunction } from "i18next";
 import { useLocation, Link } from "wouter";
 import {
@@ -8,7 +8,7 @@ import {
   getGetCitiesQueryKey, getGetProjectCategoriesQueryKey,
 } from "@workspace/api-client-react";
 import { useCityFilter } from "@/hooks/use-city-filter";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
@@ -39,45 +39,19 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
+import { fmtDate } from "@/lib/format";
+import { apiErrorMessage } from "@/lib/api-error";
+import { StatusBadge, STATUS_META, STATUS_ORDER, type DerivedStatus } from "@/components/status-badge";
 import { cn } from "@/lib/utils";
 
-// ── Status vocabulary ───────────────────────────────────────────────────────
-// Chart slices follow the DESIGN.md chart-token policy (chart-1 = primary,
-// chart-3 = accent, chart-4 = success, chart-5 = warning); the badge tints
-// reuse the same semantic tokens so table and donut read as one vocabulary.
-type DerivedStatus = "on-track" | "delayed" | "stalled" | "complete";
-
-const STATUS_ORDER: DerivedStatus[] = ["on-track", "delayed", "stalled", "complete"];
-
-const STATUS_META: Record<DerivedStatus, { chart: string; dot: string; tint: string }> = {
-  "on-track": { chart: "var(--chart-1)", dot: "bg-primary", tint: "bg-primary/10" },
-  delayed: { chart: "var(--chart-5)", dot: "bg-warning", tint: "bg-warning/15" },
-  stalled: { chart: "var(--chart-3)", dot: "bg-accent", tint: "bg-accent/10" },
-  complete: { chart: "var(--chart-4)", dot: "bg-success", tint: "bg-success/15" },
-};
-
-/** Tinted status badge — tinted fill + the mode's ink color, per DESIGN.md. */
-function StatusBadge({ status }: { status: DerivedStatus }) {
-  const { t } = useTranslation();
-  const meta = STATUS_META[status] ?? STATUS_META["on-track"];
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-0.5 text-xs font-medium text-foreground",
-        meta.tint,
-      )}
-    >
-      <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", meta.dot)} aria-hidden="true" />
-      {t(`status.${status}`)}
-    </span>
-  );
-}
-
 // ── Schema ─────────────────────────────────────────────────────────────────
+// cityId/categoryId deliberately avoid z.coerce: an untouched Select submits
+// undefined, and coercion would turn that into NaN, skipping required_error
+// and surfacing a raw untranslated Zod message. The Selects emit real numbers.
 const makeNewProjectSchema = (t: TFunction) => z.object({
   name: z.string().min(1, t("validation.projectNameRequired")).max(200),
-  cityId: z.coerce.number({ required_error: t("validation.cityRequired") }).min(1, t("validation.cityRequired")),
-  categoryId: z.coerce.number({ required_error: t("validation.categoryRequired") }).min(1, t("validation.categoryRequired")),
+  cityId: z.number({ required_error: t("validation.cityRequired"), invalid_type_error: t("validation.cityRequired") }).min(1, t("validation.cityRequired")),
+  categoryId: z.number({ required_error: t("validation.categoryRequired"), invalid_type_error: t("validation.categoryRequired") }).min(1, t("validation.categoryRequired")),
   agreementNumber: z.string().min(1, t("validation.agreementRequired")).max(100),
   plotNumber: z.string().max(100).optional(),
   pipelineId: z.coerce.number().optional(),
@@ -154,10 +128,10 @@ function NewProjectDialog({
       toast({ title: t("projects.newDialog.toastCreatedTitle"), description: t("projects.newDialog.toastCreatedDesc", { name: project.name }) });
       handleClose();
       navigate(`/projects/${project.id}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: t("projects.newDialog.toastFailedTitle"),
-        description: error.data?.message ?? t("projects.newDialog.toastFailedDesc"),
+        description: apiErrorMessage(error, t("projects.newDialog.toastFailedDesc")),
         variant: "destructive",
       });
     }
@@ -176,7 +150,7 @@ function NewProjectDialog({
             <form id="new-project-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
               {/* ── Section: Project Identity ── */}
               <div className="space-y-4">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("projects.newDialog.sectionIdentity")}</p>
+                <p className="text-sm font-medium text-foreground">{t("projects.newDialog.sectionIdentity")}</p>
 
                 <FormField control={form.control} name="name" render={({ field }) => (
                   <FormItem>
@@ -255,12 +229,15 @@ function NewProjectDialog({
 
               {/* ── Section: Assignment ── */}
               <div className="space-y-4">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("projects.newDialog.sectionAssignment")}</p>
+                <p className="text-sm font-medium text-foreground">{t("projects.newDialog.sectionAssignment")}</p>
 
                 <FormField control={form.control} name="investorId" render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t("projects.newDialog.fieldInvestor")} <span className="text-xs font-normal text-muted-foreground">{t("projects.newDialog.fieldInvestorOptional")}</span></FormLabel>
-                    <Select onValueChange={(v) => field.onChange(v === "none" ? undefined : Number(v))} defaultValue="none">
+                    <Select
+                      onValueChange={(v) => field.onChange(v === "none" ? undefined : Number(v))}
+                      value={field.value != null ? String(field.value) : "none"}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder={t("projects.newDialog.fieldInvestorPlaceholder")} />
@@ -283,7 +260,10 @@ function NewProjectDialog({
                 <FormField control={form.control} name="pipelineId" render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t("projects.newDialog.fieldPipeline")} <span className="text-xs font-normal text-muted-foreground">{t("projects.newDialog.fieldPipelineOptional")}</span></FormLabel>
-                    <Select onValueChange={(v) => field.onChange(v === "none" ? undefined : Number(v))} defaultValue="none">
+                    <Select
+                      onValueChange={(v) => field.onChange(v === "none" ? undefined : Number(v))}
+                      value={field.value != null ? String(field.value) : "none"}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder={t("projects.newDialog.fieldPipelinePlaceholder")} />
@@ -310,7 +290,7 @@ function NewProjectDialog({
 
               {/* ── Section: Initial Progress ── */}
               <div className="space-y-4">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("projects.newDialog.sectionInitialState")}</p>
+                <p className="text-sm font-medium text-foreground">{t("projects.newDialog.sectionInitialState")}</p>
 
                 <FormField control={form.control} name="constructionPct" render={({ field }) => (
                   <FormItem>
@@ -404,10 +384,18 @@ const KPI_CELL_BORDERS = [
 // ── Main Dashboard Page ─────────────────────────────────────────────────────
 export default function DashboardPage() {
   const { user } = useAuth();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [newProjectOpen, setNewProjectOpen] = useState(false);
   const { activeCityId } = useCityFilter();
+
+  // Debounce the search box so the list query doesn't fire per keystroke.
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(searchInput), 250);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   const canCreate = user?.role === "administrator" || user?.role === "project-manager";
 
@@ -421,29 +409,33 @@ export default function DashboardPage() {
     data: projects, isLoading: projectsLoading, isError: projectsError, refetch: refetchProjects,
   } = useListProjects(
     projectParams,
-    { query: { queryKey: getListProjectsQueryKey(projectParams) } },
+    { query: { queryKey: getListProjectsQueryKey(projectParams), placeholderData: keepPreviousData } },
   );
 
-  const handleExport = () => {
+  const handleExport = async () => {
     const token = localStorage.getItem("jabeen_access_token");
-    fetch("/api/projects/export", {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
-      .then((r) => r.blob())
-      .then((blob) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `jabeen-portfolio-${format(new Date(), "yyyy-MM-dd")}.csv`;
-        a.click();
-        URL.revokeObjectURL(url);
+    try {
+      const r = await fetch("/api/projects/export", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
+      if (!r.ok) throw new Error(`Export failed (${r.status})`);
+      const blob = await r.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `jabeen-portfolio-${format(new Date(), "yyyy-MM-dd")}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast({
+        title: t("dashboard.error.title"),
+        description: t("dashboard.exportFailed"),
+        variant: "destructive",
+      });
+    }
   };
-
-  const dateFormatter = useMemo(
-    () => new Intl.DateTimeFormat(i18n.language, { day: "numeric", month: "short", year: "numeric" }),
-    [i18n.language],
-  );
 
   const statusData = useMemo(
     () => (stats?.byStatus ?? [])
@@ -497,7 +489,7 @@ export default function DashboardPage() {
       </div>
 
       {statsError ? (
-        /* ── Query-error state ── */
+        /* ── Stats query-error state (scoped to KPIs/charts; the table below has its own) ── */
         <section className="rounded-xl border border-card-border bg-card px-6 py-14 text-center">
           <AlertCircle className="mx-auto h-8 w-8 text-destructive" aria-hidden="true" />
           <h2 className="mt-4 text-lg font-semibold text-foreground">{t("dashboard.error.title")}</h2>
@@ -540,10 +532,10 @@ export default function DashboardPage() {
               <Panel title={t("dashboard.breakdown.byCity")}>
                 {/* Charts render into fixed-coordinate SVG; the container is pinned LTR (registered in docs/rtl.md). */}
                 <ChartContainer dir="ltr" config={countConfig} className="aspect-auto h-[220px] w-full">
-                  <BarChart data={cityData} layout="vertical" margin={{ top: 4, bottom: 4, left: 0, right: 16 }}>
+                  <BarChart accessibilityLayer data={cityData} layout="vertical" margin={{ top: 4, bottom: 4, left: 0, right: 16 }}>
                     <XAxis type="number" hide />
-                    <YAxis type="category" dataKey="name" width={96} tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
-                    <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                    <YAxis type="category" dataKey="name" width={110} tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
+                    <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
                     <Bar dataKey="count" name={t("dashboard.charts.count")} fill="var(--chart-2)" radius={4} barSize={18} isAnimationActive={false} />
                   </BarChart>
                 </ChartContainer>
@@ -551,10 +543,10 @@ export default function DashboardPage() {
 
               <Panel title={t("dashboard.breakdown.byCategory")}>
                 <ChartContainer dir="ltr" config={countConfig} className="aspect-auto h-[220px] w-full">
-                  <BarChart data={categoryData} layout="vertical" margin={{ top: 4, bottom: 4, left: 0, right: 16 }}>
+                  <BarChart accessibilityLayer data={categoryData} layout="vertical" margin={{ top: 4, bottom: 4, left: 0, right: 16 }}>
                     <XAxis type="number" hide />
-                    <YAxis type="category" dataKey="name" width={96} tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
-                    <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                    <YAxis type="category" dataKey="name" width={110} tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
+                    <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
                     <Bar dataKey="count" name={t("dashboard.charts.count")} fill="var(--chart-1)" radius={4} barSize={18} isAnimationActive={false} />
                   </BarChart>
                 </ChartContainer>
@@ -564,7 +556,7 @@ export default function DashboardPage() {
             <div className="space-y-6">
               <Panel title={t("dashboard.breakdown.byStatus")}>
                 <ChartContainer dir="ltr" config={countConfig} className="mx-auto aspect-square h-[180px]">
-                  <PieChart>
+                  <PieChart accessibilityLayer>
                     <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
                     <Pie data={statusData} dataKey="count" nameKey="label" innerRadius={48} outerRadius={76} isAnimationActive={false}>
                       {statusData.map((d) => (
@@ -600,7 +592,7 @@ export default function DashboardPage() {
                           </Link>
                           {p.lastUpdateAt && (
                             <p className="mt-0.5 text-xs text-muted-foreground">
-                              {dateFormatter.format(new Date(p.lastUpdateAt))}
+                              {fmtDate(p.lastUpdateAt)}
                             </p>
                           )}
                         </div>
@@ -612,8 +604,11 @@ export default function DashboardPage() {
               </Panel>
             </div>
           </section>
+        </>
+      )}
 
-          {/* ── Projects table ── */}
+      {/* ── Projects table (independent of the stats query) ── */}
+      {!statsLoading && !portfolioEmpty && (
           <section className="rounded-xl border border-card-border bg-card">
             <div className="flex flex-col justify-between gap-4 border-b border-card-border p-5 sm:flex-row sm:items-center">
               <h2 className="text-lg font-semibold text-foreground">{t("dashboard.table.title")}</h2>
@@ -622,9 +617,10 @@ export default function DashboardPage() {
                 <Input
                   type="search"
                   placeholder={t("dashboard.table.searchPlaceholder")}
+                  aria-label={t("dashboard.table.searchPlaceholder")}
                   className="bg-background ps-9"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
                 />
               </div>
             </div>
@@ -690,6 +686,7 @@ export default function DashboardPage() {
                           )}
                           <Link
                             href={`/projects/${project.id}`}
+                            title={project.name}
                             className="line-clamp-1 transition-colors duration-150 hover:text-primary hover:underline"
                           >
                             {project.name}
@@ -727,7 +724,6 @@ export default function DashboardPage() {
               </TableBody>
             </Table>
           </section>
-        </>
       )}
 
       {/* ── Dialog ── */}
