@@ -430,7 +430,7 @@ export default function DashboardPage() {
       URL.revokeObjectURL(url);
     } catch {
       toast({
-        title: t("dashboard.error.title"),
+        title: t("dashboard.exportFailedTitle"),
         description: t("dashboard.exportFailed"),
         variant: "destructive",
       });
