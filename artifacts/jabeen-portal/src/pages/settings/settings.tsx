@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import type { TFunction } from "i18next";
 import { useForm, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -67,8 +67,10 @@ function NumberField({ control, name, label, description, unit }: {
       render={({ field }) => (
         <FormItem>
           <FormLabel>{label}</FormLabel>
-          <FormControl>
-            <div className="flex items-center gap-2">
+          {/* FormControl must wrap the Input directly so its id/aria-invalid/
+              aria-describedby land on the field, not the layout wrapper. */}
+          <div className="flex items-center gap-2">
+            <FormControl>
               <Input
                 type="number"
                 inputMode="numeric"
@@ -77,9 +79,9 @@ function NumberField({ control, name, label, description, unit }: {
                 className="max-w-40 tabular-nums"
                 {...field}
               />
-              <span className="shrink-0 text-sm text-muted-foreground">{unit}</span>
-            </div>
-          </FormControl>
+            </FormControl>
+            <span className="shrink-0 text-sm text-muted-foreground">{unit}</span>
+          </div>
           <FormDescription>{description}</FormDescription>
           <FormMessage />
         </FormItem>
@@ -109,12 +111,10 @@ export default function SettingsPage() {
       loginThrottleWindowSeconds: 60,
       outOfBandNotificationsEnabled: false,
     },
+    // Server-sync: RHF re-seeds the form whenever `settings` resolves/changes,
+    // with no first-render flash of the placeholder defaults.
+    values: settings,
   });
-
-  // Seed the form from the server once settings load.
-  useEffect(() => {
-    if (settings) form.reset(settings);
-  }, [settings, form]);
 
   const onSubmit = async (values: SettingsForm) => {
     try {
@@ -152,16 +152,20 @@ export default function SettingsPage() {
         </section>
       ) : isLoading || !settings ? (
         <div className="space-y-6">
-          {[0, 1].map((i) => (
-            <div key={i} className="rounded-xl border border-card-border bg-card p-5 sm:p-6">
+          {[2, 3].map((rows) => (
+            <div key={rows} className="rounded-xl border border-card-border bg-card p-5 sm:p-6">
               <Skeleton className="h-5 w-48" />
               <Skeleton className="mt-2 h-4 w-72" />
               <div className="mt-6 space-y-5">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
+                {Array.from({ length: rows }, (_, j) => (
+                  <Skeleton key={j} className="h-10 w-full" />
+                ))}
               </div>
             </div>
           ))}
+          <div className="flex justify-end">
+            <Skeleton className="h-10 w-32" />
+          </div>
         </div>
       ) : (
         <Form {...form}>
