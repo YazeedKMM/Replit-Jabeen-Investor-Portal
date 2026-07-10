@@ -22,7 +22,7 @@ physical properties in `.css` files, zero unexplained physical utilities in app 
 | `components/ui/toast.tsx` | swipe-direction transforms | Swipe gestures are physical by nature (Radix `swipeDirection`). |
 | `components/ui/resizable.tsx` | handle positioning | Panel-group axis is physical. |
 | `components/ui/scroll-area.tsx` | `border-l-transparent` on the vertical scrollbar | Transparent 1px spacer; Radix places the scrollbar on the correct side per direction. |
-| `pages/dashboard/dashboard.tsx` | `dir="ltr"` on the three `ChartContainer` wrappers | Recharts renders into SVG with physical coordinates; charts are direction-neutral data, so the chart container is pinned LTR. The surrounding panel headings, HTML legend, and layout stay logical and mirror normally. |
+| `pages/dashboard/dashboard.tsx`, `pages/reports/reports.tsx` | `dir="ltr"` on the `ChartContainer` wrappers (three on the dashboard, four on reports) | Recharts renders into SVG with physical coordinates; charts are direction-neutral data, so the chart container is pinned LTR. The surrounding panel headings, HTML legends, and layout stay logical and mirror normally. On reports the "YYYY-MM" month axis labels also stay LTR by design. |
 
 Anything physical **not** in this table is a bug — convert it to the logical
 equivalent (`start-`/`end-`) or add it here with a reason.

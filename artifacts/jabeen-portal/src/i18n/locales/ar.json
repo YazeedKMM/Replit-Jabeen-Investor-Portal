@@ -23,6 +23,7 @@
   "nav": {
     "myProjects": "مشاريعي",
     "dashboard": "لوحة التحكم",
+    "reports": "التقارير",
     "templates": "القوالب",
     "users": "المستخدمون",
     "cities": "المدن",
@@ -139,6 +140,42 @@
       "createFirst": "أنشئ أول مشروع",
       "error": "تعذّر تحميل المشاريع."
     }
+  },
+  "reports": {
+    "title": "التقارير",
+    "subtitle": "تحليلات المحفظة حسب المراحل والمدن والتصنيفات",
+    "distribution": {
+      "title": "توزيع المشاريع",
+      "byStage": "حسب المرحلة",
+      "byCity": "حسب المدينة",
+      "byCategory": "حسب التصنيف",
+      "unstaged": "بدون مرحلة محددة",
+      "total": "إجمالي المشاريع",
+      "archived": "مؤرشف"
+    },
+    "conversion": {
+      "title": "معدل الانتقال بين المراحل",
+      "template": "قالب المسار",
+      "atStage": "في هذه المرحلة حاليًا",
+      "reached": "وصلت إلى المرحلة",
+      "ofProjects": "من أصل {{count}} مشروع",
+      "noDefault": "لم يتم إعداد قالب مسار بعد."
+    },
+    "activity": {
+      "title": "النشاط عبر الزمن",
+      "range": "النطاق الزمني",
+      "months_one": "شهر واحد",
+      "months_two": "شهران",
+      "months_few": "{{count}} أشهر",
+      "months_many": "{{count}} شهرًا",
+      "months_other": "{{count}} شهر",
+      "projectsCreated": "مشاريع منشأة",
+      "updatesSubmitted": "تحديثات مرسلة",
+      "updatesApproved": "تحديثات معتمدة"
+    },
+    "empty": "لا توجد بيانات للتقرير بعد",
+    "error": "تعذّر تحميل هذا التقرير",
+    "retry": "إعادة المحاولة"
   },
   "investor": {
     "pageTitle": "مشاريعي",

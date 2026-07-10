@@ -23,6 +23,7 @@
   "nav": {
     "myProjects": "My Projects",
     "dashboard": "Dashboard",
+    "reports": "Reports",
     "templates": "Templates",
     "users": "Users",
     "cities": "Cities",
@@ -139,6 +140,39 @@
       "createFirst": "Create the first project",
       "error": "Couldn't load projects."
     }
+  },
+  "reports": {
+    "title": "Reports",
+    "subtitle": "Portfolio analytics across stages, cities, and categories",
+    "distribution": {
+      "title": "Project distribution",
+      "byStage": "By stage",
+      "byCity": "By city",
+      "byCategory": "By category",
+      "unstaged": "No stage assigned",
+      "total": "Total projects",
+      "archived": "archived"
+    },
+    "conversion": {
+      "title": "Stage conversion",
+      "template": "Pipeline template",
+      "atStage": "Currently at stage",
+      "reached": "Reached stage",
+      "ofProjects": "of {{count}} projects",
+      "noDefault": "No pipeline template is configured yet."
+    },
+    "activity": {
+      "title": "Activity over time",
+      "range": "Time range",
+      "months_one": "{{count}} month",
+      "months_other": "{{count}} months",
+      "projectsCreated": "Projects created",
+      "updatesSubmitted": "Updates submitted",
+      "updatesApproved": "Updates approved"
+    },
+    "empty": "No data to report yet",
+    "error": "Could not load this report",
+    "retry": "Try again"
   },
   "investor": {
     "pageTitle": "My Projects",
