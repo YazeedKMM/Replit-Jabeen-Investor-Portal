@@ -74,9 +74,10 @@ function StageRail({ stages, currentIndex }: { stages: Stage[]; currentIndex: nu
                 aria-hidden="true"
               />
             </div>
+            {/* sr-only below sm so screen readers still hear stage names on mobile */}
             <span
               className={cn(
-                "hidden w-full px-1 text-center text-xs leading-tight sm:line-clamp-2",
+                "sr-only w-full px-1 text-center text-xs leading-tight sm:not-sr-only sm:line-clamp-2",
                 current ? "font-medium text-foreground" : done ? "text-muted-foreground" : "text-muted-foreground/70",
               )}
             >
@@ -222,7 +223,7 @@ function ProjectPipelineBlock({ summary }: { summary: ProjectSummary }) {
                 <span className="text-muted-foreground">{t("investor.pipeline.currentStageLabel")}: </span>
                 <span className="font-medium text-foreground">{current.name}</span>
                 <span className="text-muted-foreground">
-                  {" — "}
+                  {" · "}
                   {t("investor.pipeline.stageOf", { index: currentIndex + 1, total: stages.length })}
                   {current.progressBaseline > 0 &&
                     ` · ${t("investor.pipeline.baselineNote", { pct: current.progressBaseline })}`}
