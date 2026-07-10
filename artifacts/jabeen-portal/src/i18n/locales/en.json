@@ -703,18 +703,33 @@
     "subtitle": "Configure global portal parameters and thresholds.",
     "thresholdsTitle": "Project Status Thresholds",
     "thresholdsDesc": "Determine when projects are automatically flagged based on inactivity.",
-    "delayedThreshold": "Delayed Threshold (Days)",
+    "delayedThreshold": "Delayed Threshold",
     "delayedThresholdDesc": "Days without an update before a project is marked Delayed.",
-    "stalledThreshold": "Stalled Threshold (Days)",
+    "stalledThreshold": "Stalled Threshold",
     "stalledThresholdDesc": "Days without an update before a project is marked Stalled.",
     "securityTitle": "Security & Notifications",
     "securityDesc": "Configure login protection and external alerts.",
     "maxLoginAttempts": "Max Login Attempts",
-    "throttleWindow": "Throttle Window (Seconds)",
+    "maxLoginAttemptsDesc": "Failed sign-in attempts allowed before login is temporarily throttled.",
+    "throttleWindow": "Throttle Window",
+    "throttleWindowDesc": "How long the attempt count is measured over before it resets.",
     "emailNotifications": "Email Notifications",
     "emailNotificationsDesc": "Send email alerts for important updates and messages.",
+    "units": {
+      "days": "days",
+      "seconds": "seconds",
+      "attempts": "attempts"
+    },
+    "validation": {
+      "min": "Enter a whole number of 1 or more."
+    },
     "saving": "Saving…",
     "saveConfig": "Save Configuration",
+    "error": {
+      "title": "Couldn't load settings",
+      "desc": "Something went wrong while loading the system configuration.",
+      "retry": "Try again"
+    },
     "toast": {
       "updatedTitle": "Settings updated",
       "updatedDesc": "System configuration saved successfully.",
