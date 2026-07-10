@@ -159,7 +159,24 @@
     "updatedNever": "Never",
     "updatedAt": "Updated {{date}}",
     "viewDetails": "View details",
-    "attentionMessage": "This project requires your attention. Please review recent updates."
+    "attentionMessage": "This project requires your attention. Please review recent updates.",
+    "pipeline": {
+      "title": "My projects",
+      "subtitle": "Follow each project along its licensing and construction journey — where it stands today, and what comes next.",
+      "agreement": "Agreement",
+      "plot": "Plot",
+      "progress": "Construction progress",
+      "viewProject": "View project",
+      "railLabel": "Project stages",
+      "currentStageLabel": "Current stage",
+      "stageOf": "Stage {{index}} of {{total}}",
+      "baselineNote": "begins at {{pct}}% overall progress",
+      "notStarted": "The stage journey hasn't started yet.",
+      "noPipeline": "No stage pipeline has been assigned to this project yet. Its journey will appear here once one is assigned.",
+      "detailError": "Couldn't load this project's stages.",
+      "listError": "Couldn't load your projects. Please try again.",
+      "retry": "Try again"
+    }
   },
   "projects": {
     "newDialog": {

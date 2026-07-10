@@ -35,7 +35,7 @@ equivalent (`start-`/`end-`) or add it here with a reason.
 |---|---|
 | `pages/auth/mfa-verify.tsx:146` | `ArrowLeft` (back to login) |
 | `pages/auth/mfa-setup.tsx:366` | `ArrowLeft` (back to sign in, standalone /mfa/setup page) |
-| `pages/investor/my-projects.tsx:148` | `ArrowRight` (view details) |
+| `pages/investor/my-projects.tsx:187` | `ArrowRight` (view project, pipeline-block header) |
 | `pages/audit/audit-log.tsx:85,93` | `ChevronLeft`/`ChevronRight` (pagination prev/next) |
 | `pages/admin/template-builder.tsx:311` | `ArrowLeft` (back) |
 
@@ -50,12 +50,20 @@ equivalent (`start-`/`end-`) or add it here with a reason.
   auth pages — `pages/auth/mfa-verify.tsx`, `pages/auth/mfa-setup.tsx`)
 - Status icons (`CheckCircle2`, `XCircle`, `Clock`), object icons (`Building2`, `MapPin`,
   `Users`, `Settings`, `Palette`, …)
+- The stage-journey rail on `pages/investor/my-projects.tsx` (`Check` markers, plain-line
+  connectors): a flex row that mirrors as a whole; markers/connectors are symmetric glyphs
 - `LogOut` (points out of the container symmetrically; convention is not to flip)
 
 **Phase D cleanup candidates (currently unused shadcn boilerplate — no imports anywhere):**
 `breadcrumb`, `pagination`, `carousel`, `menubar`, `context-menu`, `navigation-menu`,
 `dropdown-menu` ship `ChevronRight`/`ChevronLeft` without `.rtl-flip`. If any gets adopted
 during the Phase D rebuild, add `rtl-flip` (or `rtl:rotate-180`) to its directional glyphs.
+
+## Fixes applied in Phase D
+
+- `components/ui/progress.tsx` — the fill was `translateX`-based (physically left-anchored);
+  converted to a width-based fill so the indicator anchors at inline-start and mirrors in RTL.
+  First consumer: the construction-progress bar on `pages/investor/my-projects.tsx`.
 
 ## Fixes applied in Phase C
 
