@@ -644,7 +644,10 @@
       "discard": "تجاهل",
       "discardDialogTitle": "تجاهل التغييرات؟",
       "discardDialogDesc": "ستُفقد تعديلاتك غير المحفوظة على هذا القالب. لا يمكن التراجع عن ذلك.",
-      "saveDialogTitle": "حفظ كإصدار جديد؟"
+      "saveDialogTitle": "حفظ كإصدار جديد؟",
+      "leaveDialogTitle": "المغادرة دون حفظ؟",
+      "leaveDialogDesc": "لديك تغييرات غير محفوظة على هذا القالب. إذا غادرت الآن، ستُفقد هذه التغييرات.",
+      "leaveConfirm": "مغادرة"
     },
     "cities": {
       "title": "المدن",

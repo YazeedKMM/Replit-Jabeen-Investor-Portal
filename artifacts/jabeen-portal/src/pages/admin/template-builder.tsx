@@ -11,6 +11,7 @@ import {
   type StageInputCategory,
   type StageFieldInputBaseType,
   type StageFieldInputWidget,
+  type StageFieldInputConfig,
 } from "@workspace/api-client-react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
@@ -40,7 +41,9 @@ import { cn } from "@/lib/utils";
 
 const genId = () => Math.random().toString(36).slice(2, 11);
 
-type LocalField = Omit<StageFieldInput, "options"> & { id: string; optionsStr: string };
+// `config` is carried opaquely (the builder doesn't edit it) so a template whose
+// fields have config don't lose it on save. `optionsStr` is the editable form of `options`.
+type LocalField = Omit<StageFieldInput, "options"> & { id: string; optionsStr: string; config?: StageFieldInputConfig };
 type LocalStage = Omit<StageInput, "fields"> & { id: string; fields: LocalField[] };
 type LocalTemplate = Omit<TemplateInput, "stages"> & { stages: LocalStage[] };
 
@@ -154,7 +157,13 @@ export default function TemplateBuilderPage() {
   const templateId = isNew ? 0 : parseInt(params.id!, 10);
 
   const { data: serverTemplate, isLoading: loadingTemplate } = useGetTemplate(templateId, {
-    query: { enabled: !isNew && !!templateId, queryKey: getGetTemplateQueryKey(templateId) },
+    // Don't refetch mid-edit — a focus/reconnect refetch would overwrite unsaved local edits.
+    query: {
+      enabled: !isNew && !!templateId,
+      queryKey: getGetTemplateQueryKey(templateId),
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+    },
   });
 
   const createTemplate = useCreateTemplate();
@@ -163,7 +172,7 @@ export default function TemplateBuilderPage() {
   const [template, setTemplate] = useState<LocalTemplate>(EMPTY_TEMPLATE);
   const [selectedStageId, setSelectedStageId] = useState<string | null>(null);
   const [savedSnapshot, setSavedSnapshot] = useState<string>(() => JSON.stringify(EMPTY_TEMPLATE));
-  const [confirmKind, setConfirmKind] = useState<null | "save" | "discard">(null);
+  const [confirmKind, setConfirmKind] = useState<null | "save" | "discard" | "leave">(null);
 
   const isArchived = !isNew && !!serverTemplate?.archivedAt;
   const assignedProjectCount = !isNew ? serverTemplate?.assignedProjectCount ?? 0 : 0;
@@ -189,6 +198,7 @@ export default function TemplateBuilderPage() {
           widget: f.widget as StageFieldInputWidget,
           required: f.required,
           optionsStr: f.options ? f.options.join("\n") : "",
+          config: f.config,
         })),
       })),
     };
@@ -215,15 +225,13 @@ export default function TemplateBuilderPage() {
   };
 
   const removeStage = (stageId: string) => {
-    setTemplate((prev) => {
-      const idx = prev.stages.findIndex((s) => s.id === stageId);
-      const stages = prev.stages.filter((s) => s.id !== stageId);
-      if (selectedStageId === stageId) {
-        const next = stages[idx] ?? stages[idx - 1] ?? null;
-        setSelectedStageId(next?.id ?? null);
-      }
-      return { ...prev, stages };
-    });
+    // Compute the next selection outside the state updater (no side effects in updaters).
+    if (selectedStageId === stageId) {
+      const idx = template.stages.findIndex((s) => s.id === stageId);
+      const remaining = template.stages.filter((s) => s.id !== stageId);
+      setSelectedStageId((remaining[idx] ?? remaining[idx - 1] ?? null)?.id ?? null);
+    }
+    setTemplate((prev) => ({ ...prev, stages: prev.stages.filter((s) => s.id !== stageId) }));
   };
 
   const updateStage = (stageId: string, updates: Partial<LocalStage>) => {
@@ -286,13 +294,19 @@ export default function TemplateBuilderPage() {
       description: s.description,
       progressBaseline: Number(s.progressBaseline),
       category: s.category,
-      fields: s.fields.map((f) => ({
-        name: f.name,
-        baseType: f.baseType,
-        widget: f.widget,
-        required: f.required,
-        options: f.optionsStr.split("\n").map((o) => o.trim()).filter(Boolean),
-      })),
+      fields: s.fields.map((f) => {
+        const isChoice = f.baseType === "single-choice" || f.baseType === "multi-choice";
+        return {
+          name: f.name,
+          baseType: f.baseType,
+          widget: f.widget,
+          required: f.required,
+          // Only choice fields carry options; otherwise stale options from a since-changed
+          // base type would be persisted onto a non-choice field.
+          options: isChoice ? f.optionsStr.split("\n").map((o) => o.trim()).filter(Boolean) : [],
+          ...(f.config !== undefined ? { config: f.config } : {}),
+        };
+      }),
     })),
   });
 
@@ -334,9 +348,18 @@ export default function TemplateBuilderPage() {
   const handleDiscard = () => {
     const restored: LocalTemplate = JSON.parse(savedSnapshot);
     setTemplate(restored);
-    setSelectedStageId(restored.stages[0]?.id ?? null);
+    // Keep the current stage selected if it still exists after discarding.
+    setSelectedStageId((prev) =>
+      restored.stages.some((s) => s.id === prev) ? prev : restored.stages[0]?.id ?? null,
+    );
     setConfirmKind(null);
     toast({ title: t("admin.templateBuilder.toast.discarded") });
+  };
+
+  // Back navigation guards unsaved edits behind the discard-style confirm.
+  const handleBack = () => {
+    if (dirty && !readOnly) setConfirmKind("leave");
+    else setLocation("/templates");
   };
 
   const isSaving = createTemplate.isPending || replaceTemplate.isPending;
@@ -363,7 +386,7 @@ export default function TemplateBuilderPage() {
     <div className="mx-auto max-w-6xl space-y-6 pb-16">
       {/* ── Header ── */}
       <div className="flex flex-wrap items-center gap-4 border-b border-card-border pb-4">
-        <Button variant="ghost" size="icon" onClick={() => setLocation("/templates")} aria-label={t("common.back")}>
+        <Button variant="ghost" size="icon" onClick={handleBack} aria-label={t("common.back")}>
           <ArrowLeft className="h-4 w-4 rtl-flip" aria-hidden="true" />
         </Button>
         <div className="min-w-0 flex-1">
@@ -703,11 +726,13 @@ export default function TemplateBuilderPage() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {confirmKind === "discard" ? t("admin.templateBuilder.discardDialogTitle") : t("admin.templateBuilder.saveDialogTitle")}
+              {confirmKind === "discard" ? t("admin.templateBuilder.discardDialogTitle")
+                : confirmKind === "leave" ? t("admin.templateBuilder.leaveDialogTitle")
+                : t("admin.templateBuilder.saveDialogTitle")}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {confirmKind === "discard"
-                ? t("admin.templateBuilder.discardDialogDesc")
+              {confirmKind === "discard" ? t("admin.templateBuilder.discardDialogDesc")
+                : confirmKind === "leave" ? t("admin.templateBuilder.leaveDialogDesc")
                 : stripTags(t("admin.templateBuilder.inUseConfirm", {
                     count: assignedProjectCount,
                     plural: assignedProjectCount !== 1 ? "s" : "",
@@ -721,10 +746,13 @@ export default function TemplateBuilderPage() {
               onClick={(e) => {
                 e.preventDefault();
                 if (confirmKind === "discard") handleDiscard();
+                else if (confirmKind === "leave") { setConfirmKind(null); setLocation("/templates"); }
                 else { setConfirmKind(null); doSave(); }
               }}
             >
-              {confirmKind === "discard" ? t("admin.templateBuilder.discard") : t("admin.templateBuilder.saveTemplate")}
+              {confirmKind === "discard" ? t("admin.templateBuilder.discard")
+                : confirmKind === "leave" ? t("admin.templateBuilder.leaveConfirm")
+                : t("admin.templateBuilder.saveTemplate")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

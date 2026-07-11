@@ -641,7 +641,10 @@
       "discard": "Discard",
       "discardDialogTitle": "Discard changes?",
       "discardDialogDesc": "Your unsaved edits to this template will be lost. This cannot be undone.",
-      "saveDialogTitle": "Save as new version?"
+      "saveDialogTitle": "Save as new version?",
+      "leaveDialogTitle": "Leave without saving?",
+      "leaveDialogDesc": "You have unsaved changes to this template. If you leave now, they will be lost.",
+      "leaveConfirm": "Leave"
     },
     "cities": {
       "title": "Cities",
