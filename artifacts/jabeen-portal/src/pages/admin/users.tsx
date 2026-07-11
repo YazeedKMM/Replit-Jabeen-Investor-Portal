@@ -252,9 +252,12 @@ export default function UsersPage() {
   };
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(() => { /* clipboard blocked (insecure context / denied) — leave the icon unchanged */ });
   };
 
   const roleOptions = [
@@ -297,7 +300,8 @@ export default function UsersPage() {
     },
   }[confirmAction.kind];
 
-  const PasswordReveal = ({ pass }: { pass: string }) => (
+  // Render helper (not a component) so it doesn't remount the subtree on every parent render.
+  const renderPasswordReveal = (pass: string) => (
     <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted p-4">
       <code className="font-mono text-lg font-medium tracking-wide text-foreground" dir="ltr">{pass}</code>
       <Button variant="ghost" size="icon" onClick={() => copyToClipboard(pass)} aria-label={t("admin.users.copyPassword")}>
@@ -532,7 +536,7 @@ export default function UsersPage() {
 
             {tempPassword ? (
               <div className="px-6 py-5">
-                <PasswordReveal pass={tempPassword.pass} />
+                {renderPasswordReveal(tempPassword.pass)}
               </div>
             ) : (
               <div className="max-h-[60dvh] overflow-y-auto px-6 py-5">
@@ -723,7 +727,7 @@ export default function UsersPage() {
             <DialogTitle>{t("admin.users.passwordResetDialog.title")}</DialogTitle>
             <DialogDescription>{t("admin.users.passwordResetDialog.description", { name: tempPassword?.name ?? "" })}</DialogDescription>
           </DialogHeader>
-          {tempPassword && <PasswordReveal pass={tempPassword.pass} />}
+          {tempPassword && renderPasswordReveal(tempPassword.pass)}
           <DialogFooter>
             <Button type="button" onClick={() => setTempPassword(null)}>{t("admin.users.passwordResetDialog.done")}</Button>
           </DialogFooter>
