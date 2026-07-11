@@ -1,21 +1,15 @@
-/* Establish cascade-layer order so the DGA reset (wrapped into `dga` by the
-   dgaCssInLayer Vite plugin) ranks BELOW Tailwind's layers. Unlayered app rules
-   still win over all of these. */
-@layer dga, theme, base, components, utilities;
-
 @import "tailwindcss";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
 
-/* The DGA core.css reset (now in the `dga` layer) forces html{font-size:62.5%}.
-   Tailwind sets no html font-size, so re-assert the browser default here,
-   UNLAYERED, so the rem-based app isn't shrunk. DGA components are px-based. */
+/* Pin the root font-size to the browser default so the rem-based type scale is
+   anchored at 16px regardless of any UA or embedding overrides. */
 html {
   font-size: 100%;
 }
 
-/* Drive Tailwind's `dark:` variant off the DGA theme attribute too (the app has
-   no active `.dark` class — the DGA toggle sets data-theme on <html>). */
+/* Drive Tailwind's `dark:` variant off the `data-theme` attribute that the
+   ThemeProvider sets on <html> (the app has no `.dark` class). */
 @custom-variant dark (&:is(.dark *, [data-theme="dark"] *));
 
 @theme inline {
@@ -84,7 +78,7 @@ html {
   --font-display: var(--app-font-display);
   --font-mono: var(--app-font-mono);
 
-  /* Type scale — DGA Platforms Code (Untitled UI) sizes + line-heights */
+  /* Type scale — sizes + line-heights (see DESIGN.md) */
   --text-xs: 0.75rem;            /* 12 / 18 */
   --text-xs--line-height: 1.125rem;
   --text-sm: 0.875rem;           /* 14 / 20 */
@@ -107,7 +101,7 @@ html {
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  /* DGA Platforms Code elevation — soft shadows keyed to the cool neutral */
+  /* Elevation — soft shadows keyed to the cool neutral */
   --shadow-xs: 0 1px 2px 0 rgb(16 24 40 / 0.05);
   --shadow-sm: 0 1px 3px 0 rgb(16 24 40 / 0.10), 0 1px 2px 0 rgb(16 24 40 / 0.06);
   --shadow-md: 0 4px 8px -2px rgb(16 24 40 / 0.10), 0 2px 4px -2px rgb(16 24 40 / 0.06);
@@ -205,8 +199,8 @@ html {
 }
 
 /* ----------------------------------------------------------------------------
-   Dark theme bridge. The DGA toggle sets data-theme="dark" on <html>; the DGA
-   components already follow it. JABEEN OKLCH identity — Phase A palette
+   Dark theme bridge. The ThemeProvider sets data-theme="dark" on <html>.
+   JABEEN OKLCH identity — Phase A palette
    (DESIGN.md, dark). The dark palette is a designed variant, not an inversion:
    ground shifts to a green-cast near-black, primary flips to a pale pistachio
    fill carrying dark text, accent stays a deep ember clay carrying white text.
@@ -363,8 +357,7 @@ html {
 
 /* Touch devices: enforce a 44x44 minimum hit area on interactive controls
    (WCAG 2.5.8 Target Size). Scoped to coarse pointers so mouse/desktop density
-   is unchanged — on touch, larger targets are desirable, not distorting. Targets
-   light-DOM controls only; DGA web components size themselves in shadow DOM. */
+   is unchanged — on touch, larger targets are desirable, not distorting. */
 @media (pointer: coarse) {
   button,
   [role="button"],
