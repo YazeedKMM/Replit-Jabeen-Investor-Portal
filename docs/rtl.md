@@ -38,6 +38,7 @@ equivalent (`start-`/`end-`) or add it here with a reason.
 | `pages/investor/my-projects.tsx:187` | `ArrowRight` (view project, pipeline-block header) |
 | `pages/audit/audit-log.tsx:85,93` | `ChevronLeft`/`ChevronRight` (pagination prev/next) |
 | `pages/admin/template-builder.tsx:311` | `ArrowLeft` (back) |
+| `components/ui/dropdown-menu.tsx:37` | `ChevronRight` on `DropdownMenuSubTrigger` (submenu affordance) — adopted by the admin `/users` row-actions menu in Phase D |
 
 **Mirrored via component mechanism:**
 - `components/ui/calendar.tsx` — react-day-picker nav chevrons rotate 180° under
@@ -55,9 +56,11 @@ equivalent (`start-`/`end-`) or add it here with a reason.
 - `LogOut` (points out of the container symmetrically; convention is not to flip)
 
 **Phase D cleanup candidates (currently unused shadcn boilerplate — no imports anywhere):**
-`breadcrumb`, `pagination`, `carousel`, `menubar`, `context-menu`, `navigation-menu`,
-`dropdown-menu` ship `ChevronRight`/`ChevronLeft` without `.rtl-flip`. If any gets adopted
+`breadcrumb`, `pagination`, `carousel`, `menubar`, `context-menu`, `navigation-menu`
+ship `ChevronRight`/`ChevronLeft` without `.rtl-flip`. If any gets adopted
 during the Phase D rebuild, add `rtl-flip` (or `rtl:rotate-180`) to its directional glyphs.
+(`dropdown-menu` was adopted by `/users` in Phase D — its `SubTrigger` chevron now carries
+`.rtl-flip`, listed in the mirrored inventory above.)
 
 ## Fixes applied in Phase D
 

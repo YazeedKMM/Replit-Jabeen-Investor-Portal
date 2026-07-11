@@ -7,6 +7,7 @@
     "add": "Add",
     "search": "Search",
     "loading": "Loading…",
+    "somethingWrong": "Something went wrong. Please try again.",
     "confirm": "Confirm",
     "close": "Close",
     "back": "Back",
@@ -424,7 +425,18 @@
       "statusInactive": "Inactive",
       "statusPending": "Pending",
       "noUsersFound": "No users found.",
+      "noUsersDesc": "No users match the current search or role filter.",
+      "openActions": "Open actions",
       "noPendingAccounts": "No pending accounts — all applicants have been processed.",
+      "confirm": {
+        "deactivateTitle": "Deactivate user",
+        "deactivateDesc": "Deactivate {{name}}? They will lose portal access until reactivated.",
+        "deactivateConfirm": "Deactivate",
+        "resetPasswordTitle": "Reset password",
+        "resetPasswordConfirm": "Reset password",
+        "resetMfaTitle": "Reset MFA",
+        "resetMfaConfirm": "Reset MFA"
+      },
       "createDialog": {
         "title": "Create New User",
         "description": "Add a new staff member or investor to the portal.",
@@ -615,6 +627,7 @@
       "colSortOrder": "Sort Order",
       "colActions": "Actions",
       "noCities": "No cities found.",
+      "noCitiesDesc": "Add your first city to make it available across the portal.",
       "createDialog": {
         "title": "Add City",
         "description": "Create a new city for the portal.",
@@ -662,6 +675,7 @@
       "colSortOrder": "Sort Order",
       "colActions": "Actions",
       "noCategories": "No categories found.",
+      "noCategoriesDesc": "Add your first category to classify projects across the portal.",
       "createDialog": {
         "title": "Add Category",
         "description": "Create a new project category.",

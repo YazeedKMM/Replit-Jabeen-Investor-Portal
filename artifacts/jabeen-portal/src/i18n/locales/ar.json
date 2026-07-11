@@ -7,6 +7,7 @@
     "add": "إضافة",
     "search": "بحث",
     "loading": "جارٍ التحميل…",
+    "somethingWrong": "حدث خطأ ما. يُرجى المحاولة مرة أخرى.",
     "confirm": "تأكيد",
     "close": "إغلاق",
     "back": "رجوع",
@@ -427,7 +428,18 @@
       "statusInactive": "غير نشط",
       "statusPending": "قيد الانتظار",
       "noUsersFound": "لا يوجد مستخدمون.",
+      "noUsersDesc": "لا يوجد مستخدمون مطابقون للبحث الحالي أو تصفية الدور.",
+      "openActions": "فتح الإجراءات",
       "noPendingAccounts": "لا يوجد حسابات معلقة — تمت معالجة جميع الطلبات.",
+      "confirm": {
+        "deactivateTitle": "إلغاء تنشيط المستخدم",
+        "deactivateDesc": "إلغاء تنشيط {{name}}؟ سيفقد إمكانية الوصول إلى البوابة حتى إعادة التنشيط.",
+        "deactivateConfirm": "إلغاء التنشيط",
+        "resetPasswordTitle": "إعادة تعيين كلمة المرور",
+        "resetPasswordConfirm": "إعادة تعيين كلمة المرور",
+        "resetMfaTitle": "إعادة تعيين المصادقة الثنائية",
+        "resetMfaConfirm": "إعادة تعيين المصادقة الثنائية"
+      },
       "createDialog": {
         "title": "إنشاء مستخدم جديد",
         "description": "إضافة موظف أو مستثمر جديد إلى البوابة.",
@@ -618,6 +630,7 @@
       "colSortOrder": "ترتيب الفرز",
       "colActions": "الإجراءات",
       "noCities": "لا توجد مدن.",
+      "noCitiesDesc": "أضف أول مدينة لإتاحتها في جميع أنحاء البوابة.",
       "createDialog": {
         "title": "إضافة مدينة",
         "description": "إنشاء مدينة جديدة في البوابة.",
@@ -665,6 +678,7 @@
       "colSortOrder": "ترتيب الفرز",
       "colActions": "الإجراءات",
       "noCategories": "لا توجد تصنيفات.",
+      "noCategoriesDesc": "أضف أول تصنيف لتصنيف المشاريع في جميع أنحاء البوابة.",
       "createDialog": {
         "title": "إضافة تصنيف",
         "description": "إنشاء تصنيف مشروع جديد.",
