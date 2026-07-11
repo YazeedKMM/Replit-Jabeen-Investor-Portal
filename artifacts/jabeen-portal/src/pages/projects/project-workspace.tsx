@@ -66,7 +66,7 @@ export default function ProjectWorkspacePage() {
                 <h1 className="text-3xl font-bold tracking-tight text-foreground">{project.name}</h1>
                 <StatusBadge status={project.derivedStatus as DerivedStatus} />
                 {project.attentionFlag && (
-                  <Badge variant="outline" className="border-transparent bg-warning/15 text-foreground">{t("projects.workspace.needsAttention")}</Badge>
+                  <Badge variant="outline" className="border-transparent bg-warning/20 text-foreground">{t("projects.workspace.needsAttention")}</Badge>
                 )}
               </div>
 

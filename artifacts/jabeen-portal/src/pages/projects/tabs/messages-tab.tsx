@@ -62,8 +62,8 @@ export default function ProjectMessagesTab({ project }: Props) {
                   <span className="text-[10px] text-muted-foreground uppercase">{msg.authorRole.replace('-', ' ')}</span>
                   <span className="text-[10px] text-muted-foreground ms-2">{fmtDateTime(msg.createdAt)}</span>
                 </div>
-                {/* Own bubble is brand gold in both themes; the label uses the
-                    accessible on-primary ink token (dark on gold). */}
+                {/* Own bubble is filled with the primary brand color; text uses the
+                    contrast-matched on-primary token so it stays legible in both themes. */}
                 <div
                   className={cn("p-3 rounded-lg text-sm", isMe ? "bg-primary text-primary-foreground rounded-se-none" : "bg-muted rounded-ss-none")}
                 >
