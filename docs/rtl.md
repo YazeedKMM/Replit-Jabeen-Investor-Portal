@@ -37,7 +37,7 @@ equivalent (`start-`/`end-`) or add it here with a reason.
 | `pages/auth/mfa-setup.tsx:366` | `ArrowLeft` (back to sign in, standalone /mfa/setup page) |
 | `pages/investor/my-projects.tsx:187` | `ArrowRight` (view project, pipeline-block header) |
 | `pages/audit/audit-log.tsx:85,93` | `ChevronLeft`/`ChevronRight` (pagination prev/next) |
-| `pages/admin/template-builder.tsx:311` | `ArrowLeft` (back) |
+| `pages/admin/template-builder.tsx:367` | `ArrowLeft` (back) |
 | `components/ui/dropdown-menu.tsx:37` | `ChevronRight` on `DropdownMenuSubTrigger` (submenu affordance) — adopted by the admin `/users` row-actions menu in Phase D |
 
 **Mirrored via component mechanism:**

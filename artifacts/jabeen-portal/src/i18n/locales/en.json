@@ -19,7 +19,8 @@
     "enabled": "Enabled",
     "disabled": "Disabled",
     "allCities": "All cities",
-    "required": "Required"
+    "required": "Required",
+    "moveDown": "Move down"
   },
   "nav": {
     "myProjects": "My Projects",
@@ -534,8 +535,19 @@
         "archiveFailed": "Could not archive template",
         "deleted": "Template deleted",
         "deleteFailed": "Could not delete template",
-        "error": "Error"
-      }
+        "error": "Error",
+        "archivedDesc": "“{{name}}” is hidden from new assignment pickers.",
+        "deletedDesc": "“{{name}}” was permanently deleted."
+      },
+      "statusActive": "Active",
+      "colName": "Template",
+      "colStages": "Stages",
+      "colVersion": "Version",
+      "colStatus": "Status",
+      "colAdded": "Added",
+      "colActions": "Actions",
+      "deleteDialogTitle": "Delete template",
+      "archiveDialogTitle": "Archive template"
     },
     "templateBuilder": {
       "newTitle": "New Template",
@@ -605,7 +617,15 @@
         "previewUploadPhotos": "Upload photos…",
         "previewChooseOption": "Choose an option...",
         "previewAddOptions": "Add options above to see radio buttons.",
-        "previewAddOptionsCheckbox": "Add options above to see checkboxes."
+        "previewAddOptionsCheckbox": "Add options above to see checkboxes.",
+        "newStageName": "New Stage",
+        "newFieldName": "New Field",
+        "unnamedStage": "Unnamed Stage",
+        "selectStageTitle": "No stage selected",
+        "selectStageDesc": "Choose a stage from the list to edit its details and fields, or add a new one.",
+        "previewFieldLabel": "Field Label",
+        "previewEnterValue": "Enter {{label}}…",
+        "fieldOptionsPlaceholder": "Option A\nOption B\nOption C"
       },
       "nameRequired": "Name required",
       "toast": {
@@ -613,8 +633,15 @@
         "updated": "Template updated",
         "newVersion": "New version created",
         "newVersionDesc": "The previous version is archived. Existing projects remain pinned to their version.",
-        "saveFailed": "Save failed"
-      }
+        "saveFailed": "Save failed",
+        "createdDesc": "“{{name}}” is ready to assign to projects.",
+        "updatedDesc": "“{{name}}” was updated.",
+        "discarded": "Changes discarded"
+      },
+      "discard": "Discard",
+      "discardDialogTitle": "Discard changes?",
+      "discardDialogDesc": "Your unsaved edits to this template will be lost. This cannot be undone.",
+      "saveDialogTitle": "Save as new version?"
     },
     "cities": {
       "title": "Cities",

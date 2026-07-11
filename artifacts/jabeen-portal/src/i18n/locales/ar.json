@@ -19,7 +19,8 @@
     "enabled": "مُفعّل",
     "disabled": "مُعطّل",
     "allCities": "كل المدن",
-    "required": "مطلوب"
+    "required": "مطلوب",
+    "moveDown": "تحريك لأسفل"
   },
   "nav": {
     "myProjects": "مشاريعي",
@@ -537,8 +538,19 @@
         "archiveFailed": "تعذّر أرشفة القالب",
         "deleted": "تم حذف القالب",
         "deleteFailed": "تعذّر حذف القالب",
-        "error": "خطأ"
-      }
+        "error": "خطأ",
+        "archivedDesc": "تمّ إخفاء «{{name}}» من قوائم التعيين الجديدة.",
+        "deletedDesc": "تمّ حذف «{{name}}» نهائيًا."
+      },
+      "statusActive": "نشط",
+      "colName": "القالب",
+      "colStages": "المراحل",
+      "colVersion": "الإصدار",
+      "colStatus": "الحالة",
+      "colAdded": "تاريخ الإضافة",
+      "colActions": "الإجراءات",
+      "deleteDialogTitle": "حذف القالب",
+      "archiveDialogTitle": "أرشفة القالب"
     },
     "templateBuilder": {
       "newTitle": "قالب جديد",
@@ -608,7 +620,15 @@
         "previewUploadPhotos": "رفع صور…",
         "previewChooseOption": "اختر خياراً...",
         "previewAddOptions": "أضف خيارات أعلاه لعرض أزرار الاختيار.",
-        "previewAddOptionsCheckbox": "أضف خيارات أعلاه لعرض مربعات الاختيار."
+        "previewAddOptionsCheckbox": "أضف خيارات أعلاه لعرض مربعات الاختيار.",
+        "newStageName": "مرحلة جديدة",
+        "newFieldName": "حقل جديد",
+        "unnamedStage": "مرحلة بلا اسم",
+        "selectStageTitle": "لم يتم تحديد مرحلة",
+        "selectStageDesc": "اختر مرحلة من القائمة لتعديل تفاصيلها وحقولها، أو أضف مرحلة جديدة.",
+        "previewFieldLabel": "اسم الحقل",
+        "previewEnterValue": "أدخل {{label}}…",
+        "fieldOptionsPlaceholder": "الخيار أ\nالخيار ب\nالخيار ج"
       },
       "nameRequired": "الاسم مطلوب",
       "toast": {
@@ -616,8 +636,15 @@
         "updated": "تم تحديث القالب",
         "newVersion": "تم إنشاء إصدار جديد",
         "newVersionDesc": "الإصدار السابق مؤرشف. المشاريع الحالية تبقى مرتبطة بإصدارها.",
-        "saveFailed": "فشل الحفظ"
-      }
+        "saveFailed": "فشل الحفظ",
+        "createdDesc": "«{{name}}» جاهز للتعيين على المشاريع.",
+        "updatedDesc": "تمّ تحديث «{{name}}».",
+        "discarded": "تمّ تجاهل التغييرات"
+      },
+      "discard": "تجاهل",
+      "discardDialogTitle": "تجاهل التغييرات؟",
+      "discardDialogDesc": "ستُفقد تعديلاتك غير المحفوظة على هذا القالب. لا يمكن التراجع عن ذلك.",
+      "saveDialogTitle": "حفظ كإصدار جديد؟"
     },
     "cities": {
       "title": "المدن",
