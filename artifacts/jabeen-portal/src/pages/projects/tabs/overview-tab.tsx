@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Project } from "@workspace/api-client-react";
-import { DgaContentCard } from "@/components/ui/dga-card";
-import { DgaTag } from "platformscode-new-react";
+import { Badge } from "@/components/ui/badge";
 import { Building2, Mail, Phone, CheckCircle2, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -18,12 +17,12 @@ export default function ProjectOverviewTab({ project, isPrivileged }: Props) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <DgaContentCard className="space-y-4">
+          <div className="rounded-xl border border-card-border bg-card p-6 space-y-4">
             <h3 className="text-base font-semibold text-foreground">{t("projects.overview.timelineTitle")}</h3>
             <div className="py-8 text-center text-muted-foreground">
               {t("projects.overview.noPipelineDesc")}
             </div>
-          </DgaContentCard>
+          </div>
         </div>
       </div>
     );
@@ -36,7 +35,7 @@ export default function ProjectOverviewTab({ project, isPrivileged }: Props) {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2 space-y-6">
         {/* Visual Pipeline Timeline */}
-        <DgaContentCard className="space-y-4">
+        <div className="rounded-xl border border-card-border bg-card p-6 space-y-4">
           <h3 className="text-base font-semibold text-foreground">{t("projects.overview.pipelineLabel", { name: project.pipeline.name })}</h3>
           <div>
             <div className="relative border-s-2 border-muted ms-3 md:ms-4 space-y-6 py-2">
@@ -89,20 +88,20 @@ export default function ProjectOverviewTab({ project, isPrivileged }: Props) {
               })}
             </div>
           </div>
-        </DgaContentCard>
+        </div>
 
         {/* Project Notes */}
         {project.notes && (
-          <DgaContentCard className="space-y-4">
+          <div className="rounded-xl border border-card-border bg-card p-6 space-y-4">
             <h3 className="text-base font-semibold text-foreground">{t("projects.overview.projectNotes")}</h3>
             <p className="whitespace-pre-wrap text-sm text-muted-foreground leading-relaxed">{project.notes}</p>
-          </DgaContentCard>
+          </div>
         )}
       </div>
 
       <div className="space-y-6">
         {/* Investor Card */}
-        <DgaContentCard className="space-y-4">
+        <div className="rounded-xl border border-card-border bg-card p-6 space-y-4">
           <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("projects.overview.investorDetails")}</h3>
           <div className="space-y-4">
             {project.investor ? (
@@ -131,10 +130,10 @@ export default function ProjectOverviewTab({ project, isPrivileged }: Props) {
                     <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
                     <div className="flex flex-wrap gap-1.5">
                       {project.city && (
-                        <DgaTag variant="info" size="sm" label={project.city.name ?? project.city.shortName} />
+                        <Badge variant="outline" className="border-transparent bg-primary/10 text-foreground">{project.city.name ?? project.city.shortName}</Badge>
                       )}
                       {project.category && (
-                        <DgaTag variant="neutral" size="sm" outlined label={project.category.name} />
+                        <Badge variant="outline">{project.category.name}</Badge>
                       )}
                     </div>
                   </div>
@@ -144,7 +143,7 @@ export default function ProjectOverviewTab({ project, isPrivileged }: Props) {
               <div className="text-sm text-muted-foreground italic">{t("projects.overview.noInvestor")}</div>
             )}
           </div>
-        </DgaContentCard>
+        </div>
       </div>
     </div>
   );

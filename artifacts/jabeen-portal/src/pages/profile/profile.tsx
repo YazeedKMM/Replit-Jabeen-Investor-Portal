@@ -4,13 +4,12 @@ import { useUpdateMe } from "@workspace/api-client-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { DgaTag, DgaInlineAlert, DgaButton } from "platformscode-new-react";
-import { DgaContentCard } from "@/components/ui/dga-card";
-import { DgaForm } from "@/components/ui/dga-form";
-import { DgaTextField } from "@/components/ui/dga-text-field";
-import { DgaSubmitButton } from "@/components/ui/dga-brand-button";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, ShieldCheck } from "lucide-react";
+import { Shield, ShieldCheck, AlertTriangle } from "lucide-react";
 import { MfaSetupFlow } from "@/pages/auth/mfa-setup";
 import { useTranslation } from "react-i18next";
 
@@ -25,9 +24,7 @@ const profileSchema = z.object({
 
 const MFA_REQUIRED_ROLES = ["administrator", "project-manager"];
 
-/** Wraps DgaContentCard with an optional title/description header, replacing the
- *  shadcn Card/CardHeader/CardContent. (DgaContentCard already supplies the card
- *  padding/border, so this only adds the header + body spacing.) */
+/** Card container with an optional title/description header. */
 function ProfileCard({
   title,
   description,
@@ -40,7 +37,7 @@ function ProfileCard({
   children: React.ReactNode;
 }) {
   return (
-    <DgaContentCard className="space-y-4">
+    <div className="rounded-xl border border-card-border bg-card p-6 space-y-4">
       <div className="flex items-start gap-3">
         <div className="flex-1">
           <h2 className="text-lg font-semibold text-foreground">{title}</h2>
@@ -49,7 +46,7 @@ function ProfileCard({
         {headerAside}
       </div>
       {children}
-    </DgaContentCard>
+    </div>
   );
 }
 
@@ -126,7 +123,7 @@ export default function ProfilePage() {
           <MfaSetupFlow mfaToken={accessToken} onComplete={handleMfaEnrollComplete} isRequired={false} />
         </div>
         <div className="text-center">
-          <DgaButton variant="transparent" label={t("common.cancel")} onOnClick={() => setEnrollingMfa(false)} />
+          <Button variant="ghost" onClick={() => setEnrollingMfa(false)}>{t("common.cancel")}</Button>
         </div>
       </div>
     );
@@ -140,34 +137,41 @@ export default function ProfilePage() {
       </div>
 
       <ProfileCard title={t("profile.personalInfoTitle")} description={t("profile.personalInfoDesc")}>
-        <DgaForm onSubmit={submit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <DgaTextField control={form.control} name="fullName" label={t("profile.fullName")} required />
-            <DgaTextField control={form.control} name="companyName" label={t("profile.companyName")} required />
-            <DgaTextField control={form.control} name="title" label={t("profile.jobTitle")} />
-            <DgaTextField control={form.control} name="phone" label={t("profile.phone")} />
-          </div>
-          <div className="pt-2 flex justify-end">
-            <DgaSubmitButton
-              onSubmit={submit}
-              loading={form.formState.isSubmitting}
-              loadingLabel={t("profile.saving")}
-              label={t("profile.saveChanges")}
-            />
-          </div>
-        </DgaForm>
+        <Form {...form}>
+          <form onSubmit={submit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField control={form.control} name="fullName" render={({ field }) => (
+                <FormItem><FormLabel>{t("profile.fullName")}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+              )} />
+              <FormField control={form.control} name="companyName" render={({ field }) => (
+                <FormItem><FormLabel>{t("profile.companyName")}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+              )} />
+              <FormField control={form.control} name="title" render={({ field }) => (
+                <FormItem><FormLabel>{t("profile.jobTitle")}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+              )} />
+              <FormField control={form.control} name="phone" render={({ field }) => (
+                <FormItem><FormLabel>{t("profile.phone")}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+              )} />
+            </div>
+            <div className="pt-2 flex justify-end">
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? t("profile.saving") : t("profile.saveChanges")}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </ProfileCard>
 
       <ProfileCard
         title={t("profile.mfaTitle")}
         description={t("profile.mfaDesc")}
         headerAside={
-          <DgaTag
-            variant={user?.mfaEnabled ? "info" : "neutral"}
-            size="md"
-            outlined
-            label={user?.mfaEnabled ? t("profile.mfaEnabled") : t("profile.mfaDisabled")}
-          />
+          <Badge
+            variant="outline"
+            className={user?.mfaEnabled ? "border-transparent bg-success/15 text-foreground" : ""}
+          >
+            {user?.mfaEnabled ? t("profile.mfaEnabled") : t("profile.mfaDisabled")}
+          </Badge>
         }
       >
         {user?.mfaEnabled ? (
@@ -177,14 +181,19 @@ export default function ProfilePage() {
               {t("profile.mfaActiveDesc")}
             </div>
             {isPrivileged ? (
-              <DgaInlineAlert type="warning" colored leadText={t("profile.mfaRequiredWarning")} />
+              <p className="flex items-start gap-2 rounded-lg bg-warning/15 px-3 py-2 text-sm text-foreground">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden="true" />
+                {t("profile.mfaRequiredWarning")}
+              </p>
             ) : (
-              <DgaButton
-                variant="des-secondary-outline"
-                label={isDisablingMfa ? t("profile.disabling") : t("profile.disableMfa")}
+              <Button
+                variant="outline"
+                className="text-destructive"
                 disabled={isDisablingMfa}
-                onOnClick={disableMfa}
-              />
+                onClick={disableMfa}
+              >
+                {isDisablingMfa ? t("profile.disabling") : t("profile.disableMfa")}
+              </Button>
             )}
           </div>
         ) : (
@@ -194,7 +203,7 @@ export default function ProfilePage() {
               {isPrivileged ? t("profile.mfaPrivilegedDesc") : t("profile.mfaOptionalDesc")}
             </div>
             {!isPrivileged && (
-              <DgaButton variant="secondary" label={t("profile.enableMfa")} onOnClick={() => setEnrollingMfa(true)} />
+              <Button variant="secondary" onClick={() => setEnrollingMfa(true)}>{t("profile.enableMfa")}</Button>
             )}
           </div>
         )}

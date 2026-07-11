@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Project, useListMessages, useCreateMessage } from "@workspace/api-client-react";
 import { Textarea } from "@/components/ui/textarea";
-import { DgaBrandButton } from "@/components/ui/dga-brand-button";
+import { Button } from "@/components/ui/button";
 import { Loader2, MessageSquare } from "lucide-react";
 import { fmtDateTime } from "@/lib/format";
 import { useQueryClient } from "@tanstack/react-query";
@@ -62,12 +62,10 @@ export default function ProjectMessagesTab({ project }: Props) {
                   <span className="text-[10px] text-muted-foreground uppercase">{msg.authorRole.replace('-', ' ')}</span>
                   <span className="text-[10px] text-muted-foreground ms-2">{fmtDateTime(msg.createdAt)}</span>
                 </div>
-                {/* Own bubble is brand gold in BOTH themes; white-on-gold is only
-                    3.23:1 (fails AA), so the label is dark (#0c111b ≈ 5.4:1) — the
-                    same dark-on-gold treatment DgaBrandButton uses. */}
+                {/* Own bubble is brand gold in both themes; the label uses the
+                    accessible on-primary ink token (dark on gold). */}
                 <div
-                  className={cn("p-3 rounded-lg text-sm", isMe ? "bg-primary rounded-se-none" : "bg-muted rounded-ss-none")}
-                  style={isMe ? { color: "#0c111b" } : undefined}
+                  className={cn("p-3 rounded-lg text-sm", isMe ? "bg-primary text-primary-foreground rounded-se-none" : "bg-muted rounded-ss-none")}
                 >
                   <p className="whitespace-pre-wrap">{msg.body}</p>
                 </div>
@@ -93,11 +91,13 @@ export default function ProjectMessagesTab({ project }: Props) {
               }}
             />
             <div className="shrink-0 self-stretch flex items-stretch">
-              <DgaBrandButton
-                label={t("projects.messages.sendButton")}
+              <Button
+                className="h-full"
                 disabled={!body.trim() || createMutation.isPending}
-                onOnClick={handleSend}
-              />
+                onClick={handleSend}
+              >
+                {t("projects.messages.sendButton")}
+              </Button>
             </div>
           </div>
         </div>

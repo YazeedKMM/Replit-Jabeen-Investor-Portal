@@ -7,14 +7,12 @@ import {
   FieldValueInput,
 } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
-import { DgaContentCard } from "@/components/ui/dga-card";
-import { DgaModal } from "@/components/ui/dga-modal";
-import { DgaBrandButton } from "@/components/ui/dga-brand-button";
-import { DgaTag, DgaButton } from "platformscode-new-react";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { Loader2, CheckCircle2, XCircle, Clock, Info, FileIcon, X, ZoomIn, UploadCloud, Image as ImageIcon } from "lucide-react";
 import { fmtDate, fmtTime } from "@/lib/format";
 import {
-  Dialog, DialogContent,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -592,27 +590,20 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
         <h2 className="text-xl font-bold">{t("projects.updates.progressHistory")}</h2>
 
         {project.pipeline && (
-          <DgaBrandButton label={t("projects.updates.submitUpdate")} onOnClick={() => setIsSubmitOpen(true)} />
+          <Button onClick={() => setIsSubmitOpen(true)}>{t("projects.updates.submitUpdate")}</Button>
         )}
       </div>
 
       {/* ── Submit Update modal ── */}
       {project.pipeline && (
-        <DgaModal
+        <Dialog
           open={isSubmitOpen}
           onOpenChange={(o) => { setIsSubmitOpen(o); if (!o) { form.reset(); setFieldValues({}); } }}
-          title={t("projects.updates.submitDialogTitle")}
-          footer={
-            <div className="flex gap-3 justify-end">
-              <DgaButton variant="secondary-outline" label={t("common.cancel")} onOnClick={() => setIsSubmitOpen(false)} />
-              <DgaBrandButton
-                label={t("projects.updates.submitButton")}
-                disabled={createMutation.isPending || uploadingFields.size > 0}
-                onOnClick={() => form.handleSubmit(onSubmit)()}
-              />
-            </div>
-          }
         >
+          <DialogContent className="sm:max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>{t("projects.updates.submitDialogTitle")}</DialogTitle>
+            </DialogHeader>
           <p className="text-sm text-muted-foreground mb-4">{t("projects.updates.submitDialogDesc")}</p>
           {!isAdmin && currentStageIndex > 0 && (
             <div className="flex items-start gap-2 text-sm bg-muted/50 border rounded-md p-3 mb-4">
@@ -713,17 +704,27 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
               </form>
             </Form>
           </div>
-        </DgaModal>
+            <DialogFooter className="gap-3">
+              <Button variant="outline" onClick={() => setIsSubmitOpen(false)}>{t("common.cancel")}</Button>
+              <Button
+                disabled={createMutation.isPending || uploadingFields.size > 0}
+                onClick={() => form.handleSubmit(onSubmit)()}
+              >
+                {t("projects.updates.submitButton")}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
 
       {/* ── Timeline ── */}
       {isLoading ? (
         <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
       ) : !updates?.length ? (
-        <DgaContentCard className="py-12 text-center text-muted-foreground flex flex-col items-center">
+        <div className="rounded-xl border border-card-border bg-card px-6 py-12 text-center text-muted-foreground flex flex-col items-center">
           <Clock className="h-10 w-10 mb-4 opacity-20" />
           <p>{t("projects.updates.emptyDesc")}</p>
-        </DgaContentCard>
+        </div>
       ) : (
         <div className="space-y-4 relative before:absolute before:inset-0 before:ms-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-muted before:to-transparent">
           {updates.map((update) => (
@@ -735,7 +736,7 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
                  <Clock className="h-5 w-5 text-amber-500" />}
               </div>
 
-              <DgaContentCard className="w-[calc(100%-3rem)] md:w-[calc(50%-2.5rem)] ms-12 md:ms-0">
+              <div className="rounded-xl border border-card-border bg-card p-6 w-[calc(100%-3rem)] md:w-[calc(50%-2.5rem)] ms-12 md:ms-0">
                 <div className="flex justify-between items-start gap-2 pb-3 border-b border-border">
                   <div className="min-w-0">
                     <h3 className="text-base font-semibold truncate text-foreground">{update.targetStage?.name ?? "Unknown Stage"}</h3>
@@ -744,11 +745,17 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
                     </p>
                   </div>
                   <div className="shrink-0">
-                    <DgaTag
-                      size="sm"
-                      variant={update.reviewStatus === "approved" ? "success" : update.reviewStatus === "rejected" ? "error" : "warning"}
-                      label={update.reviewStatus === "approved" ? t("projects.updates.reviewStatusApproved") : update.reviewStatus === "rejected" ? t("projects.updates.reviewStatusRejected") : t("projects.updates.reviewStatusPending")}
-                    />
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "border-transparent",
+                        update.reviewStatus === "approved" ? "bg-success/15 text-foreground"
+                          : update.reviewStatus === "rejected" ? "bg-destructive/15 text-foreground"
+                          : "bg-warning/20 text-foreground",
+                      )}
+                    >
+                      {update.reviewStatus === "approved" ? t("projects.updates.reviewStatusApproved") : update.reviewStatus === "rejected" ? t("projects.updates.reviewStatusRejected") : t("projects.updates.reviewStatusPending")}
+                    </Badge>
                   </div>
                 </div>
 
@@ -800,18 +807,21 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
                     </div>
                   )}
                 </div>
-              </DgaContentCard>
+              </div>
             </div>
           ))}
         </div>
       )}
 
       {/* ── PM Review Modal ── */}
-      <DgaModal
+      <Dialog
         open={!!reviewUpdate}
         onOpenChange={(o) => { if (!o) { setReviewUpdate(null); setRejectMode(false); setRejectNote(""); } }}
-        title={t("projects.updates.reviewDialogTitle")}
       >
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{t("projects.updates.reviewDialogTitle")}</DialogTitle>
+          </DialogHeader>
         <p className="text-sm text-muted-foreground mb-4">{t("projects.updates.reviewDialogDesc")}</p>
         <div className="max-h-[75vh] overflow-y-auto pe-1">
           {reviewUpdate && (
@@ -862,7 +872,8 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
             </div>
           )}
         </div>
-      </DgaModal>
+        </DialogContent>
+      </Dialog>
 
       {/* ── Photo lightbox ── */}
       <Dialog open={!!lightboxUrl} onOpenChange={(o) => !o && setLightboxUrl(null)}>
