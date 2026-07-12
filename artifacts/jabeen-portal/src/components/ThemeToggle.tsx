@@ -1,20 +1,19 @@
 /* ============================================================================
    ThemeToggle.tsx
-   Light/dark theme toggle for the JABEEN Investor Portal (DGA Platforms Code).
+   Light/dark theme toggle for the JABEEN Investor Portal.
 
    What it does
    - Flips the `data-theme` attribute on <html> between "light" and "dark".
    - Persists the choice to localStorage so it survives reloads.
-   - The DGA tokens and the JABEEN gold override react automatically.
+   - The OKLCH token layer and any active branding react automatically.
 
    Setup (one time)
-   1. Add the anti-flash script + base attributes to index.html (see
-      CLAUDE_CODE_THEME_TOGGLE.md). That sets the theme before React mounts so
-      there is no flash of the wrong theme on first paint.
+   1. Add the anti-flash script + base attributes to index.html so the theme is
+      set before React mounts and there is no flash of the wrong theme on first paint.
    2. Render <ThemeToggle /> in your header/nav.
    3. Anywhere else that needs the value, call useTheme().
 
-   It is styled with DGA tokens, so it matches both themes with no extra CSS.
+   It is styled with the app's design tokens, so it matches both themes with no extra CSS.
    ============================================================================ */
 
 import { useCallback, useEffect, useState } from 'react';

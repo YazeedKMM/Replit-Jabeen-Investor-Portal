@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/hooks/use-language";
 import {
+  BarChart3,
   Building2,
   LayoutDashboard,
   FileSpreadsheet,
@@ -49,6 +50,12 @@ export function SidebarNav() {
       title: t("nav.dashboard"),
       href: "/dashboard",
       icon: LayoutDashboard,
+      show: role !== "investor",
+    },
+    {
+      title: t("nav.reports"),
+      href: "/reports",
+      icon: BarChart3,
       show: role !== "investor",
     },
     {

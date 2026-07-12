@@ -4,51 +4,85 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { TFunction } from "i18next";
-import { useAuth } from "@/hooks/use-auth";
-import { DgaTextField } from "@/components/ui/dga-text-field";
-import { DgaForm } from "@/components/ui/dga-form";
-import { DgaSubmitButton } from "@/components/ui/dga-brand-button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
-import { ShieldCheck, Activity, MapPin } from "lucide-react";
-import { MfaVerifyStep } from "./mfa-verify";
-import { MfaSetupFlow } from "./mfa-setup";
-import { LanguageSwitcher } from "@/components/language-switcher";
-import { useLanguage } from "@/hooks/use-language";
+import type { User } from "@workspace/api-client-react";
+import { AlertCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
+import { useBranding, logoUrl } from "@/theme/theme-provider";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { apiErrorMessage } from "@/lib/api-error";
+import { MfaVerifyStep } from "./mfa-verify";
 
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+const makeLoginSchema = (t: TFunction) =>
+  z.object({
+    email: z.string().email(t("validation.invalidEmail")),
+    password: z.string().min(1, t("validation.passwordRequired")),
+  });
 
-const makeLoginSchema = (t: TFunction) => z.object({
-  email: z.string().email(t("validation.invalidEmail")),
-  password: z.string().min(1, t("validation.passwordRequired")),
-});
-
-const makeRegisterSchema = (t: TFunction) => z.object({
-  fullName: z.string().min(2, t("validation.fullNameMin")),
-  email: z.string().email(t("validation.invalidEmail")),
-  password: z.string().min(8, t("validation.passwordMin")),
-  companyName: z.string().min(2, t("validation.companyRequired")),
-  title: z.string().optional(),
-  phone: z.string().optional(),
-});
+const makeRegisterSchema = (t: TFunction) =>
+  z.object({
+    fullName: z.string().min(2, t("validation.fullNameMin")),
+    email: z.string().email(t("validation.invalidEmail")),
+    password: z.string().min(8, t("validation.passwordMin")),
+    companyName: z.string().min(2, t("validation.companyRequired")),
+    title: z.string().optional(),
+    phone: z.string().optional(),
+  });
 
 type LoginForm = z.infer<ReturnType<typeof makeLoginSchema>>;
 type RegisterForm = z.infer<ReturnType<typeof makeRegisterSchema>>;
 
-type MfaStepState =
-  | { type: "none" }
-  | { type: "verify"; mfaToken: string }
-  | { type: "setup"; mfaToken: string };
+type MfaStepState = { type: "none" } | { type: "verify"; mfaToken: string };
+
+/**
+ * Tenant brand mark for the pre-auth surface. Uploaded logos come from the
+ * branding API via useBranding()/logoUrl(); with no logo the brand name
+ * renders as display text. Logos never mirror in RTL.
+ */
+export function BrandMark() {
+  const { branding } = useBranding();
+  const light = logoUrl(branding.logos?.light);
+  const dark = logoUrl(branding.logos?.dark);
+
+  if (!light && !dark) {
+    return (
+      <span className="font-display text-3xl font-semibold text-foreground">{branding.name}</span>
+    );
+  }
+  return (
+    <>
+      <img src={light ?? dark ?? undefined} alt={branding.name} className="h-12 w-auto dark:hidden" />
+      <img src={dark ?? light ?? undefined} alt={branding.name} className="hidden h-12 w-auto dark:block" />
+    </>
+  );
+}
+
+/** Inline field error (react-hook-form), programmatically tied to its input via id. */
+function FieldError({ id, message }: { id: string; message?: string }) {
+  if (!message) return null;
+  return (
+    <p id={id} className="text-sm text-destructive">
+      {message}
+    </p>
+  );
+}
 
 export default function LoginPage() {
   const [, setLocation] = useLocation();
   const { login, register, user, isLoading, handleAuthResult } = useAuth();
   const { toast } = useToast();
-  const { dir } = useLanguage();
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
   const [mfaStep, setMfaStep] = useState<MfaStepState>({ type: "none" });
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [registerError, setRegisterError] = useState<string | null>(null);
   const searchParams = new URLSearchParams(window.location.search);
   const redirect = searchParams.get("redirect");
 
@@ -62,14 +96,7 @@ export default function LoginPage() {
 
   const registerForm = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
-    defaultValues: {
-      fullName: "",
-      email: "",
-      password: "",
-      companyName: "",
-      title: "",
-      phone: "",
-    },
+    defaultValues: { fullName: "", email: "", password: "", companyName: "", title: "", phone: "" },
   });
 
   // Redirect if already logged in — runs in an effect, never during render
@@ -99,7 +126,8 @@ export default function LoginPage() {
     }
   };
 
-  const onLoginSubmit = async (data: z.infer<typeof loginSchema>) => {
+  const onLoginSubmit = async (data: LoginForm) => {
+    setLoginError(null);
     try {
       const result = await login(data);
 
@@ -109,7 +137,8 @@ export default function LoginPage() {
       }
 
       if (result.mfaSetupRequired && result.mfaToken) {
-        setMfaStep({ type: "setup", mfaToken: result.mfaToken });
+        // Fresh staff enrollment happens on the dedicated /mfa/setup page.
+        setLocation(`/mfa/setup?token=${encodeURIComponent(result.mfaToken)}&required=1`);
         return;
       }
 
@@ -117,13 +146,12 @@ export default function LoginPage() {
       if (result.accessToken && result.user) {
         toast({ title: t("auth.toast.welcomeBackTitle"), description: t("auth.toast.welcomeBackDesc") });
         navigateAfterLogin(result.user.role);
+      } else {
+        // Defensive: the server returned 200 with none of the known outcomes.
+        setLoginError(t("auth.toast.signInFailedTitle"));
       }
-    } catch (error: any) {
-      toast({
-        title: t("auth.toast.signInFailedTitle"),
-        description: error.data?.message || t("auth.toast.invalidCredentials"),
-        variant: "destructive",
-      });
+    } catch (error: unknown) {
+      setLoginError(apiErrorMessage(error, t("auth.toast.invalidCredentials")));
     }
   };
 
@@ -131,7 +159,7 @@ export default function LoginPage() {
   // "recovery" in the API is MFA recovery codes (api-server/src/lib/mfa.ts),
   // which is unrelated. When a real reset flow lands (e.g.
   // POST /api/auth/forgot-password + a reset page), wire this handler to it.
-  // Until then, direct users to the JABEEN administrator.
+  // Until then, direct users to the administrator.
   const onForgotPassword = () => {
     toast({
       title: t("auth.forgotPasswordTitle"),
@@ -139,302 +167,240 @@ export default function LoginPage() {
     });
   };
 
-  const onMfaVerifySuccess = (accessToken: string, user: any) => {
-    handleAuthResult({ accessToken, user });
+  const onMfaVerifySuccess = (accessToken: string, mfaUser: User) => {
+    handleAuthResult({ accessToken, user: mfaUser });
     toast({ title: t("auth.toast.welcomeBackTitle"), description: t("auth.toast.welcomeBackMfaDesc") });
-    navigateAfterLogin(user.role);
+    navigateAfterLogin(mfaUser.role);
   };
 
-  const onMfaSetupComplete = (accessToken: string, user: any) => {
-    handleAuthResult({ accessToken, user });
-    toast({ title: t("auth.toast.mfaEnabledTitle"), description: t("auth.toast.mfaEnabledDesc") });
-    navigateAfterLogin(user.role);
-  };
-
-  const onRegisterSubmit = async (data: z.infer<typeof registerSchema>) => {
+  const onRegisterSubmit = async (data: RegisterForm) => {
+    setRegisterError(null);
     try {
       await register(data);
       toast({ title: t("auth.toast.accountCreatedTitle"), description: t("auth.toast.accountCreatedDesc") });
       setLocation("/my-projects");
-    } catch (error: any) {
-      toast({
-        title: t("auth.toast.registrationFailedTitle"),
-        description: error.data?.message || t("auth.toast.couldNotCreateAccount"),
-        variant: "destructive",
-      });
+    } catch (error: unknown) {
+      setRegisterError(apiErrorMessage(error, t("auth.toast.couldNotCreateAccount")));
     }
   };
 
   const submitLogin = loginForm.handleSubmit(onLoginSubmit);
   const submitRegister = registerForm.handleSubmit(onRegisterSubmit);
+  const loginErrors = loginForm.formState.errors;
+  const registerErrors = registerForm.formState.errors;
 
   return (
-    <div className="min-h-[100dvh] flex flex-col md:flex-row bg-background">
-      {/* Brand Side */}
-      <div className="relative w-full md:w-1/2 lg:w-[60%] min-h-[42vh] md:min-h-0 flex flex-col p-8 md:p-12 text-white justify-between overflow-hidden bg-[#0c0a08]">
-        {/* Jubail Industrial City — petrochemical complex at golden hour */}
-        <img
-          src={`${BASE}/jubail-refinery.webp`}
-          alt=""
-          aria-hidden="true"
-          width={1920}
-          height={1080}
-          decoding="async"
-          fetchPriority="high"
-          className="absolute inset-0 h-full w-full object-cover object-[60%_center]"
-        />
-        {/* Legibility scrim — darken left + bottom where text sits, so it holds AA contrast over the photo */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: `linear-gradient(${dir === "rtl" ? 255 : 105}deg, rgba(7,5,3,0.86) 0%, rgba(7,5,3,0.62) 34%, rgba(7,5,3,0.18) 64%, rgba(7,5,3,0.08) 100%)` }}
-        />
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: 'linear-gradient(0deg, rgba(7,5,3,0.72) 0%, rgba(7,5,3,0) 32%)' }}
-        />
-        {/* Focused scrim centered on the headline/feature text zone. The large
-            headline sits over the brightest sunset pixels where the diagonal
-            scrim above is only ~0.39 alpha (≈2.9:1 white-on-image, below AA).
-            This radial adds darkening only behind the text column and fades to
-            transparent before the refinery, so the photo isn't flattened. */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: `radial-gradient(120% 82% at ${dir === "rtl" ? "70%" : "30%"} 47%, rgba(7,5,3,0.58) 0%, rgba(7,5,3,0.36) 40%, rgba(7,5,3,0) 72%)` }}
-        />
-        {/* Faint warm wash to seat the photo in the gold identity */}
-        <div className="absolute inset-0 pointer-events-none mix-blend-soft-light bg-primary/15" />
+    <div className="flex min-h-[100dvh] flex-col bg-background">
+      <header className="flex items-center justify-end p-4 sm:px-6">
+        <LanguageSwitcher />
+      </header>
 
-        <div className="relative z-10 login-rise" style={{ ['--rise-delay' as any]: '0ms' }}>
-          <img src={`${BASE}/jabeen-logo.svg`} alt="JABEEN" className="h-14 w-auto brightness-0 invert" />
-        </div>
-
-        <div className="relative z-10 max-w-xl mt-12 md:mt-0">
-          <span
-            className="login-rise inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white/90 backdrop-blur-sm"
-            style={{ ['--rise-delay' as any]: '80ms' }}
-          >
-            <MapPin className="h-3.5 w-3.5" />
-            {t("auth.brandChip")}
-          </span>
-          <h1
-            className="login-rise text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.08] mt-5 mb-5"
-            style={{ ['--rise-delay' as any]: '140ms', textShadow: '0 2px 24px rgba(0,0,0,0.45)' }}
-          >
-            {t("auth.headline")}
-          </h1>
-          <p
-            className="login-rise text-white/85 text-lg md:text-xl font-medium max-w-md"
-            style={{ ['--rise-delay' as any]: '210ms', textShadow: '0 1px 16px rgba(0,0,0,0.4)' }}
-          >
-            {t("auth.subCopy")}
-          </p>
-
-          <div
-            className="login-rise mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm font-medium text-white/80"
-            style={{ ['--rise-delay' as any]: '280ms' }}
-          >
-            <span className="inline-flex items-center gap-2">
-              <Activity className="h-4 w-4 text-primary-foreground/90" aria-hidden="true" />
-              {t("auth.featureMilestones")}
-            </span>
-            <span className="inline-flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-primary-foreground/90" aria-hidden="true" />
-              {t("auth.featureSecure")}
-            </span>
+      <main className="flex flex-1 items-start justify-center px-4 pb-10 pt-4 sm:items-center sm:pb-24 sm:pt-0">
+        <div className="w-full max-w-md">
+          <div className="mb-8 flex flex-col items-center gap-4 text-center">
+            <BrandMark />
+            <h1 className="font-display text-4xl font-semibold text-foreground">
+              {t("auth.productHeading")}
+            </h1>
           </div>
-        </div>
 
-        <div
-          className="relative z-10 mt-12 md:mt-0 login-rise"
-          style={{ ['--rise-delay' as any]: '340ms' }}
-        >
-          <p className="text-sm font-medium text-white/55">
-            © {new Date().getFullYear()} {t("auth.footerCompany")}
-          </p>
-        </div>
-      </div>
+          <div className="rounded-xl border border-card-border bg-card p-6 shadow-sm sm:p-8">
+            {mfaStep.type === "verify" ? (
+              <MfaVerifyStep
+                mfaToken={mfaStep.mfaToken}
+                onSuccess={onMfaVerifySuccess}
+                onBack={() => setMfaStep({ type: "none" })}
+              />
+            ) : (
+              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "login" | "register")} className="w-full">
+                <TabsList className="mb-6 grid h-11 w-full grid-cols-2">
+                  <TabsTrigger value="login" className="h-full text-sm font-medium">
+                    {t("auth.tabSignIn")}
+                  </TabsTrigger>
+                  <TabsTrigger value="register" className="h-full text-sm font-medium">
+                    {t("auth.tabRegister")}
+                  </TabsTrigger>
+                </TabsList>
 
-      {/* Form Side */}
-      <div className="w-full md:w-1/2 lg:w-[40%] flex items-center justify-center p-8 bg-card relative">
-        <div className="absolute top-4 end-4 z-20">
-          <LanguageSwitcher />
-        </div>
-        <div className="w-full max-w-[420px] login-rise" style={{ ['--rise-delay' as any]: '120ms' }}>
+                <TabsContent value="login" className="space-y-6">
+                  <div className="space-y-1.5">
+                    <h2 className="font-display text-2xl font-semibold text-foreground">{t("auth.welcomeBack")}</h2>
+                    <p className="text-sm text-muted-foreground">{t("auth.welcomeBackDesc")}</p>
+                  </div>
 
-          {/* MFA Verify Step */}
-          {mfaStep.type === "verify" && (
-            <MfaVerifyStep
-              mfaToken={mfaStep.mfaToken}
-              onSuccess={onMfaVerifySuccess}
-              onBack={() => setMfaStep({ type: "none" })}
-            />
-          )}
+                  <form onSubmit={submitLogin} noValidate className="space-y-5">
+                    {loginError && (
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" aria-hidden="true" />
+                        <AlertDescription>{loginError}</AlertDescription>
+                      </Alert>
+                    )}
 
-          {/* MFA Setup Step */}
-          {mfaStep.type === "setup" && (
-            <MfaSetupFlow
-              mfaToken={mfaStep.mfaToken}
-              onComplete={onMfaSetupComplete}
-              isRequired
-            />
-          )}
+                    <div className="space-y-2">
+                      <Label htmlFor="login-email">{t("auth.workEmail")}</Label>
+                      <Input
+                        id="login-email"
+                        type="email"
+                        autoComplete="username"
+                        inputMode="email"
+                        placeholder="name@company.com"
+                        aria-invalid={!!loginErrors.email}
+                        aria-describedby={loginErrors.email ? "login-email-error" : undefined}
+                        {...loginForm.register("email")}
+                      />
+                      <FieldError id="login-email-error" message={loginErrors.email?.message} />
+                    </div>
 
-          {/* Normal Login / Register */}
-          {mfaStep.type === "none" && (
-            <>
-              {/* Brand mark on the form side — anchors the column so it doesn't
-                  float in empty space, and mirrors the hero logo. Native logo is
-                  two-tone gold + dark (reads on the light card); invert to white
-                  in dark theme where the card surface goes dark. */}
-              <div className="mb-9 flex justify-center md:justify-start">
-                <img
-                  src={`${BASE}/jabeen-logo.svg`}
-                  alt="JABEEN"
-                  className="h-12 w-auto dark:brightness-0 dark:invert"
-                />
-              </div>
-              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6 h-12 p-1 bg-muted">
-                <TabsTrigger value="login" className="text-sm font-semibold rounded-md h-full data-[state=active]:bg-background data-[state=active]:shadow-sm">{t("auth.tabSignIn")}</TabsTrigger>
-                <TabsTrigger value="register" className="text-sm font-semibold rounded-md h-full data-[state=active]:bg-background data-[state=active]:shadow-sm">{t("auth.tabRegister")}</TabsTrigger>
-              </TabsList>
+                    <div className="space-y-2">
+                      <Label htmlFor="login-password">{t("auth.password")}</Label>
+                      <Input
+                        id="login-password"
+                        type="password"
+                        autoComplete="current-password"
+                        placeholder="••••••••"
+                        aria-invalid={!!loginErrors.password}
+                        aria-describedby={loginErrors.password ? "login-password-error" : undefined}
+                        {...loginForm.register("password")}
+                      />
+                      <FieldError id="login-password-error" message={loginErrors.password?.message} />
+                    </div>
 
-              <TabsContent value="login" className="space-y-6">
-                <div className="space-y-2">
-                  <h2 className="text-2xl font-bold tracking-tight text-foreground">{t("auth.welcomeBack")}</h2>
-                  <p className="text-muted-foreground text-sm">{t("auth.welcomeBackDesc")}</p>
-                </div>
-
-                <DgaForm onSubmit={submitLogin} className="space-y-5">
-                    {/* Phase 3: DGA text inputs (label + validation via the
-                        component's own props). data-testid was DOM-only and the
-                        web component doesn't forward it; tests are HTTP-level. */}
-                    <DgaTextField
-                      control={loginForm.control}
-                      name="email"
-                      type="email"
-                      autoComplete="username"
-                      inputMode="email"
-                      label={t("auth.workEmail")}
-                      placeholder="name@company.com"
-                      required
-                    />
-                    <DgaTextField
-                      control={loginForm.control}
-                      name="password"
-                      type="password"
-                      autoComplete="current-password"
-                      label={t("auth.password")}
-                      placeholder="••••••••"
-                      required
-                    />
-                    {/* Forgot-password affordance. Logical text-end keeps it on
-                        the trailing edge in both LTR and RTL. Colored via the
-                        theme-split --text-primary token so it stays gold and AA
-                        (gold-800 #826311 on the light card = 5.6:1; brand gold on
-                        dark = 5.85:1) rather than the lighter utility gold. */}
-                    <div className="-mt-3 text-end">
+                    <div className="-mt-1 text-end">
                       <button
                         type="button"
                         onClick={onForgotPassword}
-                        className="text-sm font-medium hover:underline"
-                        style={{ color: "var(--text-primary)" }}
+                        className="text-sm font-medium text-secondary hover:underline"
                       >
                         {t("auth.forgotPassword")}
                       </button>
                     </div>
-                    <DgaSubmitButton
-                      onSubmit={submitLogin}
-                      size="lg"
-                      fullWidth
-                      loading={loginForm.formState.isSubmitting}
-                      loadingLabel={t("auth.signingIn")}
-                      label={t("auth.signInButton")}
-                    />
-                  </DgaForm>
-              </TabsContent>
 
-              <TabsContent value="register" className="space-y-6">
-                <div className="space-y-2">
-                  <h2 className="text-2xl font-bold tracking-tight text-foreground">{t("auth.investorRegistration")}</h2>
-                  <p className="text-muted-foreground text-sm">{t("auth.investorRegistrationDesc")}</p>
-                </div>
+                    <Button type="submit" size="lg" className="w-full" disabled={loginForm.formState.isSubmitting}>
+                      {loginForm.formState.isSubmitting && <Spinner aria-hidden="true" />}
+                      {loginForm.formState.isSubmitting ? t("auth.signingIn") : t("auth.signInButton")}
+                    </Button>
+                  </form>
+                </TabsContent>
 
-                <DgaForm onSubmit={submitRegister} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <DgaTextField
-                        control={registerForm.control}
-                        name="fullName"
-                        autoComplete="name"
-                        label={t("auth.fullName")}
-                        placeholder="John Doe"
-                        required
-                      />
-                      <DgaTextField
-                        control={registerForm.control}
-                        name="companyName"
-                        autoComplete="organization"
-                        label={t("auth.company")}
-                        placeholder="Acme Corp"
-                        required
-                      />
+                <TabsContent value="register" className="space-y-6">
+                  <div className="space-y-1.5">
+                    <h2 className="font-display text-2xl font-semibold text-foreground">
+                      {t("auth.investorRegistration")}
+                    </h2>
+                    <p className="text-sm text-muted-foreground">{t("auth.investorRegistrationDesc")}</p>
+                  </div>
+
+                  <form onSubmit={submitRegister} noValidate className="space-y-4">
+                    {registerError && (
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" aria-hidden="true" />
+                        <AlertDescription>{registerError}</AlertDescription>
+                      </Alert>
+                    )}
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="register-fullname">{t("auth.fullName")}</Label>
+                        <Input
+                          id="register-fullname"
+                          autoComplete="name"
+                          aria-invalid={!!registerErrors.fullName}
+                          aria-describedby={registerErrors.fullName ? "register-fullname-error" : undefined}
+                          {...registerForm.register("fullName")}
+                        />
+                        <FieldError id="register-fullname-error" message={registerErrors.fullName?.message} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="register-company">{t("auth.company")}</Label>
+                        <Input
+                          id="register-company"
+                          autoComplete="organization"
+                          aria-invalid={!!registerErrors.companyName}
+                          aria-describedby={registerErrors.companyName ? "register-company-error" : undefined}
+                          {...registerForm.register("companyName")}
+                        />
+                        <FieldError id="register-company-error" message={registerErrors.companyName?.message} />
+                      </div>
                     </div>
 
-                    <DgaTextField
-                      control={registerForm.control}
-                      name="email"
-                      type="email"
-                      autoComplete="email"
-                      inputMode="email"
-                      label={t("auth.workEmail")}
-                      placeholder="name@company.com"
-                      required
-                    />
-
-                    <DgaTextField
-                      control={registerForm.control}
-                      name="password"
-                      type="password"
-                      autoComplete="new-password"
-                      label={t("auth.password")}
-                      placeholder="••••••••"
-                      required
-                    />
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <DgaTextField
-                        control={registerForm.control}
-                        name="title"
-                        autoComplete="organization-title"
-                        label={`${t("auth.jobTitle")} ${t("auth.optional")}`}
-                        placeholder="Project Manager"
+                    <div className="space-y-2">
+                      <Label htmlFor="register-email">{t("auth.workEmail")}</Label>
+                      <Input
+                        id="register-email"
+                        type="email"
+                        autoComplete="email"
+                        inputMode="email"
+                        placeholder="name@company.com"
+                        aria-invalid={!!registerErrors.email}
+                        aria-describedby={registerErrors.email ? "register-email-error" : undefined}
+                        {...registerForm.register("email")}
                       />
-                      <DgaTextField
-                        control={registerForm.control}
-                        name="phone"
-                        type="tel"
-                        autoComplete="tel"
-                        inputMode="tel"
-                        label={`${t("auth.phone")} ${t("auth.optional")}`}
-                        placeholder="+966…"
-                      />
+                      <FieldError id="register-email-error" message={registerErrors.email?.message} />
                     </div>
 
-                    <DgaSubmitButton
-                      onSubmit={submitRegister}
+                    <div className="space-y-2">
+                      <Label htmlFor="register-password">{t("auth.password")}</Label>
+                      <Input
+                        id="register-password"
+                        type="password"
+                        autoComplete="new-password"
+                        placeholder="••••••••"
+                        aria-invalid={!!registerErrors.password}
+                        aria-describedby={registerErrors.password ? "register-password-error" : undefined}
+                        {...registerForm.register("password")}
+                      />
+                      <FieldError id="register-password-error" message={registerErrors.password?.message} />
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="register-title">
+                          {t("auth.jobTitle")}{" "}
+                          <span className="text-muted-foreground">{t("auth.optional")}</span>
+                        </Label>
+                        <Input
+                          id="register-title"
+                          autoComplete="organization-title"
+                          {...registerForm.register("title")}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="register-phone">
+                          {t("auth.phone")}{" "}
+                          <span className="text-muted-foreground">{t("auth.optional")}</span>
+                        </Label>
+                        <Input
+                          id="register-phone"
+                          type="tel"
+                          autoComplete="tel"
+                          inputMode="tel"
+                          {...registerForm.register("phone")}
+                        />
+                      </div>
+                    </div>
+
+                    <Button
+                      type="submit"
                       size="lg"
-                      fullWidth
-                      loading={registerForm.formState.isSubmitting}
-                      loadingLabel={t("auth.creatingAccount")}
-                      label={t("auth.registerButton")}
-                    />
-                  </DgaForm>
-              </TabsContent>
-            </Tabs>
-            </>
-          )}
+                      className="w-full"
+                      disabled={registerForm.formState.isSubmitting}
+                    >
+                      {registerForm.formState.isSubmitting && <Spinner aria-hidden="true" />}
+                      {registerForm.formState.isSubmitting
+                        ? t("auth.creatingAccount")
+                        : t("auth.registerButton")}
+                    </Button>
+                  </form>
+                </TabsContent>
+              </Tabs>
+            )}
+          </div>
+
+          <p className="mt-8 text-center text-sm text-muted-foreground">
+            © {new Date().getFullYear()} {t("auth.footerCompany")}
+          </p>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

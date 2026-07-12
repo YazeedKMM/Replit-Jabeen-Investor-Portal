@@ -7,6 +7,7 @@ import LoginPage from "@/pages/auth/login";
 import MfaSetupPage from "@/pages/auth/mfa-setup";
 import MyProjectsPage from "@/pages/investor/my-projects";
 import DashboardPage from "@/pages/dashboard/dashboard";
+import ReportsPage from "@/pages/reports/reports";
 import ProfilePage from "@/pages/profile/profile";
 import SettingsPage from "@/pages/settings/settings";
 import AuditLogPage from "@/pages/audit/audit-log";
@@ -46,6 +47,12 @@ export function AppRouter() {
       <Route path="/dashboard">
         <ProtectedRoute allowedRoles={["project-manager", "top-management", "administrator"]}>
           <AppLayout><DashboardPage /></AppLayout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/reports">
+        <ProtectedRoute allowedRoles={["project-manager", "top-management", "administrator"]}>
+          <AppLayout><ReportsPage /></AppLayout>
         </ProtectedRoute>
       </Route>
 

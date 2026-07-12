@@ -11,15 +11,18 @@ const Progress = React.forwardRef<
 >(({ className, value, ...props }, ref) => (
   <ProgressPrimitive.Root
     ref={ref}
+    value={value}
     className={cn(
       "relative h-2 w-full overflow-hidden rounded-full bg-primary/20",
       className
     )}
     {...props}
   >
+    {/* Width-based fill anchors at inline-start, so the bar mirrors correctly in RTL
+        (a translateX fill would stay physically left-anchored). */}
     <ProgressPrimitive.Indicator
-      className="h-full w-full flex-1 bg-primary transition-all"
-      style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
+      className="h-full bg-primary transition-[width] duration-200 motion-reduce:transition-none"
+      style={{ width: `${value || 0}%` }}
     />
   </ProgressPrimitive.Root>
 ))

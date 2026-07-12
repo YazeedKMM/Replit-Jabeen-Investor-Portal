@@ -7,9 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DgaContentCard } from "@/components/ui/dga-card";
-import { DgaSubmitButton } from "@/components/ui/dga-brand-button";
-import { DgaButton } from "platformscode-new-react";
+import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -109,7 +107,7 @@ export default function ProjectManageTab({ project, isAdmin }: Props) {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <DgaContentCard className="space-y-4">
+      <div className="rounded-xl border border-card-border bg-card p-6 space-y-4">
         <div>
           <h2 className="text-lg font-semibold text-foreground">{t("projects.manage.metadataTitle")}</h2>
           <p className="text-sm text-muted-foreground">{t("projects.manage.metadataDesc")}</p>
@@ -191,25 +189,22 @@ export default function ProjectManageTab({ project, isAdmin }: Props) {
               )} />
 
               <div className="flex justify-end pt-4">
-                <DgaSubmitButton
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  loading={updateMutation.isPending}
-                  loadingLabel={t("projects.manage.saveChanges")}
-                  label={t("projects.manage.saveChanges")}
-                />
+                <Button type="submit" disabled={updateMutation.isPending}>
+                  {t("projects.manage.saveChanges")}
+                </Button>
               </div>
             </form>
           </Form>
-      </DgaContentCard>
+      </div>
 
       {isAdmin && (
-        <DgaContentCard className="space-y-4">
+        <div className="rounded-xl border border-card-border bg-card p-6 space-y-4">
           <div>
             <h2 className="text-destructive flex items-center text-lg font-semibold"><Trash2 className="me-2 h-5 w-5" /> {t("projects.manage.dangerZoneTitle")}</h2>
             <p className="text-sm text-muted-foreground">{t("projects.manage.dangerZoneDesc")}</p>
           </div>
-          <DgaButton variant="des-primary" label={t("projects.manage.deleteButton")} disabled={deleteMutation.isPending} onOnClick={handleDelete} />
-        </DgaContentCard>
+          <Button variant="destructive" disabled={deleteMutation.isPending} onClick={handleDelete}>{t("projects.manage.deleteButton")}</Button>
+        </div>
       )}
     </div>
   );

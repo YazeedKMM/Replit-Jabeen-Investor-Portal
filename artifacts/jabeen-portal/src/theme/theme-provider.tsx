@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, type ReactNode } from "react";
-import { useGetBranding, type Branding, type BrandingColors } from "@workspace/api-client-react";
+import { useGetBranding, getGetBrandingQueryKey, type Branding, type BrandingColors } from "@workspace/api-client-react";
 import { parseOklch, formatOklch, deriveRamp, foregroundFor, darkVariant, type Oklch } from "@/lib/oklch";
 import { DEFAULT_BRANDING } from "./default-branding";
 
@@ -121,7 +121,7 @@ function applyBranding(branding: Branding) {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const { data } = useGetBranding({ query: { staleTime: 60_000 } });
+  const { data } = useGetBranding({ query: { queryKey: getGetBrandingQueryKey(), staleTime: 60_000 } });
   const branding = data ?? DEFAULT_BRANDING;
   useEffect(() => {
     applyBranding(branding);

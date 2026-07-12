@@ -2,8 +2,7 @@ import { useState } from "react";
 import { useListAuditLog } from "@workspace/api-client-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { DgaContentCard } from "@/components/ui/dga-card";
-import { DgaTag } from "platformscode-new-react";
+import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { fmtDateTime } from "@/lib/format";
@@ -22,7 +21,7 @@ export default function AuditLogPage() {
         <p className="text-muted-foreground">{t("audit.subtitle")}</p>
       </div>
 
-      <DgaContentCard className="space-y-4">
+      <div className="rounded-xl border border-card-border bg-card p-6 space-y-4">
         <h2 className="text-lg font-semibold text-foreground">{t("audit.eventHistory")}</h2>
         <Table>
           <TableHeader className="bg-muted/30">
@@ -57,7 +56,7 @@ export default function AuditLogPage() {
                     {entry.actorName || t("audit.actorFallback", { id: entry.actorId })}
                   </TableCell>
                   <TableCell>
-                    <DgaTag variant="neutral" size="sm" outlined label={entry.action} />
+                    <Badge variant="outline">{entry.action}</Badge>
                   </TableCell>
                   <TableCell className="text-sm">
                     {entry.targetType} {entry.targetId && `#${entry.targetId}`}
@@ -94,7 +93,7 @@ export default function AuditLogPage() {
             </Button>
           </div>
         </div>
-      </DgaContentCard>
+      </div>
     </div>
   );
 }

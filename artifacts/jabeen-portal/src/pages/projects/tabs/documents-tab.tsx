@@ -1,8 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Project, useListProjectDocuments, useUploadDocument, useDeleteDocument } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
-import { DgaContentCard } from "@/components/ui/dga-card";
-import { DgaBrandButton } from "@/components/ui/dga-brand-button";
 import { Loader2, FileIcon, Download, Trash2 } from "lucide-react";
 import { fmtDate } from "@/lib/format";
 import { useQueryClient } from "@tanstack/react-query";
@@ -63,25 +61,26 @@ export default function ProjectDocumentsTab({ project }: Props) {
         <h2 className="text-xl font-bold">{t("projects.documents.title")}</h2>
         <div>
           <input type="file" className="hidden" ref={fileInputRef} onChange={handleFileSelect} />
-          <DgaBrandButton
-            label={t("projects.documents.uploadButton")}
+          <Button
             disabled={isUploading}
-            onOnClick={() => fileInputRef.current?.click()}
-          />
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {t("projects.documents.uploadButton")}
+          </Button>
         </div>
       </div>
 
       {isLoading ? (
         <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
       ) : !documents?.length ? (
-        <DgaContentCard className="py-12 text-center text-muted-foreground flex flex-col items-center">
+        <div className="rounded-xl border border-card-border bg-card px-6 py-12 text-center text-muted-foreground flex flex-col items-center">
           <FileIcon className="h-10 w-10 mb-4 opacity-20" />
           <p>{t("projects.documents.emptyDesc")}</p>
-        </DgaContentCard>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {documents.map(doc => (
-            <DgaContentCard key={doc.id} className="group flex items-start gap-4">
+            <div key={doc.id} className="rounded-xl border border-card-border bg-card p-6 group flex items-start gap-4">
               <div className="h-12 w-12 bg-primary/10 text-primary rounded flex items-center justify-center shrink-0">
                 <FileIcon className="h-6 w-6" />
               </div>
@@ -100,7 +99,7 @@ export default function ProjectDocumentsTab({ project }: Props) {
                   <Trash2 className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </div>
-            </DgaContentCard>
+            </div>
           ))}
         </div>
       )}

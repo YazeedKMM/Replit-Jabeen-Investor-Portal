@@ -36,6 +36,8 @@ tags:
     description: System settings
   - name: branding
     description: White-label branding (colors + logos)
+  - name: reports
+    description: Portfolio reports and analytics
 
 paths:
   /healthz:
@@ -245,6 +247,69 @@ paths:
             text/csv:
               schema:
                 type: string
+
+  # --- REPORTS ---
+  /reports/distribution:
+    get:
+      operationId: getReportsDistribution
+      tags: [reports]
+      summary: Project counts by stage, city, and category (managers only)
+      responses:
+        "200":
+          description: Distribution report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportDistribution"
+
+  /reports/stage-conversion:
+    get:
+      operationId: getReportsStageConversion
+      tags: [reports]
+      summary: Pipeline stage conversion funnel (managers only)
+      parameters:
+        - name: templateId
+          in: query
+          required: false
+          description: Stage template to report on; defaults to the default template
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Stage conversion report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportStageConversion"
+        "400":
+          description: Invalid templateId
+        "404":
+          description: Template not found
+
+  /reports/activity:
+    get:
+      operationId: getReportsActivity
+      tags: [reports]
+      summary: Monthly activity time series (managers only)
+      parameters:
+        - name: months
+          in: query
+          required: false
+          description: How many trailing months to include (1-24, default 6)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 24
+            default: 6
+      responses:
+        "200":
+          description: Activity report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportActivity"
+        "400":
+          description: Invalid months parameter
 
   # --- PROJECTS ---
   /projects:
@@ -2047,6 +2112,118 @@ components:
           type: string
         count:
           type: integer
+
+    # --- REPORTS ---
+    ReportDistribution:
+      type: object
+      required: [total, unstaged, byStage, byCity, byCategory]
+      properties:
+        total:
+          type: integer
+        unstaged:
+          type: integer
+          description: Projects with no current stage
+        byStage:
+          type: array
+          description: Spans all templates; group by templateId, sort by orderIndex within a template.
+          items:
+            type: object
+            required: [stageId, stageName, templateId, templateName, templateVersion, templateArchived, orderIndex, count]
+            properties:
+              stageId:
+                type: integer
+              stageName:
+                type: string
+              templateId:
+                type: integer
+              templateName:
+                type: string
+              templateVersion:
+                type: integer
+                description: Version number of the owning template
+              templateArchived:
+                type: boolean
+                description: True when the owning template version is archived
+              orderIndex:
+                type: integer
+              count:
+                type: integer
+        byCity:
+          type: array
+          items:
+            type: object
+            required: [cityId, city, count]
+            properties:
+              cityId:
+                type: integer
+              city:
+                type: string
+              count:
+                type: integer
+        byCategory:
+          type: array
+          items:
+            type: object
+            required: [categoryId, category, count]
+            properties:
+              categoryId:
+                type: integer
+              category:
+                type: string
+              count:
+                type: integer
+
+    ReportStageConversion:
+      type: object
+      required: [templateId, templateName, totalProjects, stages]
+      properties:
+        templateId:
+          type: integer
+        templateName:
+          type: string
+        totalProjects:
+          type: integer
+          description: Projects assigned to this template
+        stages:
+          type: array
+          items:
+            type: object
+            required: [stageId, name, orderIndex, atStage, reached, reachedPct]
+            properties:
+              stageId:
+                type: integer
+              name:
+                type: string
+              orderIndex:
+                type: integer
+              atStage:
+                type: integer
+                description: Projects currently at this stage
+              reached:
+                type: integer
+                description: Projects at or past this stage
+              reachedPct:
+                type: integer
+
+    ReportActivity:
+      type: object
+      required: [months]
+      properties:
+        months:
+          type: array
+          items:
+            type: object
+            required: [month, projectsCreated, updatesSubmitted, updatesApproved]
+            properties:
+              month:
+                type: string
+                description: Calendar month as YYYY-MM (UTC)
+              projectsCreated:
+                type: integer
+              updatesSubmitted:
+                type: integer
+              updatesApproved:
+                type: integer
 
     # --- TEMPLATE ---
     TemplateSummary:

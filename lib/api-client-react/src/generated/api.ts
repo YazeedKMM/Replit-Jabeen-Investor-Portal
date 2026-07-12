@@ -34,6 +34,8 @@ import type {
   DashboardStats,
   Document,
   DocumentUpload,
+  GetReportsActivityParams,
+  GetReportsStageConversionParams,
   HealthStatus,
   InternalNote,
   ListAuditLogParams,
@@ -62,6 +64,9 @@ import type {
   RegisterInput,
   RejectInput,
   ReplaceTemplateResult,
+  ReportActivity,
+  ReportDistribution,
+  ReportStageConversion,
   SetUserCitiesInput,
   SettingsUpdate,
   StatusUpdate,
@@ -1022,6 +1027,251 @@ export function useExportPortfolio<TData = Awaited<ReturnType<typeof exportPortf
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getExportPortfolioQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetReportsDistributionUrl = () => {
+
+
+
+
+  return `/api/reports/distribution`
+}
+
+/**
+ * @summary Project counts by stage, city, and category (managers only)
+ */
+export const getReportsDistribution = async ( options?: RequestInit): Promise<ReportDistribution> => {
+
+  return customFetch<ReportDistribution>(getGetReportsDistributionUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetReportsDistributionQueryKey = () => {
+    return [
+    `/api/reports/distribution`
+    ] as const;
+    }
+
+
+export const getGetReportsDistributionQueryOptions = <TData = Awaited<ReturnType<typeof getReportsDistribution>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getReportsDistribution>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetReportsDistributionQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getReportsDistribution>>> = ({ signal }) => getReportsDistribution({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getReportsDistribution>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetReportsDistributionQueryResult = NonNullable<Awaited<ReturnType<typeof getReportsDistribution>>>
+export type GetReportsDistributionQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Project counts by stage, city, and category (managers only)
+ */
+
+export function useGetReportsDistribution<TData = Awaited<ReturnType<typeof getReportsDistribution>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getReportsDistribution>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetReportsDistributionQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetReportsStageConversionUrl = (params?: GetReportsStageConversionParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/reports/stage-conversion?${stringifiedParams}` : `/api/reports/stage-conversion`
+}
+
+/**
+ * @summary Pipeline stage conversion funnel (managers only)
+ */
+export const getReportsStageConversion = async (params?: GetReportsStageConversionParams, options?: RequestInit): Promise<ReportStageConversion> => {
+
+  return customFetch<ReportStageConversion>(getGetReportsStageConversionUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetReportsStageConversionQueryKey = (params?: GetReportsStageConversionParams,) => {
+    return [
+    `/api/reports/stage-conversion`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetReportsStageConversionQueryOptions = <TData = Awaited<ReturnType<typeof getReportsStageConversion>>, TError = ErrorType<void>>(params?: GetReportsStageConversionParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getReportsStageConversion>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetReportsStageConversionQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getReportsStageConversion>>> = ({ signal }) => getReportsStageConversion(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getReportsStageConversion>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetReportsStageConversionQueryResult = NonNullable<Awaited<ReturnType<typeof getReportsStageConversion>>>
+export type GetReportsStageConversionQueryError = ErrorType<void>
+
+
+/**
+ * @summary Pipeline stage conversion funnel (managers only)
+ */
+
+export function useGetReportsStageConversion<TData = Awaited<ReturnType<typeof getReportsStageConversion>>, TError = ErrorType<void>>(
+ params?: GetReportsStageConversionParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getReportsStageConversion>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetReportsStageConversionQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetReportsActivityUrl = (params?: GetReportsActivityParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/reports/activity?${stringifiedParams}` : `/api/reports/activity`
+}
+
+/**
+ * @summary Monthly activity time series (managers only)
+ */
+export const getReportsActivity = async (params?: GetReportsActivityParams, options?: RequestInit): Promise<ReportActivity> => {
+
+  return customFetch<ReportActivity>(getGetReportsActivityUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetReportsActivityQueryKey = (params?: GetReportsActivityParams,) => {
+    return [
+    `/api/reports/activity`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetReportsActivityQueryOptions = <TData = Awaited<ReturnType<typeof getReportsActivity>>, TError = ErrorType<void>>(params?: GetReportsActivityParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getReportsActivity>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetReportsActivityQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getReportsActivity>>> = ({ signal }) => getReportsActivity(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getReportsActivity>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetReportsActivityQueryResult = NonNullable<Awaited<ReturnType<typeof getReportsActivity>>>
+export type GetReportsActivityQueryError = ErrorType<void>
+
+
+/**
+ * @summary Monthly activity time series (managers only)
+ */
+
+export function useGetReportsActivity<TData = Awaited<ReturnType<typeof getReportsActivity>>, TError = ErrorType<void>>(
+ params?: GetReportsActivityParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getReportsActivity>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetReportsActivityQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

@@ -7,6 +7,7 @@
     "add": "Add",
     "search": "Search",
     "loading": "Loading…",
+    "somethingWrong": "Something went wrong. Please try again.",
     "confirm": "Confirm",
     "close": "Close",
     "back": "Back",
@@ -18,11 +19,13 @@
     "enabled": "Enabled",
     "disabled": "Disabled",
     "allCities": "All cities",
-    "required": "Required"
+    "required": "Required",
+    "moveDown": "Move down"
   },
   "nav": {
     "myProjects": "My Projects",
     "dashboard": "Dashboard",
+    "reports": "Reports",
     "templates": "Templates",
     "users": "Users",
     "cities": "Cities",
@@ -92,6 +95,8 @@
     "title": "Portfolio Dashboard",
     "subtitle": "Overview of all JABEEN projects across Royal Commission cities",
     "exportCsv": "Export CSV",
+    "exportFailedTitle": "Export failed",
+    "exportFailed": "Could not export the portfolio CSV. Please try again.",
     "newProject": "New Project",
     "kpi": {
       "total": "Total Projects",
@@ -101,7 +106,25 @@
     },
     "breakdown": {
       "byCategory": "By Category",
-      "byCity": "By City"
+      "byCity": "By City",
+      "byStatus": "By Status"
+    },
+    "charts": {
+      "count": "Projects"
+    },
+    "recent": {
+      "title": "Recent Updates",
+      "empty": "No project updates yet."
+    },
+    "empty": {
+      "title": "No projects yet",
+      "desc": "Start building the portfolio by registering the first investment project.",
+      "descReadOnly": "Portfolio projects will appear here once they are registered."
+    },
+    "error": {
+      "title": "Couldn't load the dashboard",
+      "desc": "Something went wrong while fetching portfolio data. Please try again.",
+      "retry": "Try again"
     },
     "table": {
       "title": "Project Directory",
@@ -116,8 +139,42 @@
       "initializing": "Initializing",
       "emptySearch": "No JABEEN projects match your search.",
       "emptyAll": "No JABEEN projects yet.",
-      "createFirst": "Create the first project"
+      "createFirst": "Create the first project",
+      "error": "Couldn't load projects."
     }
+  },
+  "reports": {
+    "title": "Reports",
+    "subtitle": "Portfolio analytics across stages, cities, and categories",
+    "distribution": {
+      "title": "Project distribution",
+      "byStage": "By stage",
+      "byCity": "By city",
+      "byCategory": "By category",
+      "unstaged": "No stage assigned",
+      "total": "Total projects",
+      "archived": "archived"
+    },
+    "conversion": {
+      "title": "Stage conversion",
+      "template": "Pipeline template",
+      "atStage": "Currently at stage",
+      "reached": "Reached stage",
+      "ofProjects": "of {{count}} projects",
+      "noDefault": "No pipeline template is configured yet."
+    },
+    "activity": {
+      "title": "Activity over time",
+      "range": "Time range",
+      "months_one": "{{count}} month",
+      "months_other": "{{count}} months",
+      "projectsCreated": "Projects created",
+      "updatesSubmitted": "Updates submitted",
+      "updatesApproved": "Updates approved"
+    },
+    "empty": "No data to report yet",
+    "error": "Could not load this report",
+    "retry": "Try again"
   },
   "investor": {
     "pageTitle": "My Projects",
@@ -138,7 +195,24 @@
     "updatedNever": "Never",
     "updatedAt": "Updated {{date}}",
     "viewDetails": "View details",
-    "attentionMessage": "This project requires your attention. Please review recent updates."
+    "attentionMessage": "This project requires your attention. Please review recent updates.",
+    "pipeline": {
+      "title": "My projects",
+      "subtitle": "Follow each project along its licensing and construction journey — where it stands today, and what comes next.",
+      "agreement": "Agreement",
+      "plot": "Plot",
+      "progress": "Construction progress",
+      "viewProject": "View project",
+      "railLabel": "Project stages",
+      "currentStageLabel": "Current stage",
+      "stageOf": "Stage {{index}} of {{total}}",
+      "baselineNote": "begins at {{pct}}% overall progress",
+      "notStarted": "The stage journey hasn't started yet.",
+      "noPipeline": "No stage pipeline has been assigned to this project yet. Its journey will appear here once one is assigned.",
+      "detailError": "Couldn't load this project's stages.",
+      "listError": "Couldn't load your projects. Please try again.",
+      "retry": "Try again"
+    }
   },
   "projects": {
     "newDialog": {
@@ -352,7 +426,18 @@
       "statusInactive": "Inactive",
       "statusPending": "Pending",
       "noUsersFound": "No users found.",
+      "noUsersDesc": "No users match the current search or role filter.",
+      "openActions": "Open actions",
       "noPendingAccounts": "No pending accounts — all applicants have been processed.",
+      "confirm": {
+        "deactivateTitle": "Deactivate user",
+        "deactivateDesc": "Deactivate {{name}}? They will lose portal access until reactivated.",
+        "deactivateConfirm": "Deactivate",
+        "resetPasswordTitle": "Reset password",
+        "resetPasswordConfirm": "Reset password",
+        "resetMfaTitle": "Reset MFA",
+        "resetMfaConfirm": "Reset MFA"
+      },
       "createDialog": {
         "title": "Create New User",
         "description": "Add a new staff member or investor to the portal.",
@@ -450,8 +535,19 @@
         "archiveFailed": "Could not archive template",
         "deleted": "Template deleted",
         "deleteFailed": "Could not delete template",
-        "error": "Error"
-      }
+        "error": "Error",
+        "archivedDesc": "“{{name}}” is hidden from new assignment pickers.",
+        "deletedDesc": "“{{name}}” was permanently deleted."
+      },
+      "statusActive": "Active",
+      "colName": "Template",
+      "colStages": "Stages",
+      "colVersion": "Version",
+      "colStatus": "Status",
+      "colAdded": "Added",
+      "colActions": "Actions",
+      "deleteDialogTitle": "Delete template",
+      "archiveDialogTitle": "Archive template"
     },
     "templateBuilder": {
       "newTitle": "New Template",
@@ -521,7 +617,15 @@
         "previewUploadPhotos": "Upload photos…",
         "previewChooseOption": "Choose an option...",
         "previewAddOptions": "Add options above to see radio buttons.",
-        "previewAddOptionsCheckbox": "Add options above to see checkboxes."
+        "previewAddOptionsCheckbox": "Add options above to see checkboxes.",
+        "newStageName": "New Stage",
+        "newFieldName": "New Field",
+        "unnamedStage": "Unnamed Stage",
+        "selectStageTitle": "No stage selected",
+        "selectStageDesc": "Choose a stage from the list to edit its details and fields, or add a new one.",
+        "previewFieldLabel": "Field Label",
+        "previewEnterValue": "Enter {{label}}…",
+        "fieldOptionsPlaceholder": "Option A\nOption B\nOption C"
       },
       "nameRequired": "Name required",
       "toast": {
@@ -529,8 +633,18 @@
         "updated": "Template updated",
         "newVersion": "New version created",
         "newVersionDesc": "The previous version is archived. Existing projects remain pinned to their version.",
-        "saveFailed": "Save failed"
-      }
+        "saveFailed": "Save failed",
+        "createdDesc": "“{{name}}” is ready to assign to projects.",
+        "updatedDesc": "“{{name}}” was updated.",
+        "discarded": "Changes discarded"
+      },
+      "discard": "Discard",
+      "discardDialogTitle": "Discard changes?",
+      "discardDialogDesc": "Your unsaved edits to this template will be lost. This cannot be undone.",
+      "saveDialogTitle": "Save as new version?",
+      "leaveDialogTitle": "Leave without saving?",
+      "leaveDialogDesc": "You have unsaved changes to this template. If you leave now, they will be lost.",
+      "leaveConfirm": "Leave"
     },
     "cities": {
       "title": "Cities",
@@ -543,6 +657,7 @@
       "colSortOrder": "Sort Order",
       "colActions": "Actions",
       "noCities": "No cities found.",
+      "noCitiesDesc": "Add your first city to make it available across the portal.",
       "createDialog": {
         "title": "Add City",
         "description": "Create a new city for the portal.",
@@ -590,6 +705,7 @@
       "colSortOrder": "Sort Order",
       "colActions": "Actions",
       "noCategories": "No categories found.",
+      "noCategoriesDesc": "Add your first category to classify projects across the portal.",
       "createDialog": {
         "title": "Add Category",
         "description": "Create a new project category.",
@@ -631,18 +747,33 @@
     "subtitle": "Configure global portal parameters and thresholds.",
     "thresholdsTitle": "Project Status Thresholds",
     "thresholdsDesc": "Determine when projects are automatically flagged based on inactivity.",
-    "delayedThreshold": "Delayed Threshold (Days)",
+    "delayedThreshold": "Delayed Threshold",
     "delayedThresholdDesc": "Days without an update before a project is marked Delayed.",
-    "stalledThreshold": "Stalled Threshold (Days)",
+    "stalledThreshold": "Stalled Threshold",
     "stalledThresholdDesc": "Days without an update before a project is marked Stalled.",
     "securityTitle": "Security & Notifications",
     "securityDesc": "Configure login protection and external alerts.",
     "maxLoginAttempts": "Max Login Attempts",
-    "throttleWindow": "Throttle Window (Seconds)",
+    "maxLoginAttemptsDesc": "Failed sign-in attempts allowed before login is temporarily throttled.",
+    "throttleWindow": "Throttle Window",
+    "throttleWindowDesc": "How long the attempt count is measured over before it resets.",
     "emailNotifications": "Email Notifications",
     "emailNotificationsDesc": "Send email alerts for important updates and messages.",
+    "units": {
+      "days": "days",
+      "seconds": "seconds",
+      "attempts": "attempts"
+    },
+    "validation": {
+      "min": "Enter a whole number of 1 or more."
+    },
     "saving": "Saving…",
     "saveConfig": "Save Configuration",
+    "error": {
+      "title": "Couldn't load settings",
+      "desc": "Something went wrong while loading the system configuration.",
+      "retry": "Try again"
+    },
     "toast": {
       "updatedTitle": "Settings updated",
       "updatedDesc": "System configuration saved successfully.",
@@ -733,6 +864,7 @@
     "featureMilestones": "Real-time milestones",
     "featureSecure": "Secure investor access",
     "footerCompany": "Jubail and Yanbu Industrial Cities Services Company (JABEEN)",
+    "productHeading": "Investor Portal",
     "tabSignIn": "Sign In",
     "tabRegister": "Register",
     "welcomeBack": "Welcome back",
@@ -806,7 +938,9 @@
       "invalidSetupCodeTitle": "Invalid code",
       "invalidSetupCodeDesc": "Enter the 6-digit code from your authenticator app",
       "invalidSetupCodeVerifyDesc": "The code was incorrect. Try again.",
-      "verifyErrorDesc": "Failed to verify code"
+      "verifyErrorDesc": "Failed to verify code",
+      "sessionExpired": "Your sign-in session has expired. Please sign in again.",
+      "qrAlt": "MFA enrollment QR code"
     }
   }
 }

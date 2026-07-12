@@ -5,11 +5,11 @@ import { useAuth } from "@/hooks/use-auth";
 import { useGetProject, getGetProjectQueryKey } from "@workspace/api-client-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DgaContentCard } from "@/components/ui/dga-card";
-import { DgaStatusTag, DgaLinearProgressBar } from "platformscode-new-react";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { StatusBadge, type DerivedStatus } from "@/components/status-badge";
 import { Building2, MapPin, Calendar, FileText, Activity, MessageSquare, History, Settings } from "lucide-react";
 import { fmtDate } from "@/lib/format";
-import { dgaStatusColor } from "@/lib/dga-status";
 
 // Mock imports for tab components (to be implemented next)
 import ProjectOverviewTab from "./tabs/overview-tab";
@@ -49,7 +49,7 @@ export default function ProjectWorkspacePage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto pb-12">
       {/* Header Profile Area */}
-      <DgaContentCard>
+      <div className="rounded-xl border border-card-border bg-card p-6">
         {isLoading ? (
           <div className="space-y-4">
             <Skeleton className="h-10 w-2/3" />
@@ -64,9 +64,9 @@ export default function ProjectWorkspacePage() {
             <div className="space-y-4 flex-1">
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className="text-3xl font-bold tracking-tight text-foreground">{project.name}</h1>
-                <DgaStatusTag color={dgaStatusColor(project.derivedStatus)} status="subtle" size="sm" label={t(`status.${project.derivedStatus}`)} />
+                <StatusBadge status={project.derivedStatus as DerivedStatus} />
                 {project.attentionFlag && (
-                  <DgaStatusTag color="red" status="subtle" size="sm" label={t("projects.workspace.needsAttention")} />
+                  <Badge variant="outline" className="border-transparent bg-warning/20 text-foreground">{t("projects.workspace.needsAttention")}</Badge>
                 )}
               </div>
 
@@ -95,21 +95,14 @@ export default function ProjectWorkspacePage() {
               <div className="text-lg font-bold">{project.currentStage?.name || t("projects.workspace.stageInitializing")}</div>
               <div className="flex items-center gap-2 w-full mt-1">
                 <div className="flex-1">
-                  <DgaLinearProgressBar
-                    style={{ display: "block", width: "100%" }}
-                    percentage={project.constructionPct}
-                    progressStyle="primary"
-                    size="small"
-                    showLabel={false}
-                    showHelperText={false}
-                  />
+                  <Progress value={project.constructionPct} className="h-1.5" aria-label={t("projects.workspace.currentStage")} />
                 </div>
                 <span className="text-sm font-medium w-9 text-end">{project.constructionPct}%</span>
               </div>
             </div>
           </div>
         )}
-      </DgaContentCard>
+      </div>
 
       {/* Tabs */}
       {project && (
