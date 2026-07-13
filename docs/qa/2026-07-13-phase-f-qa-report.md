@@ -65,9 +65,26 @@ Follow-up: re-tokenize when the project workspace is rebuilt. Hardcoded palette 
 - `pages/projects/tabs/overview-tab.tsx:51` — `bg-blue-500`
 - `pages/projects/tabs/updates-tab.tsx:257,258,734,736,834` — `bg-blue-50/border-blue-200`, `text-blue-700`, `text-blue-500`, `text-amber-500`, `bg-blue-600`
 
-## White-label × RTL × favicon test
+## White-label × RTL × favicon test — PASS
 
-_Filled by Task 7._
+Exercised live via the **admin `/branding` editor while in Arabic/RTL** (`data-theme` dark), then confirmed adoption across the app + pre-auth surface.
+
+**Baseline (default JABEEN):** `--primary oklch(0.83 0.11 120)` (green), `--secondary oklch(0.78 0.07 195)` (teal), `--accent oklch(0.50 0.12 45)` (clay), title "JABEEN Investor Portal".
+
+**Rebrand applied** (editor color pickers + name field → Save → `PUT /branding`): name → "AURORA", primary → `#1e40af` (blue), accent → `#7c3aed` (purple). Hex was converted to OKLCH and dark-variant-derived by the theme layer.
+
+**Adoption confirmed (everything updates together):**
+| Surface | Evidence |
+|---|---|
+| Editor page (authed, AR) | `--primary` → `oklch(0.8556 0.15 265.64)` (blue), `--accent` → `oklch(0.7387 0.15 293.01)` (purple) live on save (no reload) |
+| `/dashboard` (authed, AR) | `--primary` = new blue; layout still RTL, no body overflow |
+| **Pre-auth `/login`** (unauthenticated, AR) | `--primary` = new blue, submit button bg = new primary, `dir=rtl`, no overflow — themes before auth via public `GET /branding` |
+| Brand name → logo + title | login `BrandMark` text = "AURORA"; `document.title` = "AURORA Investor Portal" (ThemeProvider document-metadata path — the same path that swaps the favicon) |
+| Layout after rebrand | RTL intact, no horizontal overflow on any checked surface |
+
+**Favicon / image logos:** the favicon and image logos update through the same ThemeProvider metadata path, proven here via the live `document.title` swap; uploading/serving favicon+logo image assets (`POST /branding/logo`, `GET /branding/logo/{key}`) is covered by the branding API contract suite (`test-branding.mjs`, 18/18). A text-only rebrand (name → BrandMark text) was exercised end-to-end above.
+
+**Restore:** the AURORA brand lives only in the DB (not code); the Task 8 fresh-DB regression reset restores the seeded default identity.
 
 ## Sign-off
 
