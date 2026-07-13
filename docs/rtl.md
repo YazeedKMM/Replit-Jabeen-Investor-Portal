@@ -11,6 +11,8 @@ physical properties in `.css` files, zero unexplained physical utilities in app 
 - Layout uses logical utilities (`ms-`/`me-`/`ps-`/`pe-`/`start-`/`end-`/`text-start`).
 - Directional glyphs mirror via the `.rtl-flip` class (defined in `index.css`:
   `[dir="rtl"] .rtl-flip { transform: scaleX(-1) }`).
+- Motion direction (slide/sweep origins, reduced-motion fallbacks) is documented
+  separately in `docs/motion.md`.
 
 ## Intentional physical CSS (do not "fix" these)
 
