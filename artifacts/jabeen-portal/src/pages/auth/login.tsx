@@ -68,7 +68,7 @@ export function BrandMark() {
 function FieldError({ id, message }: { id: string; message?: string }) {
   if (!message) return null;
   return (
-    <p id={id} className="text-sm text-destructive">
+    <p id={id} className="enter-rise text-sm text-destructive">
       {message}
     </p>
   );
@@ -230,7 +230,7 @@ export default function LoginPage() {
 
                   <form onSubmit={submitLogin} noValidate className="space-y-5">
                     {loginError && (
-                      <Alert variant="destructive">
+                      <Alert variant="destructive" className="attention-nudge">
                         <AlertCircle className="h-4 w-4" aria-hidden="true" />
                         <AlertDescription>{loginError}</AlertDescription>
                       </Alert>
@@ -292,7 +292,7 @@ export default function LoginPage() {
 
                   <form onSubmit={submitRegister} noValidate className="space-y-4">
                     {registerError && (
-                      <Alert variant="destructive">
+                      <Alert variant="destructive" className="attention-nudge">
                         <AlertCircle className="h-4 w-4" aria-hidden="true" />
                         <AlertDescription>{registerError}</AlertDescription>
                       </Alert>

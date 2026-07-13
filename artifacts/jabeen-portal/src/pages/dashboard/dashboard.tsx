@@ -349,7 +349,7 @@ function Panel({ title, className, children }: { title: string; className?: stri
 /** Loading state mirroring the final layout: KPI strip, chart row, table. */
 function DashboardSkeleton() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 stagger-rise">
       <div className="grid grid-cols-2 overflow-hidden rounded-xl border border-card-border bg-card lg:grid-cols-4">
         {[0, 1, 2, 3].map((i) => (
           <div key={i} className={cn("space-y-3 p-5", KPI_CELL_BORDERS[i])}>

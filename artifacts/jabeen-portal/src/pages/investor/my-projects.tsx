@@ -311,7 +311,7 @@ export default function MyProjectsPage() {
       {isLoading ? (
         <PageSkeleton />
       ) : isError ? (
-        <section className="rounded-xl border border-card-border bg-card px-6 py-14 text-center">
+        <section className="enter-rise rounded-xl border border-card-border bg-card px-6 py-14 text-center">
           <AlertCircle className="mx-auto h-8 w-8 text-destructive" aria-hidden="true" />
           <p className="mx-auto mt-4 max-w-md text-sm text-muted-foreground">{t("investor.pipeline.listError")}</p>
           <Button variant="outline" className="mt-5" onClick={() => refetch()}>
@@ -320,7 +320,7 @@ export default function MyProjectsPage() {
         </section>
       ) : !projects?.length ? (
         /* ── Empty portfolio: teaches what the portal does (investors can't create) ── */
-        <section className="rounded-xl border border-card-border bg-card px-6 py-16 text-center">
+        <section className="enter-rise rounded-xl border border-card-border bg-card px-6 py-16 text-center">
           <FolderOpen className="mx-auto h-10 w-10 text-muted-foreground/40" aria-hidden="true" />
           <h2 className="mt-4 font-display text-2xl font-semibold text-foreground">{t("investor.emptyTitle")}</h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{t("investor.emptyDesc")}</p>

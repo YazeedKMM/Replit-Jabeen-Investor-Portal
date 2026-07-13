@@ -303,6 +303,69 @@ html {
   --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
+/* ----------------------------------------------------------------------------
+   Motion foundation (Phase E)
+   Shared eases + a small set of reduced-motion-safe, dir-aware utilities.
+   Only transform/opacity/background-position animate (GPU-friendly). Every
+   utility here is neutralised in the single prefers-reduced-motion block below.
+---------------------------------------------------------------------------- */
+:root {
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --dur-fast: 150ms;
+  --dur-base: 260ms;
+}
+
+/* Skeleton shimmer — a light band sweeping across a placeholder. The sweep
+   travels with the reading direction: default L→R, reversed under [dir=rtl]. */
+@keyframes skeleton-shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -100% 0; }
+}
+.skeleton-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklab, var(--foreground) 9%, transparent) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+[dir="rtl"] .skeleton-shimmer {
+  animation-direction: reverse;
+}
+
+/* Element entrance — gentle fade+rise for freshly revealed inline content
+   (validation errors, inline alerts). Vertical + symmetric: direction-neutral. */
+@keyframes enter-rise {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.enter-rise {
+  animation: enter-rise var(--dur-base) var(--ease-out-strong);
+}
+
+/* Attention nudge — a small horizontal shake for a hard failure (failed login).
+   Symmetric X displacement: identical in both directions, no dir flip needed. */
+@keyframes attention-nudge {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-3px); }
+  75%      { transform: translateX(3px); }
+}
+.attention-nudge {
+  animation: attention-nudge var(--dur-fast) var(--ease-standard);
+}
+
+/* Staggered reveal — direct children fade+rise with an increasing delay.
+   Used for the dashboard skeleton strip so blocks cascade rather than pop. */
+.stagger-rise > * {
+  animation: enter-rise var(--dur-base) var(--ease-out-strong) both;
+}
+.stagger-rise > *:nth-child(2) { animation-delay: 60ms; }
+.stagger-rise > *:nth-child(3) { animation-delay: 120ms; }
+.stagger-rise > *:nth-child(4) { animation-delay: 180ms; }
+
 @keyframes login-rise {
   from {
     opacity: 0;
@@ -350,6 +413,11 @@ html {
     animation-duration: 1ms !important;
     animation-delay: 0ms !important;
   }
+  /* Phase E motion utilities: hold their final resting state, no motion. */
+  .skeleton-shimmer { animation: none; }
+  .enter-rise,
+  .attention-nudge,
+  .stagger-rise > * { animation: none; }
   html {
     scroll-behavior: auto !important;
   }
