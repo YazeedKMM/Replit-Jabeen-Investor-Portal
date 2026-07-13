@@ -86,6 +86,18 @@ Exercised live via the **admin `/branding` editor while in Arabic/RTL** (`data-t
 
 **Restore:** the AURORA brand lives only in the DB (not code); the Task 8 fresh-DB regression reset restores the seeded default identity.
 
-## Sign-off
+## Sign-off — 2026-07-13
 
-_Filled by Task 8._
+**Dimensions audited:** WCAG AA, responsive (375/768/1280), dark mode, RTL, stale-theme, performance (qualitative), across the six rebuilt pages + shared app-shell (toast, notification-panel, header, sidebar).
+
+**Findings:** 7 in-scope (F-01…F-07) — **7 fixed, 0 open**. Severity: 3 major (F-01 toast tokens, F-03 notification keyboard, F-04 toast close name), 4 minor. All re-verified live where observable (branding `<h2>` headings render live after container reload; white-label test exercises the tokenized theme path end-to-end). Deferred: the un-rebuilt `project-workspace` + tabs stale-theme (documented above; follow-up flagged) — a page rebuild, out of QA scope.
+
+**Regression (each on a fresh DB):** `test-suite` **148/0**, `test-branding` **18/0**, `test-reports` **31/0**. Typechecks: portal **PASS**, api-server **PASS**. Diff scope: 3 frontend files + this report + the plan — **zero backend/API/db changes**.
+
+**White-label × RTL × favicon:** PASS (see section above) — colors, brand name/logo, title, and layout adopt a new brand together in Arabic/RTL, including the pre-auth login page.
+
+**Live audit:** responsive/dark/RTL clean on all rebuilt pages (no body overflow at 375px; wide tables/charts contained; both themes tokenized; RTL correct).
+
+**Performance (qualitative):** no findings — charts render in responsive containers, no oversized inline assets introduced, motion is GPU-friendly + reduced-motion-safe (Phase E). No Lighthouse/axe tooling exists in-repo; assessed via code + DOM inspection.
+
+**Pass condition MET:** QA report clean — all in-scope findings fixed and re-verified; the single deferred item is out-of-scope (un-rebuilt feature) with rationale and a follow-up. **The redesign (Phases A–F) is complete.**
