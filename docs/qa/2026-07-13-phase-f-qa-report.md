@@ -42,6 +42,16 @@ Audited surfaces (the spec's "every rebuilt page" + shared app-shell):
 
 _Static audit (Task 2, web-design-guidelines): the six rebuilt pages + header/sidebar/app-layout audited **CLEAN** — every input labelled + errors wired via `aria-describedby`/`FormMessage`; tables inherit `overflow-auto`; Recharts containers pinned `dir="ltr"` with HTML legends outside; numerals/IDs wrapped `dir="ltr"`; icon-only buttons have `aria-label`; decorative icons `aria-hidden`. Findings cluster only in the two shared surfaces + branding (Card-based)._
 
+### Live preview audit (Task 3) — responsive / dark / RTL: CLEAN
+
+Verified live (`http://localhost:5173`) at **375px mobile**, in **RTL (ar)**, both themes:
+- **No body horizontal overflow** on `/login`, `/users`, `/dashboard`, `/reports` (`scrollWidth == clientWidth == 375`). Wide content is contained: the `/users` table (525px) and `/dashboard` table (674px) scroll inside their own `overflow-x-auto` parent; the 6 dashboard / 4 reports Recharts render in responsive containers.
+- **Dark mode** (`data-theme="dark"`, `jabeen-theme` in localStorage): body = dark token `oklch(0.165 0.012 140)`; **0** near-white hardcoded surfaces in `main`.
+- **Light mode** (`data-theme="light"`): body = light token `oklch(1 0 0)`; **0** dark-stuck surfaces.
+- **RTL**: all pages render `dir="rtl"` with correct Arabic headings and mirrored layout.
+
+No responsive / dark-mode / RTL findings on the rebuilt pages → **Task 6 (responsive/dark fixes): no findings**.
+
 ### RTL (app pages)
 
 Clean — re-confirmed 2026-07-13. Every physical directional utility (`slide-in-from-left/right`, `left-`/`right-`) is inside `components/ui/*` Radix primitives and is intentional/direction-correct per `docs/rtl.md`. No physical directional CSS in app pages.
