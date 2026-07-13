@@ -34,8 +34,13 @@ Audited surfaces (the spec's "every rebuilt page" + shared app-shell):
 |----|---------|-----------|----------|--------------------------|--------|
 | F-01 | toast (shared) | stale-theme | major | `components/ui/toast.tsx:78` — destructive close-button uses `group-[.destructive]:text-red-300 / hover:text-red-50 / focus:ring-red-400 / focus:ring-offset-red-600` (shadcn default palette, not the `destructive` token; won't follow branding/dark) | open |
 | F-02 | notification-panel (shared) | stale-theme | minor | `components/layout/notification-panel.tsx:34-37` — notification icons use `text-blue-500` / `text-purple-500` / `text-amber-500` / `text-blue-500` (palette, not semantic tokens; won't follow branding/dark) | open |
+| F-03 | notification-panel (shared) | semantic (WCAG 2.1.1) | major | `components/layout/notification-panel.tsx:65` — notification row is a clickable `<div onClick>` (mark-read + navigate) with no `role`/`tabIndex`/key handler; mouse-only, invisible to keyboard/AT. Nested `<Link>` at :90 blocks wrapping in a `<button>`. | open |
+| F-04 | toast (shared) | WCAG-AA (4.1.2) | major | `components/ui/toast.tsx:84` — `ToastClose` is icon-only (`<X/>`) with no accessible name (no `aria-label`/sr-only text). | open |
+| F-05 | admin/branding | semantic | minor | `pages/admin/branding.tsx` — `CardTitle` renders a `<div>` (card.tsx:32), so section titles ("Brand Name", "Colors", "Logos") aren't headings; SR heading-nav skips them after the page `<h1>`. | open |
+| F-06 | admin/branding | WCAG-AA | minor | `pages/admin/branding.tsx:47` — full-page loading is a bare spinning `Loader2` with no `role="status"`/sr-only text and icon not `aria-hidden`. | open |
+| F-07 | notification-panel (shared) | semantic | minor | `components/layout/notification-panel.tsx:46` — panel title is `<h4>` with no h2/h3 above (skipped level). | open |
 
-_Rows F-03+ appended by the static (Task 2) and live (Task 3) audits._
+_Static audit (Task 2, web-design-guidelines): the six rebuilt pages + header/sidebar/app-layout audited **CLEAN** — every input labelled + errors wired via `aria-describedby`/`FormMessage`; tables inherit `overflow-auto`; Recharts containers pinned `dir="ltr"` with HTML legends outside; numerals/IDs wrapped `dir="ltr"`; icon-only buttons have `aria-label`; decorative icons `aria-hidden`. Findings cluster only in the two shared surfaces + branding (Card-based)._
 
 ### RTL (app pages)
 
