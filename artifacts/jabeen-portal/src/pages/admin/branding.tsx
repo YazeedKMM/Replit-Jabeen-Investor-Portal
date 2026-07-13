@@ -8,7 +8,7 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,8 +43,9 @@ export default function BrandingPage() {
 
   if (!draft) {
     return (
-      <div className="flex items-center justify-center py-24">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className="flex items-center justify-center py-24" role="status">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" aria-hidden="true" />
+        <span className="sr-only">{t("common.loading")}</span>
       </div>
     );
   }
@@ -98,7 +99,7 @@ export default function BrandingPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>{t("branding.brandName")}</CardTitle>
+          <h2 className="font-semibold leading-none tracking-tight">{t("branding.brandName")}</h2>
         </CardHeader>
         <CardContent>
           <Input
@@ -112,7 +113,7 @@ export default function BrandingPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>{t("branding.colors")}</CardTitle>
+          <h2 className="font-semibold leading-none tracking-tight">{t("branding.colors")}</h2>
           <CardDescription>{t("branding.colorsDesc")}</CardDescription>
         </CardHeader>
         <CardContent>
@@ -146,7 +147,7 @@ export default function BrandingPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>{t("branding.logos")}</CardTitle>
+          <h2 className="font-semibold leading-none tracking-tight">{t("branding.logos")}</h2>
           <CardDescription>{t("branding.logosDesc")}</CardDescription>
         </CardHeader>
         <CardContent>
