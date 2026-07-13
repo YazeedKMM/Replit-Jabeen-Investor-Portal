@@ -31,10 +31,10 @@ export function NotificationPanel() {
 
   const getIcon = (kind: string) => {
     switch (kind) {
-      case 'message': return <MessageSquare className="h-4 w-4 text-blue-500" />;
-      case 'internal-note': return <FileText className="h-4 w-4 text-purple-500" />;
-      case 'update-submitted': return <Info className="h-4 w-4 text-amber-500" />;
-      case 'update-approved': return <CheckCircle className="h-4 w-4 text-blue-500" />;
+      case 'message': return <MessageSquare className="h-4 w-4 text-secondary" />;
+      case 'internal-note': return <FileText className="h-4 w-4 text-accent" />;
+      case 'update-submitted': return <Info className="h-4 w-4 text-warning" />;
+      case 'update-approved': return <CheckCircle className="h-4 w-4 text-success" />;
       case 'update-rejected': return <XCircle className="h-4 w-4 text-destructive" />;
       default: return <Info className="h-4 w-4 text-muted-foreground" />;
     }
@@ -43,7 +43,7 @@ export function NotificationPanel() {
   return (
     <div className="flex flex-col h-[400px]">
       <div className="flex items-center justify-between p-4 border-b">
-        <h4 className="font-semibold text-sm">{t("notifications.title")}</h4>
+        <h2 className="font-semibold text-sm">{t("notifications.title")}</h2>
         {notifications?.some(n => !n.read) && (
           <Button variant="ghost" size="sm" className="h-8 text-xs px-2" onClick={handleMarkAllRead}>
             <Check className="me-2 h-3 w-3" /> {t("notifications.markAllRead")}
@@ -62,13 +62,21 @@ export function NotificationPanel() {
         ) : (
           <div className="flex flex-col">
             {notifications.map((notif) => (
-              <div 
-                key={notif.id} 
+              <div
+                key={notif.id}
+                role="button"
+                tabIndex={0}
                 className={cn(
                   "p-4 border-b last:border-0 hover:bg-muted/50 transition-colors flex gap-3",
                   !notif.read ? "bg-primary/5" : ""
                 )}
                 onClick={() => handleNotificationClick(notif)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    if (e.key === " ") e.preventDefault();
+                    handleNotificationClick(notif);
+                  }
+                }}
               >
                 <div className="mt-1 flex-shrink-0">
                   {getIcon(notif.kind)}
