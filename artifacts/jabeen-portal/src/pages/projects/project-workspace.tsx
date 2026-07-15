@@ -123,7 +123,7 @@ export default function ProjectWorkspacePage() {
               </TabsTrigger>
 
               {isPrivileged && (
-                <TabsTrigger value="internal" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-6 py-3 text-purple-700 dark:text-purple-400">
+                <TabsTrigger value="internal" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-6 py-3 text-accent">
                   <FileText className="h-4 w-4 me-2" /> {t("projects.workspace.tabs.internal")}
                 </TabsTrigger>
               )}

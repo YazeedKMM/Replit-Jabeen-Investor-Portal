@@ -37,7 +37,7 @@ export default function ProjectInternalNotesTab({ project }: Props) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <div className="md:col-span-2 flex flex-col space-y-4">
-        <h2 className="text-xl font-bold text-purple-900 dark:text-purple-300">{t("projects.internal.title")}</h2>
+        <h2 className="text-xl font-bold text-accent">{t("projects.internal.title")}</h2>
         <p className="text-sm text-muted-foreground">{t("projects.internal.subtitle")}</p>
 
         <div className="space-y-4">
@@ -49,9 +49,9 @@ export default function ProjectInternalNotesTab({ project }: Props) {
             </div>
           ) : (
             notes.map(note => (
-              <div key={note.id} className="bg-purple-50/50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-800/30 p-4 rounded-lg">
+              <div key={note.id} className="bg-accent/5 border border-accent/20 p-4 rounded-lg">
                 <div className="flex justify-between items-start mb-2">
-                  <div className="font-semibold text-sm text-purple-900 dark:text-purple-300">{note.author?.fullName}</div>
+                  <div className="font-semibold text-sm text-accent">{note.author?.fullName}</div>
                   <div className="text-xs text-muted-foreground">{fmtDateTime(note.createdAt)}</div>
                 </div>
                 <p className="text-sm whitespace-pre-wrap">{note.body}</p>
@@ -71,7 +71,7 @@ export default function ProjectInternalNotesTab({ project }: Props) {
             className="min-h-[150px] resize-none mb-3 bg-background"
           />
           <Button
-            className="w-full bg-purple-700 hover:bg-purple-800 text-white"
+            className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
             onClick={handleSend}
             disabled={!body.trim() || createMutation.isPending}
           >
