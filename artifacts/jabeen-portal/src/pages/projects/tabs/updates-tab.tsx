@@ -254,8 +254,8 @@ function UpdateDetail({ update, projectId }: { update: StatusUpdate; projectId: 
       {update.reviewStatus !== "pending" && update.reviewer && (
         <>
           <Separator />
-          <div className={`rounded-md border p-3 ${update.reviewStatus === "approved" ? "bg-blue-50 border-blue-200" : "bg-destructive/5 border-destructive/20"}`}>
-            <p className={`text-[10px] uppercase tracking-wider font-semibold mb-1 ${update.reviewStatus === "approved" ? "text-blue-700" : "text-destructive"}`}>
+          <div className={`rounded-md border p-3 ${update.reviewStatus === "approved" ? "bg-success/5 border-success/20" : "bg-destructive/5 border-destructive/20"}`}>
+            <p className={`text-[10px] uppercase tracking-wider font-semibold mb-1 ${update.reviewStatus === "approved" ? "text-success" : "text-destructive"}`}>
               {update.reviewStatus === "approved" ? t("projects.updates.detailApproved") : t("projects.updates.detailRejected")} {t("projects.updates.detailBy", { name: update.reviewer.fullName })}
               {update.reviewedAt && <span className="font-normal"> {t("projects.updates.detailOn", { date: fmtDate(update.reviewedAt) })}</span>}
             </p>
@@ -731,9 +731,9 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
             <div key={update.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
               {/* Status dot */}
               <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-background bg-muted shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 absolute start-0 md:left-1/2 md:-translate-x-1/2">
-                {update.reviewStatus === "approved" ? <CheckCircle2 className="h-5 w-5 text-blue-500" /> :
+                {update.reviewStatus === "approved" ? <CheckCircle2 className="h-5 w-5 text-success" /> :
                  update.reviewStatus === "rejected" ? <XCircle className="h-5 w-5 text-destructive" /> :
-                 <Clock className="h-5 w-5 text-amber-500" />}
+                 <Clock className="h-5 w-5 text-warning" />}
               </div>
 
               <div className="rounded-xl border border-card-border bg-card p-6 w-[calc(100%-3rem)] md:w-[calc(50%-2.5rem)] ms-12 md:ms-0">
@@ -831,7 +831,7 @@ export default function ProjectUpdatesTab({ project, isPrivileged }: Props) {
               {!rejectMode ? (
                 <div className="flex gap-3 pt-2 border-t">
                   <Button
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                    className="flex-1 bg-success text-white hover:bg-success/90"
                     onClick={handleApprove}
                     disabled={approveMutation.isPending}
                   >
