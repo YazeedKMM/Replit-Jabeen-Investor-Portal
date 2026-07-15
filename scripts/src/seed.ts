@@ -6,9 +6,12 @@ import {
   stageFieldsTable,
   projectsTable,
   systemSettingsTable,
+  citiesTable,
+  projectCategoriesTable,
+  userCitiesTable,
 } from "@workspace/db";
 import bcrypt from "bcryptjs";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 function hash(pw: string) {
   return bcrypt.hashSync(pw, 12);
@@ -203,6 +206,51 @@ async function seed() {
     }
   }
 
+  // ── Cities (RCJY) ──────────────────────────────────────────────────
+  const CITY_SEED = [
+    { code: "JUB", name: "Jubail Industrial City", shortName: "Jubail", sortOrder: 1 },
+    { code: "YNB", name: "Yanbu Industrial City", shortName: "Yanbu", sortOrder: 2 },
+    { code: "RAS", name: "Ras Al-Khair City for Mining Industries", shortName: "Ras Al-Khair", sortOrder: 3 },
+    { code: "JZN", name: "Jazan City for Primary and Downstream Industries", shortName: "Jazan", sortOrder: 4 },
+  ];
+  const cityIdByCode: Record<string, number> = {};
+  for (const c of CITY_SEED) {
+    const [existing] = await db.select().from(citiesTable).where(eq(citiesTable.code, c.code));
+    if (existing) { cityIdByCode[c.code] = existing.id; continue; }
+    const [row] = await db.insert(citiesTable).values(c).returning();
+    cityIdByCode[c.code] = row.id;
+    console.log(`  Created city: ${c.code}`);
+  }
+
+  // ── Project Categories ─────────────────────────────────────────────
+  const CATEGORY_SEED = [
+    { code: "PETRO", name: "Petrochemical", sortOrder: 1 },
+    { code: "OILGAS", name: "Oil & Gas", sortOrder: 2 },
+    { code: "MINING", name: "Mining", sortOrder: 3 },
+    { code: "COMMERCIAL", name: "Commercial", sortOrder: 4 },
+    { code: "ENTERTAINMENT", name: "Entertainment", sortOrder: 5 },
+  ];
+  const categoryIdByCode: Record<string, number> = {};
+  for (const c of CATEGORY_SEED) {
+    const [existing] = await db.select().from(projectCategoriesTable).where(eq(projectCategoriesTable.code, c.code));
+    if (existing) { categoryIdByCode[c.code] = existing.id; continue; }
+    const [row] = await db.insert(projectCategoriesTable).values(c).returning();
+    categoryIdByCode[c.code] = row.id;
+    console.log(`  Created category: ${c.code}`);
+  }
+
+  // ── PM city assignments (demonstrate multi-city scoping) ───────────
+  const [pm1] = await db.select().from(usersTable).where(eq(usersTable.email, "pm1@jabeen.sa"));
+  if (pm1) {
+    for (const code of ["JUB", "YNB"]) {
+      const cityId = cityIdByCode[code];
+      const [existing] = await db.select().from(userCitiesTable)
+        .where(and(eq(userCitiesTable.userId, pm1.id), eq(userCitiesTable.cityId, cityId)));
+      if (!existing) await db.insert(userCitiesTable).values({ userId: pm1.id, cityId });
+    }
+    console.log("  Assigned pm1 to JUB, YNB");
+  }
+
   // ── Sample Projects ────────────────────────────────────────────────
   const [firstStage] = await db.select({ id: stagesTable.id }).from(stagesTable).where(eq(stagesTable.templateId, templateId)).orderBy(stagesTable.orderIndex).limit(1);
   const firstStageId = firstStage?.id;
@@ -218,7 +266,8 @@ async function seed() {
   const sampleProjects = [
     {
       name: "Acme Plastics Manufacturing Facility",
-      sector: "Petrochemicals & Plastics",
+      cityId: cityIdByCode["JUB"],
+      categoryId: categoryIdByCode["PETRO"],
       agreementNumber: "RCJY-2024-001",
       plotNumber: "P-1432-J",
       constructionPct: 40,
@@ -227,7 +276,8 @@ async function seed() {
     },
     {
       name: "Gulf Petro Refinery Expansion",
-      sector: "Petroleum Refining",
+      cityId: cityIdByCode["YNB"],
+      categoryId: categoryIdByCode["OILGAS"],
       agreementNumber: "RCJY-2024-002",
       plotNumber: "P-2891-J",
       constructionPct: 20,
@@ -250,7 +300,8 @@ async function seed() {
 
     await db.insert(projectsTable).values({
       name: p.name,
-      sector: p.sector,
+      cityId: p.cityId,
+      categoryId: p.categoryId,
       agreementNumber: p.agreementNumber,
       plotNumber: p.plotNumber,
       constructionPct: p.constructionPct,
